@@ -1,0 +1,146 @@
+'use client';
+
+import { useState } from 'react';
+import { Search, MapPin, Loader2, Bookmark, ExternalLink } from 'lucide-react';
+import { formatDate, formatSalary, cn } from '@/lib/utils';
+import type { Job } from '@/types';
+
+export default function JobsPage() {
+  const [query, setQuery] = useState('');
+  const [location, setLocation] = useState('');
+  const [remoteOnly, setRemoteOnly] = useState(false);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim()) return;
+
+    setLoading(true);
+    setSearched(true);
+
+    try {
+      const params = new URLSearchParams({ query });
+      if (location) params.set('location', location);
+      if (remoteOnly) params.set('remote', 'true');
+
+      const res = await fetch(`/api/jobs/search?${params}`);
+      const data = await res.json();
+      setJobs(data.jobs || []);
+    } catch {
+      setJobs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold text-slate-900">Job Search</h1>
+      <p className="mt-1 text-sm text-slate-500">
+        Find jobs across the US and see how well they match your resume.
+      </p>
+
+      {/* Search Form */}
+      <form onSubmit={handleSearch} className="mt-6 flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Job title, keywords, or company"
+            className="w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+        </div>
+        <div className="relative min-w-[180px]">
+          <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="City, state, or remote"
+            className="w-full rounded-lg border border-slate-300 py-2.5 pl-10 pr-4 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          />
+        </div>
+        <label className="flex items-center gap-2 text-sm text-slate-600">
+          <input
+            type="checkbox"
+            checked={remoteOnly}
+            onChange={(e) => setRemoteOnly(e.target.checked)}
+            className="rounded"
+          />
+          Remote only
+        </label>
+        <button
+          type="submit"
+          disabled={loading}
+          className="rounded-lg bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition"
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Search'}
+        </button>
+      </form>
+
+      {/* Results */}
+      <div className="mt-8 space-y-4">
+        {loading && (
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-brand-600" />
+          </div>
+        )}
+
+        {!loading && searched && jobs.length === 0 && (
+          <div className="text-center py-16 text-sm text-slate-400">
+            No jobs found. Try different keywords or location.
+          </div>
+        )}
+
+        {!loading &&
+          jobs.map((job) => (
+            <div
+              key={job.id}
+              className="rounded-xl border border-slate-200 p-5 hover:shadow-sm transition"
+            >
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">
+                    {job.title}
+                  </h3>
+                  <p className="text-sm text-slate-600">{job.company}</p>
+                  <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" /> {job.location}
+                    </span>
+                    {job.remote_type === 'remote' && (
+                      <span className="rounded-full bg-green-50 px-2 py-0.5 text-green-600">
+                        Remote
+                      </span>
+                    )}
+                    <span>{formatSalary(job.salary_min, job.salary_max)}</span>
+                    <span>{formatDate(job.posted_date)}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button className="rounded-lg border border-slate-200 p-2 text-slate-400 hover:text-brand-600 transition">
+                    <Bookmark className="h-4 w-4" />
+                  </button>
+                  <a
+                    href={job.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-lg border border-slate-200 p-2 text-slate-400 hover:text-brand-600 transition"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                </div>
+              </div>
+              <p className="mt-3 text-xs text-slate-500 line-clamp-3">
+                {job.description}
+              </p>
+            </div>
+          ))}
+      </div>
+    </div>
+  );
+}
