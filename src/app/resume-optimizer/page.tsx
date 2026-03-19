@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import {
   Upload, FileText, Loader2, CheckCircle2, AlertTriangle,
-  XCircle, ChevronDown, ChevronUp, Zap,
+  XCircle, ChevronDown, ChevronUp, Zap, Download, Sparkles,
 } from 'lucide-react';
 import { useResumeProfile } from '@/hooks/useResumeProfile';
 import { toast } from 'sonner';
@@ -18,21 +18,19 @@ export default function ResumeOptimizerPage() {
   const [analysis, setAnalysis] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedSuggestions, setExpandedSuggestions] = useState(true);
+  const [generating, setGenerating] = useState(false);
+  const [generatedResume, setGeneratedResume] = useState<any>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const { profile } = useResumeProfile();
 
-  // Check for pre-filled JD from job search
   useEffect(() => {
     const jd = sessionStorage.getItem('optimize_jd');
     const title = sessionStorage.getItem('optimize_title');
     if (jd) {
       setJobDescription(jd);
       sessionStorage.removeItem('optimize_jd');
-      if (title) {
-        setJobTitle(title);
-        sessionStorage.removeItem('optimize_title');
-      }
-      // Auto-select base resume if available
+      if (title) { setJobTitle(title); sessionStorage.removeItem('optimize_title'); }
       if (profile?.text) {
         setUseBaseResume(true);
         toast.info('JD loaded from job search. Using your base resume.');
@@ -43,59 +41,73 @@ export default function ResumeOptimizerPage() {
   }, [profile]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (acceptedFiles[0]) {
-      setFile(acceptedFiles[0]);
-      setUseBaseResume(false);
-      setAnalysis(null);
-      setError(null);
-    }
+    if (acceptedFiles[0]) { setFile(acceptedFiles[0]); setUseBaseResume(false); setAnalysis(null); setError(null); setGeneratedResume(null); }
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: {
-      'application/pdf': ['.pdf'],
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
-      'text/plain': ['.txt'],
-    },
-    maxFiles: 1,
-    maxSize: 10 * 1024 * 1024,
+    accept: { 'application/pdf': ['.pdf'], 'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'], 'text/plain': ['.txt'] },
+    maxFiles: 1, maxSize: 10 * 1024 * 1024,
   });
 
   const canAnalyze = (file || useBaseResume) && jobDescription.trim();
 
   const handleAnalyze = async () => {
     if (!canAnalyze) return;
-    setAnalyzing(true);
-    setError(null);
+    setAnalyzing(true); setError(null); setGeneratedResume(null);
     try {
       let res;
       if (useBaseResume && profile?.text) {
-        // Send text directly
-        res = await fetch('/api/resume/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ resumeText: profile.text, jobDescription }),
-        });
+        res = await fetch('/api/resume/analyze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resumeText: profile.text, jobDescription }) });
       } else if (file) {
-        const formData = new FormData();
-        formData.append('resume', file);
-        formData.append('jobDescription', jobDescription);
+        const formData = new FormData(); formData.append('resume', file); formData.append('jobDescription', jobDescription);
         res = await fetch('/api/resume/analyze', { method: 'POST', body: formData });
-      } else {
-        throw new Error('No resume selected');
-      }
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Analysis failed');
-      }
+      } else throw new Error('No resume selected');
+      if (!res.ok) { const data = await res.json().catch(() => ({})); throw new Error(data.error || 'Analysis failed'); }
       setAnalysis(await res.json());
-    } catch (err: any) {
-      setError(err.message || 'Failed to analyze resume.');
-    } finally {
-      setAnalyzing(false);
-    }
+    } catch (err: any) { setError(err.message || 'Failed to analyze resume.'); } finally { setAnalyzing(false); }
+  };
+
+  const handleGenerate = async () => {
+    const resumeText = useBaseResume ? profile?.text : null;
+    if (!resumeText && !file) { setError('No resume available to optimize'); return; }
+    setGenerating(true); setError(null);
+    try {
+      let textToSend = resumeText || '';
+      if (file && !resumeText) {
+        const parseForm = new FormData(); parseForm.append('resume', file);
+        const parseRes = await fetch('/api/resume/parse', { method: 'POST', body: parseForm });
+        if (!parseRes.ok) throw new Error('Failed to parse resume');
+        const parseData = await parseRes.json(); textToSend = parseData.text;
+      }
+      const res = await fetch('/api/resume/generate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeText: textToSend, jobDescription, jobTitle }),
+      });
+      if (!res.ok) { const data = await res.json().catch(() => ({})); throw new Error(data.error || 'Generation failed'); }
+      const data = await res.json();
+      setGeneratedResume(data.resume);
+      toast.success('Optimized resume generated!');
+    } catch (err: any) { setError(err.message || 'Failed to generate optimized resume.'); } finally { setGenerating(false); }
+  };
+
+  const handleDownload = async () => {
+    if (!generatedResume) return;
+    setDownloading(true);
+    try {
+      const res = await fetch('/api/resume/download', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resume: generatedResume }),
+      });
+      if (!res.ok) throw new Error('Download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url;
+      a.download = `optimized_resume_${(generatedResume.name || 'resume').replace(/\s+/g, '_')}.docx`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Resume downloaded!');
+    } catch (err: any) { setError(err.message || 'Failed to download.'); } finally { setDownloading(false); }
   };
 
   const barColor = (s: number) => s >= 80 ? 'bg-green-500' : s >= 60 ? 'bg-amber-500' : 'bg-red-500';
@@ -104,76 +116,86 @@ export default function ResumeOptimizerPage() {
   return (
     <div>
       <h1 className="text-2xl font-bold text-slate-900">Resume Optimizer</h1>
-      <p className="mt-1 text-sm text-slate-500">
-        {jobTitle ? `Optimizing for: ${jobTitle}` : 'Upload your resume and paste a job description to get an ATS score with actionable suggestions.'}
-      </p>
+      <p className="mt-1 text-sm text-slate-500">{jobTitle ? `Optimizing for: ${jobTitle}` : 'Upload your resume and paste a job description to get an ATS score with actionable suggestions.'}</p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
-          {/* Resume Source Toggle */}
           {profile && (
             <div className="rounded-lg border border-slate-200 p-4">
               <p className="text-sm font-medium text-slate-700 mb-3">Resume Source</p>
               <div className="flex gap-2">
-                <button
-                  onClick={() => { setUseBaseResume(true); setFile(null); }}
-                  className={['flex-1 rounded-lg border px-3 py-2.5 text-sm font-medium transition flex items-center justify-center gap-2', useBaseResume ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'].join(' ')}
-                >
-                  <Zap className="h-4 w-4" /> Base Resume
-                </button>
-                <button
-                  onClick={() => { setUseBaseResume(false); }}
-                  className={['flex-1 rounded-lg border px-3 py-2.5 text-sm font-medium transition flex items-center justify-center gap-2', !useBaseResume ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'].join(' ')}
-                >
-                  <Upload className="h-4 w-4" /> Upload New
-                </button>
+                <button onClick={() => { setUseBaseResume(true); setFile(null); }} className={['flex-1 rounded-lg border px-3 py-2.5 text-sm font-medium transition flex items-center justify-center gap-2', useBaseResume ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'].join(' ')}><Zap className="h-4 w-4" /> Base Resume</button>
+                <button onClick={() => setUseBaseResume(false)} className={['flex-1 rounded-lg border px-3 py-2.5 text-sm font-medium transition flex items-center justify-center gap-2', !useBaseResume ? 'border-brand-300 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-600 hover:bg-slate-50'].join(' ')}><Upload className="h-4 w-4" /> Upload New</button>
               </div>
-              {useBaseResume && (
-                <p className="mt-2 text-xs text-green-600 flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3" /> Using: {profile.fileName}
-                </p>
-              )}
+              {useBaseResume && <p className="mt-2 text-xs text-green-600 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Using: {profile.fileName}</p>}
             </div>
           )}
 
-          {/* Dropzone (show only if not using base resume) */}
           {!useBaseResume && (
             <div {...getRootProps()} className={['flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 text-center cursor-pointer transition', isDragActive ? 'border-brand-400 bg-brand-50' : file ? 'border-green-300 bg-green-50' : 'border-slate-300 hover:border-slate-400'].join(' ')}>
               <input {...getInputProps()} />
-              {file ? (
-                <><FileText className="h-8 w-8 text-green-600" /><p className="mt-2 text-sm font-medium text-green-700">{file.name}</p><p className="text-xs text-slate-400">Click or drag to replace</p></>
-              ) : (
-                <><Upload className="h-8 w-8 text-slate-400" /><p className="mt-2 text-sm font-medium text-slate-600">Drop your resume here, or click to browse</p><p className="text-xs text-slate-400">PDF, DOCX, or TXT — up to 10 MB</p></>
+              {file ? (<><FileText className="h-8 w-8 text-green-600" /><p className="mt-2 text-sm font-medium text-green-700">{file.name}</p><p className="text-xs text-slate-400">Click or drag to replace</p></>) : (<><Upload className="h-8 w-8 text-slate-400" /><p className="mt-2 text-sm font-medium text-slate-600">Drop your resume here, or click to browse</p><p className="text-xs text-slate-400">PDF, DOCX, or TXT — up to 10 MB</p></>)}
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Job Description</label>
+            <textarea rows={8} value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} placeholder="Paste the full job description here..." className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
+          </div>
+
+          <button onClick={handleAnalyze} disabled={!canAnalyze || analyzing} className="w-full rounded-lg bg-brand-600 px-4 py-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
+            {analyzing ? (<><Loader2 className="h-4 w-4 animate-spin" />Analyzing...</>) : 'Analyze Resume'}
+          </button>
+
+          {/* Generate Optimized Resume Button */}
+          {analysis && (
+            <div className="rounded-xl border-2 border-purple-200 bg-purple-50/50 p-4">
+              <h3 className="text-sm font-semibold text-purple-800 flex items-center gap-2"><Sparkles className="h-4 w-4" /> AI Resume Rewriter</h3>
+              <p className="mt-1 text-xs text-purple-600">Generate a fully optimized resume tailored to this JD. Download as DOCX.</p>
+              <div className="mt-3 flex gap-2">
+                <button onClick={handleGenerate} disabled={generating} className="flex-1 rounded-lg bg-purple-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-purple-700 disabled:opacity-50 transition flex items-center justify-center gap-2">
+                  {generating ? (<><Loader2 className="h-4 w-4 animate-spin" />Generating...</>) : (<><Sparkles className="h-4 w-4" />Generate Optimized Resume</>)}
+                </button>
+                {generatedResume && (
+                  <button onClick={handleDownload} disabled={downloading} className="rounded-lg bg-green-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 transition flex items-center justify-center gap-2">
+                    {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} DOCX
+                  </button>
+                )}
+              </div>
+              {generatedResume && (
+                <div className="mt-3 rounded-lg bg-white border border-purple-100 p-3 max-h-60 overflow-y-auto">
+                  <p className="text-[10px] font-medium text-purple-400 uppercase tracking-wide mb-2">Preview</p>
+                  <p className="text-sm font-bold text-slate-900">{generatedResume.name}</p>
+                  {generatedResume.summary && <p className="text-xs text-slate-600 mt-1">{generatedResume.summary}</p>}
+                  {generatedResume.skills && <div className="mt-2 flex flex-wrap gap-1">{generatedResume.skills.slice(0, 15).map((s: string) => (<span key={s} className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] text-purple-700">{s}</span>))}</div>}
+                  {generatedResume.experience?.slice(0, 2).map((exp: any, i: number) => (
+                    <div key={i} className="mt-2">
+                      <p className="text-xs font-semibold text-slate-800">{exp.title} — {exp.company}</p>
+                      {exp.bullets?.slice(0, 2).map((b: string, j: number) => (<p key={j} className="text-[10px] text-slate-500 mt-0.5">• {b}</p>))}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           )}
 
-          {/* Job Description */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Job Description</label>
-            <textarea rows={10} value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} placeholder="Paste the full job description here..." className="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500" />
-          </div>
-
-          <button onClick={handleAnalyze} disabled={!canAnalyze || analyzing} className="w-full rounded-lg bg-brand-600 px-4 py-3 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center justify-center gap-2">
-            {analyzing ? (<><Loader2 className="h-4 w-4 animate-spin" />Analyzing with AI...</>) : 'Analyze Resume'}
-          </button>
           {error && <div className="flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600"><XCircle className="h-4 w-4 flex-shrink-0" />{error}</div>}
         </div>
 
-        {/* Results */}
+        {/* Results Panel */}
         <div className="rounded-xl border border-slate-200 p-6 min-h-[500px]">
           {!analysis ? (
             <div className="flex h-full items-center justify-center text-sm text-slate-400">
-              {analyzing ? (
-                <div className="text-center"><Loader2 className="h-8 w-8 animate-spin text-brand-600 mx-auto" /><p className="mt-3 text-sm text-slate-500">AI is analyzing your resume...</p><p className="mt-1 text-xs text-slate-400">This usually takes 10-15 seconds</p></div>
-              ) : (useBaseResume || file) ? 'Paste a job description and click Analyze.' : 'Select a resume source and paste a job description.'}
+              {analyzing ? (<div className="text-center"><Loader2 className="h-8 w-8 animate-spin text-brand-600 mx-auto" /><p className="mt-3 text-sm text-slate-500">Analyzing your resume...</p></div>) : (useBaseResume || file) ? 'Paste a job description and click Analyze.' : 'Select a resume source and paste a job description.'}
             </div>
           ) : (
             <div className="space-y-6 overflow-y-auto max-h-[700px]">
               <div className="text-center">
                 <div className={['inline-flex h-24 w-24 items-center justify-center rounded-full text-3xl font-bold', scoreColor(analysis.overall_score)].join(' ')}>{analysis.overall_score}</div>
                 <p className="mt-2 text-sm text-slate-500">ATS Score</p>
-                <p className="text-xs text-slate-400">{analysis.overall_score >= 80 ? 'Great match!' : analysis.overall_score >= 60 ? 'Good start, room for improvement.' : 'Needs work. Follow suggestions below.'}</p>
+                <p className="text-xs text-slate-400">
+                  {analysis.scoring_method === 'hybrid' ? 'Hybrid: Algorithmic + AI' : 'Algorithmic scoring'}
+                </p>
               </div>
 
               {analysis.keyword_match && (
