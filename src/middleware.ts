@@ -4,12 +4,10 @@ export function middleware(request: NextRequest) {
   const publicPaths = ['/', '/auth/login', '/auth/signup', '/api/health'];
   const { pathname } = request.nextUrl;
 
-  // Allow public paths and static files
   if (publicPaths.includes(pathname) || pathname.startsWith('/api/')) {
     return NextResponse.next();
   }
 
-  // Check for Supabase auth cookie
   const hasAuthCookie = request.cookies.getAll().some(
     (cookie) => cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')
   );

@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTextFromFile } from '@/lib/resume-parser';
 import { analyzeResumeATS } from '@/lib/ai';
@@ -16,6 +17,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check API key
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return NextResponse.json(
+        { error: 'AI service not configured. Please add ANTHROPIC_API_KEY.' },
+        { status: 503 }
+      );
+    }
+
     // Extract text from resume
     const buffer = Buffer.from(await file.arrayBuffer());
     const resumeText = await extractTextFromFile(buffer, file.type);
@@ -29,13 +38,24 @@ export async function POST(request: NextRequest) {
 
     // Run ATS analysis via Claude
     const rawAnalysis = await analyzeResumeATS(resumeText, jobDescription);
-    const analysis = JSON.parse(rawAnalysis);
+
+    // Parse JSON — handle potential markdown wrapping
+    let analysis;
+    try {
+      const cleaned = rawAnalysis.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      analysis = JSON.parse(cleaned);
+    } catch {
+      return NextResponse.json(
+        { error: 'AI returned an unexpected format. Please try again.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json(analysis);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Resume analysis error:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze resume.' },
+      { error: error.message || 'Failed to analyze resume.' },
       { status: 500 }
     );
   }
