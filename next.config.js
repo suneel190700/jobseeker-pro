@@ -2,7 +2,7 @@
 const nextConfig = {
   experimental: {
     serverActions: {
-      bodySizeLimit: '10mb', // For resume uploads
+      bodySizeLimit: '10mb',
     },
   },
   images: {
@@ -13,6 +13,9 @@ const nextConfig = {
       },
     ],
   },
+  poweredByHeader: false,
+  compress: true,
+  reactStrictMode: true,
 };
 
 module.exports = nextConfig;
