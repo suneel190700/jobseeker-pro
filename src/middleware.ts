@@ -1,45 +1,30 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request: { headers: request.headers } });
+export function middleware(request: NextRequest) {
+  const publicPaths = ['/', '/auth/login', '/auth/signup', '/api/health'];
+  const { pathname } = request.nextUrl;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options });
-          response = NextResponse.next({ request: { headers: request.headers } });
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options });
-          response = NextResponse.next({ request: { headers: request.headers } });
-          response.cookies.set({ name, value: '', ...options });
-        },
-      },
-    }
+  // Allow public paths and static files
+  if (publicPaths.includes(pathname) || pathname.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+
+  // Check for Supabase auth cookie
+  const hasAuthCookie = request.cookies.getAll().some(
+    (cookie) => cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')
   );
 
-  const { data: { user } } = await supabase.auth.getUser();
-
-  const publicPaths = ['/', '/auth/login', '/auth/signup'];
-  if (!user && !publicPaths.includes(request.nextUrl.pathname)) {
+  if (!hasAuthCookie) {
     const url = request.nextUrl.clone();
     url.pathname = '/auth/login';
     return NextResponse.redirect(url);
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|api/health|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 };
