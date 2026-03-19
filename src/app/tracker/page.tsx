@@ -3,20 +3,9 @@
 import { useState } from 'react';
 import {
   Plus, GripVertical, MoreHorizontal, X, Trash2,
-  ChevronRight, Calendar, Building2, StickyNote,
+  Calendar, StickyNote, ExternalLink, MapPin,
 } from 'lucide-react';
-
-type Stage = 'saved' | 'applied' | 'screening' | 'interview' | 'offer' | 'rejected';
-
-interface AppCard {
-  id: string;
-  company: string;
-  title: string;
-  stage: Stage;
-  applied_date: string;
-  notes: string;
-  url: string;
-}
+import { useTracker, type Stage, type AppCard } from '@/hooks/useTracker';
 
 const STAGES: { key: Stage; label: string; color: string }[] = [
   { key: 'saved', label: 'Saved', color: 'bg-slate-100 text-slate-700' },
@@ -28,23 +17,21 @@ const STAGES: { key: Stage; label: string; color: string }[] = [
 ];
 
 export default function TrackerPage() {
-  const [cards, setCards] = useState<AppCard[]>([]);
+  const tracker = useTracker();
   const [showModal, setShowModal] = useState(false);
   const [editCard, setEditCard] = useState<AppCard | null>(null);
   const [dragCard, setDragCard] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<Stage | null>(null);
-
-  // Form state
-  const [form, setForm] = useState({ company: '', title: '', stage: 'saved' as Stage, applied_date: '', notes: '', url: '' });
+  const [form, setForm] = useState({ company: '', title: '', stage: 'saved' as Stage, applied_date: '', notes: '', url: '', location: '', salary: '' });
 
   const openAdd = () => {
-    setForm({ company: '', title: '', stage: 'saved', applied_date: new Date().toISOString().split('T')[0], notes: '', url: '' });
+    setForm({ company: '', title: '', stage: 'saved', applied_date: new Date().toISOString().split('T')[0], notes: '', url: '', location: '', salary: '' });
     setEditCard(null);
     setShowModal(true);
   };
 
   const openEdit = (card: AppCard) => {
-    setForm({ company: card.company, title: card.title, stage: card.stage, applied_date: card.applied_date, notes: card.notes, url: card.url });
+    setForm({ company: card.company, title: card.title, stage: card.stage, applied_date: card.applied_date, notes: card.notes, url: card.url, location: card.location || '', salary: card.salary || '' });
     setEditCard(card);
     setShowModal(true);
   };
@@ -52,47 +39,40 @@ export default function TrackerPage() {
   const saveCard = () => {
     if (!form.company.trim() || !form.title.trim()) return;
     if (editCard) {
-      setCards((prev) => prev.map((c) => c.id === editCard.id ? { ...c, ...form } : c));
+      tracker.updateCard(editCard.id, form);
     } else {
-      const newCard: AppCard = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ...form };
-      setCards((prev) => [...prev, newCard]);
+      tracker.addCard(form);
     }
     setShowModal(false);
   };
 
-  const deleteCard = (id: string) => {
-    setCards((prev) => prev.filter((c) => c.id !== id));
-    setShowModal(false);
-  };
-
-  const moveCard = (id: string, newStage: Stage) => {
-    setCards((prev) => prev.map((c) => c.id === id ? { ...c, stage: newStage } : c));
-  };
-
-  // Drag handlers
   const handleDragStart = (id: string) => setDragCard(id);
   const handleDragOver = (e: React.DragEvent, stage: Stage) => { e.preventDefault(); setDragOverStage(stage); };
   const handleDragLeave = () => setDragOverStage(null);
   const handleDrop = (stage: Stage) => {
-    if (dragCard) { moveCard(dragCard, stage); setDragCard(null); setDragOverStage(null); }
+    if (dragCard) { tracker.moveCard(dragCard, stage); setDragCard(null); setDragOverStage(null); }
   };
   const handleDragEnd = () => { setDragCard(null); setDragOverStage(null); };
 
-  const getCardsForStage = (stage: Stage) => cards.filter((c) => c.stage === stage);
+  const getCardsForStage = (stage: Stage) => tracker.cards.filter((c) => c.stage === stage);
+
+  if (!tracker.loaded) {
+    return <div className="flex items-center justify-center py-20 text-sm text-slate-400">Loading tracker...</div>;
+  }
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Application Tracker</h1>
-          <p className="mt-1 text-sm text-slate-500">Drag cards between columns to update status. {cards.length} application{cards.length !== 1 ? 's' : ''}.</p>
+          <p className="mt-1 text-sm text-slate-500">Drag cards between columns to update status. {tracker.cards.length} application{tracker.cards.length !== 1 ? 's' : ''}.</p>
         </div>
         <button onClick={openAdd} className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 transition">
           <Plus className="h-4 w-4" /> Add Application
         </button>
       </div>
 
-      {/* Kanban Board */}
+      {/* Kanban */}
       <div className="mt-6 flex gap-3 overflow-x-auto pb-4">
         {STAGES.map(({ key, label, color }) => {
           const stageCards = getCardsForStage(key);
@@ -138,8 +118,13 @@ export default function TrackerPage() {
                           <MoreHorizontal className="h-4 w-4" />
                         </button>
                       </div>
+                      {card.location && (
+                        <div className="mt-1.5 flex items-center gap-1 text-[10px] text-slate-400">
+                          <MapPin className="h-3 w-3" /> {card.location}
+                        </div>
+                      )}
                       {card.applied_date && (
-                        <div className="mt-2 flex items-center gap-1 text-[10px] text-slate-400">
+                        <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400">
                           <Calendar className="h-3 w-3" /> {card.applied_date}
                         </div>
                       )}
@@ -149,14 +134,14 @@ export default function TrackerPage() {
                           <span className="line-clamp-2">{card.notes}</span>
                         </div>
                       )}
-                      {/* Quick move buttons */}
-                      <div className="mt-2 flex gap-1">
+                      {card.url && card.url !== '#' && (
+                        <a href={card.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="mt-2 inline-flex items-center gap-1 text-[10px] text-brand-600 hover:text-brand-700">
+                          <ExternalLink className="h-3 w-3" /> View posting
+                        </a>
+                      )}
+                      <div className="mt-2 flex gap-1 flex-wrap">
                         {STAGES.filter((s) => s.key !== key).slice(0, 3).map((s) => (
-                          <button
-                            key={s.key}
-                            onClick={() => moveCard(card.id, s.key)}
-                            className="rounded px-1.5 py-0.5 text-[9px] font-medium border border-slate-200 text-slate-400 hover:bg-slate-100 transition truncate"
-                          >
+                          <button key={s.key} onClick={() => tracker.moveCard(card.id, s.key)} className="rounded px-1.5 py-0.5 text-[9px] font-medium border border-slate-200 text-slate-400 hover:bg-slate-100 transition truncate">
                             {s.label}
                           </button>
                         ))}
@@ -170,7 +155,7 @@ export default function TrackerPage() {
         })}
       </div>
 
-      {/* Add/Edit Modal */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowModal(false)}>
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl mx-4" onClick={(e) => e.stopPropagation()}>
@@ -210,7 +195,7 @@ export default function TrackerPage() {
             </div>
             <div className="mt-5 flex items-center justify-between">
               {editCard ? (
-                <button onClick={() => deleteCard(editCard.id)} className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700">
+                <button onClick={() => { tracker.deleteCard(editCard.id); setShowModal(false); }} className="flex items-center gap-1 text-sm text-red-500 hover:text-red-700">
                   <Trash2 className="h-4 w-4" /> Delete
                 </button>
               ) : <div />}

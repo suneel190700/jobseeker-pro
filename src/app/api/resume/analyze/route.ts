@@ -6,57 +6,54 @@ import { analyzeResumeATS } from '@/lib/ai';
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const file = formData.get('resume') as File;
-    const jobDescription = formData.get('jobDescription') as string;
-
-    if (!file || !jobDescription) {
-      return NextResponse.json(
-        { error: 'Resume file and job description are required.' },
-        { status: 400 }
-      );
-    }
-
-    // Check API key
     if (!process.env.ANTHROPIC_API_KEY) {
-      return NextResponse.json(
-        { error: 'AI service not configured. Please add ANTHROPIC_API_KEY.' },
-        { status: 503 }
-      );
+      return NextResponse.json({ error: 'AI service not configured. Add ANTHROPIC_API_KEY.' }, { status: 503 });
     }
 
-    // Extract text from resume
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const resumeText = await extractTextFromFile(buffer, file.type);
+    let resumeText: string;
+    let jobDescription: string;
 
-    if (!resumeText.trim()) {
-      return NextResponse.json(
-        { error: 'Could not extract text from resume. Try a different format.' },
-        { status: 422 }
-      );
+    const contentType = request.headers.get('content-type') || '';
+
+    if (contentType.includes('application/json')) {
+      // JSON body — base resume text sent directly
+      const body = await request.json();
+      resumeText = body.resumeText;
+      jobDescription = body.jobDescription;
+    } else {
+      // FormData — file upload
+      const formData = await request.formData();
+      const file = formData.get('resume') as File;
+      jobDescription = formData.get('jobDescription') as string;
+
+      if (!file) {
+        return NextResponse.json({ error: 'Resume file is required.' }, { status: 400 });
+      }
+
+      const buffer = Buffer.from(await file.arrayBuffer());
+      resumeText = await extractTextFromFile(buffer, file.type);
     }
 
-    // Run ATS analysis via Claude
+    if (!resumeText?.trim()) {
+      return NextResponse.json({ error: 'Could not extract text from resume.' }, { status: 422 });
+    }
+    if (!jobDescription?.trim()) {
+      return NextResponse.json({ error: 'Job description is required.' }, { status: 400 });
+    }
+
     const rawAnalysis = await analyzeResumeATS(resumeText, jobDescription);
 
-    // Parse JSON — handle potential markdown wrapping
     let analysis;
     try {
       const cleaned = rawAnalysis.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       analysis = JSON.parse(cleaned);
     } catch {
-      return NextResponse.json(
-        { error: 'AI returned an unexpected format. Please try again.' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'AI returned unexpected format. Please try again.' }, { status: 500 });
     }
 
     return NextResponse.json(analysis);
   } catch (error: any) {
     console.error('Resume analysis error:', error);
-    return NextResponse.json(
-      { error: error.message || 'Failed to analyze resume.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message || 'Failed to analyze resume.' }, { status: 500 });
   }
 }

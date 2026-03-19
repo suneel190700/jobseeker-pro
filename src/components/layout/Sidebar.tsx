@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/profile', label: 'My Resume', icon: FileText },
   { href: '/resume-optimizer', label: 'Resume Optimizer', icon: FileText },
   { href: '/jobs', label: 'Job Search', icon: Search },
   { href: '/tracker', label: 'Application Tracker', icon: Kanban },
