@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { extractTextFromFile } from '@/lib/resume-parser';
 import { analyzeResumeATS } from '@/lib/ai';

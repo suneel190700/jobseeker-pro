@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { searchJobs } from '@/lib/jobs-api';
 import type { JobSearchFilters } from '@/types';
