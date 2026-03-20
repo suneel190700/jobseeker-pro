@@ -10,23 +10,26 @@ export interface ResumeProfile {
 }
 
 const LOCAL_KEY = 'jobseeker_base_resume';
+const TITLES_KEY = 'jobseeker_target_titles';
 
 export function useResumeProfile() {
   const [profile, setProfile] = useState<ResumeProfile | null>(null);
+  const [titles, setTitles] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     async function load() {
-      // Try Supabase first
       try {
         const db = await getBaseResume();
-        if (db) { setProfile(db); setLoaded(true); return; }
+        if (db) { setProfile(db); }
       } catch {}
-
-      // Fallback to localStorage
       try {
         const raw = localStorage.getItem(LOCAL_KEY);
-        if (raw) setProfile(JSON.parse(raw));
+        if (raw && !profile) setProfile(JSON.parse(raw));
+      } catch {}
+      try {
+        const t = localStorage.getItem(TITLES_KEY);
+        if (t) setTitles(JSON.parse(t));
       } catch {}
       setLoaded(true);
     }
@@ -36,11 +39,7 @@ export function useResumeProfile() {
   const saveResume = useCallback(async (fileName: string, text: string) => {
     const p: ResumeProfile = { fileName, text, uploadedAt: new Date().toISOString() };
     setProfile(p);
-
-    // Save to localStorage immediately
     try { localStorage.setItem(LOCAL_KEY, JSON.stringify(p)); } catch {}
-
-    // Save to Supabase in background
     try { await saveBaseResume(fileName, text); } catch {}
   }, []);
 
@@ -50,5 +49,20 @@ export function useResumeProfile() {
     try { await deleteBaseResume(); } catch {}
   }, []);
 
-  return { profile, loaded, saveResume, clearResume };
+  const saveTitles = useCallback((newTitles: string[]) => {
+    setTitles(newTitles);
+    try { localStorage.setItem(TITLES_KEY, JSON.stringify(newTitles)); } catch {}
+  }, []);
+
+  const addTitle = useCallback((title: string) => {
+    if (!title.trim() || titles.includes(title.trim())) return;
+    const updated = [...titles, title.trim()];
+    saveTitles(updated);
+  }, [titles, saveTitles]);
+
+  const removeTitle = useCallback((title: string) => {
+    saveTitles(titles.filter((t) => t !== title));
+  }, [titles, saveTitles]);
+
+  return { profile, titles, loaded, saveResume, clearResume, saveTitles, addTitle, removeTitle };
 }
