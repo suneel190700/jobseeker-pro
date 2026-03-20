@@ -4,33 +4,22 @@ import { useState, useEffect } from 'react';
 import {
   Search, MapPin, Loader2, Bookmark, BookmarkCheck,
   ExternalLink, Building2, Clock, DollarSign, Briefcase,
-  CheckCircle, Zap, FileText, AlertCircle,
+  CheckCircle, Zap, AlertCircle, Target,
 } from 'lucide-react';
 import { useTracker } from '@/hooks/useTracker';
 import { useResumeProfile } from '@/hooks/useResumeProfile';
+import { getCachedScores, setCachedScore } from '@/lib/db';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
 interface Job {
-  id: string;
-  title: string;
-  company: string;
-  company_logo: string | null;
-  location: string;
-  remote_type: string;
-  description: string;
-  salary_min: number | null;
-  salary_max: number | null;
-  posted_date: string;
-  source_url: string;
-  employment_type: string;
+  id: string; title: string; company: string; location: string;
+  remote_type: string; description: string;
+  salary_min: number | null; salary_max: number | null;
+  posted_date: string; source_url: string; employment_type: string;
 }
 
-interface MatchScore {
-  index: number;
-  score: number;
-  reason: string;
-}
+interface ScoreData { score: number; reason: string; }
 
 export default function JobsPage() {
   const [query, setQuery] = useState('');
@@ -42,21 +31,40 @@ export default function JobsPage() {
   const [searched, setSearched] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [error, setError] = useState('');
-  const [matchScores, setMatchScores] = useState<Record<string, MatchScore>>({});
-  const [scoring, setScoring] = useState(false);
+  const [scores, setScores] = useState<Record<string, ScoreData>>({});
+  const [scoringId, setScoringId] = useState<string | null>(null);
 
   const tracker = useTracker();
   const { profile } = useResumeProfile();
   const router = useRouter();
 
+  // Load cached scores on mount
+  useEffect(() => {
+    setScores(getCachedScores());
+  }, []);
+
+  // Persist search state to sessionStorage so back button works
+  useEffect(() => {
+    if (jobs.length > 0) {
+      sessionStorage.setItem('jobseeker_search_results', JSON.stringify({ query, location, remoteOnly, datePosted, jobs }));
+    }
+  }, [jobs, query, location, remoteOnly, datePosted]);
+
+  // Restore search state on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem('jobseeker_search_results');
+      if (saved) {
+        const { query: q, location: l, remoteOnly: r, datePosted: d, jobs: j } = JSON.parse(saved);
+        setQuery(q); setLocation(l); setRemoteOnly(r); setDatePosted(d); setJobs(j); setSearched(true);
+      }
+    } catch {}
+  }, []);
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
-    setLoading(true);
-    setSearched(true);
-    setError('');
-    setSelectedJob(null);
-    setMatchScores({});
+    setLoading(true); setSearched(true); setError(''); setSelectedJob(null);
     try {
       const params = new URLSearchParams({ query });
       if (location) params.set('location', location);
@@ -65,75 +73,49 @@ export default function JobsPage() {
       const res = await fetch(`/api/jobs/search?${params}`);
       const data = await res.json();
       if (data.error) { setError(data.error); setJobs([]); }
-      else {
-        setJobs(data.jobs || []);
-        // Auto-score if resume is uploaded
-        if (profile?.text && data.jobs?.length > 0) {
-          scoreJobs(data.jobs, profile.text);
-        }
-      }
+      else setJobs(data.jobs || []);
     } catch {
-      setError('Failed to search jobs.');
-      setJobs([]);
-    } finally {
-      setLoading(false);
-    }
+      setError('Failed to search jobs.'); setJobs([]);
+    } finally { setLoading(false); }
   };
 
-  const scoreJobs = async (jobList: Job[], resumeText: string) => {
-    setScoring(true);
+  const scoreJob = async (job: Job) => {
+    if (!profile?.text) { toast.error('Upload your base resume first', { action: { label: 'Go to Profile', onClick: () => router.push('/profile') } }); return; }
+    setScoringId(job.id);
     try {
-      const res = await fetch('/api/resume/match', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resumeText,
-          jobs: jobList.slice(0, 10).map((j) => ({
-            title: j.title,
-            company: j.company,
-            description: j.description,
-          })),
-        }),
+      const res = await fetch('/api/resume/analyze', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeText: profile.text, jobDescription: job.description }),
       });
+      if (!res.ok) throw new Error('Scoring failed');
       const data = await res.json();
-      if (data.scores) {
-        const scoreMap: Record<string, MatchScore> = {};
-        data.scores.forEach((s: MatchScore) => {
-          if (jobList[s.index]) {
-            scoreMap[jobList[s.index].id] = s;
-          }
-        });
-        setMatchScores(scoreMap);
-      }
-    } catch (err) {
-      console.error('Scoring failed:', err);
-    } finally {
-      setScoring(false);
-    }
+      const scoreData: ScoreData = {
+        score: data.overall_score,
+        reason: data.score_summary || `ATS Score: ${data.overall_score}/100`,
+      };
+      setScores((prev) => ({ ...prev, [job.id]: scoreData }));
+      setCachedScore(job.id, scoreData.score, scoreData.reason);
+      toast.success(`Score: ${scoreData.score}/100`);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to score');
+    } finally { setScoringId(null); }
   };
 
   const toggleSave = (job: Job) => {
     const isSaved = tracker.cards.some((c) => c.url === job.source_url);
-    if (isSaved) {
-      tracker.unsaveJob(job.source_url);
-      toast('Removed from tracker');
-    } else {
+    if (isSaved) { tracker.unsaveJob(job.source_url); toast('Removed from tracker'); }
+    else {
+      const jobScore = scores[job.id];
       tracker.saveJob({
-        title: job.title,
-        company: job.company,
-        url: job.source_url,
-        location: job.location,
-        salary: formatSalary(job.salary_min, job.salary_max) || undefined,
+        title: job.title, company: job.company, url: job.source_url,
+        location: job.location, salary: formatSalary(job.salary_min, job.salary_max) || undefined,
+        match_score: jobScore?.score, match_reason: jobScore?.reason,
       });
-      toast.success('Saved to Application Tracker!', {
-        description: `${job.company} — ${job.title}`,
-        action: { label: 'View Tracker', onClick: () => router.push('/tracker') },
-      });
+      toast.success('Saved to tracker!', { action: { label: 'View', onClick: () => router.push('/tracker') } });
     }
   };
 
   const optimizeForJob = (job: Job) => {
-    // Store JD in sessionStorage so resume optimizer can pick it up
     sessionStorage.setItem('optimize_jd', job.description);
     sessionStorage.setItem('optimize_title', `${job.title} at ${job.company}`);
     router.push('/resume-optimizer');
@@ -145,46 +127,38 @@ export default function JobsPage() {
     if (!min && !max) return null;
     const fmt = (n: number) => `$${(n / 1000).toFixed(0)}k`;
     if (min && max) return `${fmt(min)} - ${fmt(max)}`;
-    if (min) return `From ${fmt(min)}`;
-    return `Up to ${fmt(max!)}`;
+    if (min) return `From ${fmt(min)}`; return `Up to ${fmt(max!)}`;
   };
 
   const timeAgo = (date: string) => {
     const days = Math.floor((Date.now() - new Date(date).getTime()) / 86400000);
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Yesterday';
-    if (days < 7) return `${days}d ago`;
-    if (days < 30) return `${Math.floor(days / 7)}w ago`;
+    if (days === 0) return 'Today'; if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days}d ago`; if (days < 30) return `${Math.floor(days / 7)}w ago`;
     return `${Math.floor(days / 30)}mo ago`;
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 75) return 'bg-green-100 text-green-700 border-green-200';
-    if (score >= 50) return 'bg-amber-100 text-amber-700 border-amber-200';
+    if (score >= 80) return 'bg-green-100 text-green-700 border-green-200';
+    if (score >= 60) return 'bg-amber-100 text-amber-700 border-amber-200';
     return 'bg-red-100 text-red-700 border-red-200';
   };
-
-  const savedCount = tracker.cards.length;
 
   return (
     <div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Job Search</h1>
-          <p className="mt-1 text-sm text-slate-500">
-            Find jobs across the US.
-            {profile ? ' Match scores are based on your uploaded resume.' : ''}
-          </p>
+          <p className="mt-1 text-sm text-slate-500">Find jobs and score them against your resume.</p>
         </div>
         <div className="flex items-center gap-2">
           {!profile && (
             <a href="/profile" className="flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700 hover:bg-amber-100 transition">
-              <AlertCircle className="h-3.5 w-3.5" /> Upload resume for match scores
+              <AlertCircle className="h-3.5 w-3.5" /> Upload resume for scoring
             </a>
           )}
-          {savedCount > 0 && (
+          {tracker.cards.length > 0 && (
             <a href="/tracker" className="flex items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 text-xs font-medium text-brand-700 hover:bg-brand-100 transition">
-              <BookmarkCheck className="h-3.5 w-3.5" /> {savedCount} saved
+              <BookmarkCheck className="h-3.5 w-3.5" /> {tracker.cards.length} saved
             </a>
           )}
         </div>
@@ -210,47 +184,39 @@ export default function JobsPage() {
             <input type="checkbox" checked={remoteOnly} onChange={(e) => setRemoteOnly(e.target.checked)} className="rounded" /> Remote only
           </label>
           <select value={datePosted} onChange={(e) => setDatePosted(e.target.value)} className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-600">
-            <option value="">Any time</option>
-            <option value="today">Today</option>
-            <option value="3days">Last 3 days</option>
-            <option value="week">This week</option>
-            <option value="month">This month</option>
+            <option value="">Any time</option><option value="today">Today</option><option value="3days">Last 3 days</option><option value="week">This week</option><option value="month">This month</option>
           </select>
-          {scoring && <span className="flex items-center gap-1.5 text-xs text-brand-600"><Loader2 className="h-3 w-3 animate-spin" /> Scoring matches...</span>}
         </div>
       </form>
 
       {error && <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>}
 
-      {/* Results */}
       <div className="mt-6 flex gap-6">
         <div className="flex-1 space-y-3">
           {loading && <div className="flex items-center justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-brand-600" /></div>}
           {!loading && searched && jobs.length === 0 && !error && (
-            <div className="text-center py-16 text-sm text-slate-400">No jobs found. Try different keywords or location.</div>
+            <div className="text-center py-16 text-sm text-slate-400">No jobs found.</div>
           )}
           {!loading && jobs.map((job) => {
             const saved = isJobSaved(job);
-            const match = matchScores[job.id];
+            const jobScore = scores[job.id];
+            const isScoring = scoringId === job.id;
             return (
-              <div
-                key={job.id}
-                onClick={() => setSelectedJob(job)}
-                className={['rounded-xl border p-4 cursor-pointer transition', selectedJob?.id === job.id ? 'border-brand-300 bg-brand-50/30 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'].join(' ')}
-              >
+              <div key={job.id} onClick={() => setSelectedJob(job)}
+                className={['rounded-xl border p-4 cursor-pointer transition', selectedJob?.id === job.id ? 'border-brand-300 bg-brand-50/30 shadow-sm' : 'border-slate-200 hover:border-slate-300 hover:shadow-sm'].join(' ')}>
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-sm font-semibold text-slate-900 truncate">{job.title}</h3>
                       {saved && <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />}
-                      {match && (
-                        <span className={['inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold border', getScoreColor(match.score)].join(' ')}>
-                          {match.score}% match
+                      {jobScore && (
+                        <span className={['inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold border', getScoreColor(jobScore.score)].join(' ')}>
+                          {jobScore.score}% ATS
                         </span>
                       )}
                     </div>
                     <p className="text-sm text-slate-600 flex items-center gap-1 mt-0.5"><Building2 className="h-3 w-3" /> {job.company}</p>
-                    {match && <p className="text-xs text-slate-400 mt-1 italic">{match.reason}</p>}
+                    {jobScore && <p className="text-xs text-slate-400 mt-1 italic">{jobScore.reason}</p>}
                     <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                       <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {job.location}</span>
                       {job.remote_type === 'remote' && <span className="rounded-full bg-green-50 px-2 py-0.5 text-green-600 font-medium">Remote</span>}
@@ -258,13 +224,21 @@ export default function JobsPage() {
                       <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {timeAgo(job.posted_date)}</span>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1 ml-2">
-                    <button onClick={(e) => { e.stopPropagation(); toggleSave(job); }} className="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 transition" title={saved ? 'Remove from tracker' : 'Save to tracker'}>
+                  <div className="flex flex-col items-end gap-1.5 ml-2">
+                    <button onClick={(e) => { e.stopPropagation(); toggleSave(job); }} className="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 transition">
                       {saved ? <BookmarkCheck className="h-5 w-5 text-brand-600" /> : <Bookmark className="h-5 w-5" />}
                     </button>
+                    {!jobScore && profile && (
+                      <button onClick={(e) => { e.stopPropagation(); scoreJob(job); }} disabled={isScoring}
+                        className="flex items-center gap-1 rounded-lg border border-slate-200 px-2 py-1 text-[10px] font-medium text-slate-500 hover:bg-slate-50 hover:text-brand-600 transition disabled:opacity-50">
+                        {isScoring ? <Loader2 className="h-3 w-3 animate-spin" /> : <Target className="h-3 w-3" />}
+                        {isScoring ? 'Scoring...' : 'Get Score'}
+                      </button>
+                    )}
                     {profile && (
-                      <button onClick={(e) => { e.stopPropagation(); optimizeForJob(job); }} className="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 transition" title="Optimize resume for this job">
-                        <Zap className="h-5 w-5" />
+                      <button onClick={(e) => { e.stopPropagation(); optimizeForJob(job); }}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-purple-600 transition" title="Optimize resume">
+                        <Zap className="h-4 w-4" />
                       </button>
                     )}
                   </div>
@@ -281,14 +255,21 @@ export default function JobsPage() {
               <h2 className="text-lg font-bold text-slate-900">{selectedJob.title}</h2>
               <p className="text-sm text-slate-600 mt-1">{selectedJob.company}</p>
 
-              {matchScores[selectedJob.id] && (
-                <div className={['mt-3 rounded-lg p-3 border', getScoreColor(matchScores[selectedJob.id].score)].join(' ')}>
+              {scores[selectedJob.id] && (
+                <div className={['mt-3 rounded-lg p-3 border', getScoreColor(scores[selectedJob.id].score)].join(' ')}>
                   <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold">{matchScores[selectedJob.id].score}%</span>
-                    <span className="text-xs font-medium">Resume Match</span>
+                    <span className="text-lg font-bold">{scores[selectedJob.id].score}%</span>
+                    <span className="text-xs font-medium">ATS Score</span>
                   </div>
-                  <p className="text-xs mt-1 opacity-80">{matchScores[selectedJob.id].reason}</p>
+                  <p className="text-xs mt-1 opacity-80">{scores[selectedJob.id].reason}</p>
                 </div>
+              )}
+
+              {!scores[selectedJob.id] && profile && (
+                <button onClick={() => scoreJob(selectedJob)} disabled={scoringId === selectedJob.id}
+                  className="mt-3 w-full rounded-lg border border-brand-200 bg-brand-50 px-4 py-2.5 text-sm font-medium text-brand-700 hover:bg-brand-100 transition flex items-center justify-center gap-2 disabled:opacity-50">
+                  {scoringId === selectedJob.id ? (<><Loader2 className="h-4 w-4 animate-spin" />Scoring...</>) : (<><Target className="h-4 w-4" />Get ATS Score</>)}
+                </button>
               )}
 
               <div className="mt-3 flex flex-wrap gap-2 text-xs">

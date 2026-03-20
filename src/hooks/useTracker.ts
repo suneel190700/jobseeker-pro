@@ -14,51 +14,40 @@ export interface AppCard {
   url: string;
   location?: string;
   salary?: string;
+  match_score?: number;
+  match_reason?: string;
 }
 
 const STORAGE_KEY = 'jobseeker_tracker_cards';
 
-function loadCards(): AppCard[] {
+function loadLocal(): AppCard[] {
   if (typeof window === 'undefined') return [];
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
 }
 
-function saveCards(cards: AppCard[]) {
+function saveLocal(cards: AppCard[]) {
   if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
-  } catch {
-    // Storage full or unavailable
-  }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cards)); } catch {}
 }
 
 export function useTracker() {
   const [cards, setCards] = useState<AppCard[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  // Load from localStorage on mount
   useEffect(() => {
-    setCards(loadCards());
+    setCards(loadLocal());
     setLoaded(true);
   }, []);
 
-  // Persist on every change (after initial load)
   useEffect(() => {
-    if (loaded) saveCards(cards);
+    if (loaded) saveLocal(cards);
   }, [cards, loaded]);
 
-  // Listen for changes from other tabs/pages
+  // Cross-tab sync
   useEffect(() => {
     const handler = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY && e.newValue) {
-        try {
-          setCards(JSON.parse(e.newValue));
-        } catch {}
+        try { setCards(JSON.parse(e.newValue)); } catch {}
       }
     };
     window.addEventListener('storage', handler);
@@ -66,10 +55,7 @@ export function useTracker() {
   }, []);
 
   const addCard = useCallback((card: Omit<AppCard, 'id'>) => {
-    const newCard: AppCard = {
-      ...card,
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    };
+    const newCard: AppCard = { ...card, id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
     setCards((prev) => [...prev, newCard]);
     return newCard;
   }, []);
@@ -86,47 +72,20 @@ export function useTracker() {
     setCards((prev) => prev.map((c) => (c.id === id ? { ...c, stage: newStage } : c)));
   }, []);
 
-  const isJobSaved = useCallback(
-    (jobId: string) => cards.some((c) => c.url === jobId || c.id === jobId),
-    [cards]
-  );
+  const saveJob = useCallback((job: { title: string; company: string; url: string; location?: string; salary?: string; match_score?: number; match_reason?: string }) => {
+    if (cards.some((c) => c.url === job.url)) return null;
+    return addCard({
+      company: job.company, title: job.title, stage: 'saved',
+      applied_date: new Date().toISOString().split('T')[0],
+      notes: '', url: job.url, location: job.location, salary: job.salary,
+      match_score: job.match_score, match_reason: job.match_reason,
+    });
+  }, [cards, addCard]);
 
-  const saveJob = useCallback(
-    (job: { title: string; company: string; url: string; location?: string; salary?: string }) => {
-      // Check if already saved by URL
-      if (cards.some((c) => c.url === job.url)) return null;
-      return addCard({
-        company: job.company,
-        title: job.title,
-        stage: 'saved',
-        applied_date: new Date().toISOString().split('T')[0],
-        notes: '',
-        url: job.url,
-        location: job.location,
-        salary: job.salary,
-      });
-    },
-    [cards, addCard]
-  );
+  const unsaveJob = useCallback((url: string) => {
+    const card = cards.find((c) => c.url === url);
+    if (card) deleteCard(card.id);
+  }, [cards, deleteCard]);
 
-  const unsaveJob = useCallback(
-    (url: string) => {
-      const card = cards.find((c) => c.url === url);
-      if (card) deleteCard(card.id);
-    },
-    [cards, deleteCard]
-  );
-
-  return {
-    cards,
-    loaded,
-    addCard,
-    updateCard,
-    deleteCard,
-    moveCard,
-    isJobSaved,
-    saveJob,
-    unsaveJob,
-    setCards,
-  };
+  return { cards, loaded, addCard, updateCard, deleteCard, moveCard, saveJob, unsaveJob, setCards };
 }

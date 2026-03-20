@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-
-const RESUME_KEY = 'jobseeker_base_resume';
+import { getBaseResume, saveBaseResume, deleteBaseResume } from '@/lib/db';
 
 export interface ResumeProfile {
   fileName: string;
@@ -10,33 +9,45 @@ export interface ResumeProfile {
   uploadedAt: string;
 }
 
+const LOCAL_KEY = 'jobseeker_base_resume';
+
 export function useResumeProfile() {
   const [profile, setProfile] = useState<ResumeProfile | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(RESUME_KEY);
-      if (raw) setProfile(JSON.parse(raw));
-    } catch {}
-    setLoaded(true);
-  }, []);
+    async function load() {
+      // Try Supabase first
+      try {
+        const db = await getBaseResume();
+        if (db) { setProfile(db); setLoaded(true); return; }
+      } catch {}
 
-  useEffect(() => {
-    if (!loaded) return;
-    if (profile) {
-      localStorage.setItem(RESUME_KEY, JSON.stringify(profile));
-    } else {
-      localStorage.removeItem(RESUME_KEY);
+      // Fallback to localStorage
+      try {
+        const raw = localStorage.getItem(LOCAL_KEY);
+        if (raw) setProfile(JSON.parse(raw));
+      } catch {}
+      setLoaded(true);
     }
-  }, [profile, loaded]);
-
-  const saveResume = useCallback((fileName: string, text: string) => {
-    setProfile({ fileName, text, uploadedAt: new Date().toISOString() });
+    load();
   }, []);
 
-  const clearResume = useCallback(() => {
+  const saveResume = useCallback(async (fileName: string, text: string) => {
+    const p: ResumeProfile = { fileName, text, uploadedAt: new Date().toISOString() };
+    setProfile(p);
+
+    // Save to localStorage immediately
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(p)); } catch {}
+
+    // Save to Supabase in background
+    try { await saveBaseResume(fileName, text); } catch {}
+  }, []);
+
+  const clearResume = useCallback(async () => {
     setProfile(null);
+    try { localStorage.removeItem(LOCAL_KEY); } catch {}
+    try { await deleteBaseResume(); } catch {}
   }, []);
 
   return { profile, loaded, saveResume, clearResume };
