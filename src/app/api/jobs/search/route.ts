@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       if (!seen.has(key)) { seen.add(key); unique.push(job); }
     }
 
-    return NextResponse.json({ jobs: unique, count: unique.length, page, hasMore: unique.length >= 15 });
+    return NextResponse.json({ jobs: unique, count: unique.length, page, hasMore: unique.length >= 10 });
   } catch (error: any) { console.error('Job search error:', error); return NextResponse.json({ error: 'Failed.', jobs: [] }, { status: 500 }); }
 }
 
@@ -61,15 +61,9 @@ async function fetchJSearch(query:string, location:string, remote:boolean, dateP
 }
 
 async function fetchAdzuna(query:string, location:string, page:number): Promise<MappedJob[]> {
-  if (!process.env.ADZUNA_APP_ID || !process.env.ADZUNA_APP_KEY) return [];
-  try {
-    const p = new URLSearchParams({ app_id: process.env.ADZUNA_APP_ID, app_key: process.env.ADZUNA_APP_KEY, results_per_page: '20', what: query, content_type: 'application/json' });
-    if (location) p.set('where', location);
-    const r = await fetch(`${ADZUNA_BASE}/${page}?${p}`);
-    if (!r.ok) { console.error('Adzuna error:', r.status, await r.text()); return []; }
-    const d = await r.json();
-    return (d.results || []).map(mapAdzuna);
-  } catch(e) { console.error('Adzuna fetch error:', e); return []; }
+  const appId = process.env.ADZUNA_APP_ID || '937a7fa3';
+  const appKey = process.env.ADZUNA_APP_KEY || 'b58dd04b479085796120caa7ef7924d7';
+  return fetchAdzunaWithKeys(appId, appKey, query, location, page);
 }
 
 function mapJSearch(item:any): MappedJob {
@@ -83,6 +77,20 @@ function mapJSearch(item:any): MappedJob {
   return { id: item.job_id || Math.random().toString(36).slice(2), title: item.job_title || 'Untitled', company: item.employer_name || 'Unknown', location: item.job_city ? `${item.job_city}, ${item.job_state||''}` : item.job_country || 'US', remote_type: item.job_is_remote ? 'remote' : 'onsite', description: desc, salary_min: item.job_min_salary, salary_max: item.job_max_salary, posted_date: item.job_posted_at_datetime_utc || new Date().toISOString(), source_url: item.job_apply_link || item.job_google_link || '#', source: 'JSearch', employment_type: item.job_employment_type || '' };
 }
 
-function mapAdzuna(item:any): MappedJob {
+async function fetchAdzunaWithKeys(appId:string, appKey:string, query:string, location:string, page:number): Promise<MappedJob[]> {
+  try {
+    const p = new URLSearchParams({ app_id: appId, app_key: appKey, results_per_page: '20', what: query, content_type: 'application/json' });
+    if (location) p.set('where', location);
+    const url = `${ADZUNA_BASE}/${page}?${p}`;
+    console.log('Adzuna URL:', url);
+    const r = await fetch(url);
+    if (!r.ok) { console.error('Adzuna error:', r.status, await r.text()); return []; }
+    const d = await r.json();
+    console.log('Adzuna results:', d.results?.length || 0);
+    return (d.results || []).map(mapAdzunaItem);
+  } catch(e) { console.error('Adzuna fetch error:', e); return []; }
+}
+
+function mapAdzunaItem(item:any): MappedJob {
   return { id: `adz_${item.id || Math.random().toString(36).slice(2)}`, title: item.title || 'Untitled', company: item.company?.display_name || 'Unknown', location: item.location?.display_name || 'US', remote_type: (item.title||'').toLowerCase().includes('remote') ? 'remote' : 'onsite', description: item.description || '', salary_min: item.salary_min || null, salary_max: item.salary_max || null, posted_date: item.created || new Date().toISOString(), source_url: item.redirect_url || '#', source: 'Adzuna', employment_type: item.contract_time === 'full_time' ? 'FULLTIME' : item.contract_time || '' };
 }

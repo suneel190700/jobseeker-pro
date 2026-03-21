@@ -31,7 +31,7 @@ export default function JobsPage() {
 
   const doSearch=async(q:string,loc:string,pg:number=1,append:boolean=false)=>{if(!q.trim())return;if(append)setLoadingMore(true);else{setLoading(true);setPage(1);}setSearched(true);setError('');if(!append)setSelectedJob(null);
     try{const p=new URLSearchParams({query:experienceLevel?`${experienceLevel} ${q}`:q});if(loc)p.set('location',loc);if(remoteFilter==='remote')p.set('remote','true');if(datePosted)p.set('date_posted',datePosted);if(employmentType)p.set('type',employmentType);
-      p.set('page',String(pg));const r=await fetch(`/api/jobs/search?${p}`);const d=await r.json();if(d.error){setError(d.error);setJobs([]);}else{setJobs(d.jobs||[]);sessionStorage.setItem('jobseeker_search',JSON.stringify({query:q,location:loc,jobs:d.jobs||[]}));}}catch{setError('Failed.');setJobs([]);}finally{setLoading(false);setLoadingMore(false);}};
+      p.set('page',String(pg));const r=await fetch(`/api/jobs/search?${p}`);const d=await r.json();if(d.error){setError(d.error);if(!append)setJobs([]);}else{if(append){setJobs(prev=>[...prev,...(d.jobs||[])]);}else{setJobs(d.jobs||[]);}setHasMore(d.hasMore===true);setPage(pg);if(!append)sessionStorage.setItem('jobseeker_search',JSON.stringify({query:q,location:loc,jobs:d.jobs||[]}));}}catch{setError('Failed.');if(!append)setJobs([]);}finally{setLoading(false);setLoadingMore(false);}};
 
   const handleSearch=(e?:React.FormEvent,oq?:string)=>{if(e)e.preventDefault();autoLoaded.current=true;const q=oq||query;if(oq)setQuery(oq);doSearch(q,location);};
 
