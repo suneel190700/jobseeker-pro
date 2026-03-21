@@ -21,7 +21,11 @@ export async function POST(request: NextRequest) {
   try {
     const { resumeText, jobDescription, jobTitle } = await request.json();
     if (!resumeText?.trim() || !jobDescription?.trim()) return NextResponse.json({ error: 'Resume and JD required.' }, { status: 400 });
-    const text = await callAI({ tier: 'balanced', system: PROMPT, user: `ORIGINAL RESUME:\n${resumeText}\n\nTARGET JOB${jobTitle ? ` (${jobTitle})` : ''}:\n${jobDescription}\n\nOptimize to score 95+. Be aggressive with keywords. Fill pages completely.`, maxTokens: 6000 });
-    return NextResponse.json({ resume: parseJSON(text) });
+    const text = await callAI({ tier: 'balanced', system: PROMPT, user: `ORIGINAL RESUME:\n${resumeText}\n\nTARGET JOB${jobTitle ? ` (${jobTitle})` : ''}:\n${jobDescription}\n\nOptimize to score 95+. Be aggressive with keywords. Fill pages completely.`, maxTokens: 8192 });
+    try { return NextResponse.json({ resume: parseJSON(text) }); } catch (parseErr) {
+      console.error('Generate JSON parse failed, retrying...', parseErr);
+      const text2 = await callAI({ tier: 'balanced', system: PROMPT + '\n\nCRITICAL: Return ONLY valid JSON. No markdown. Keep compact.', user: `RESUME:\n${resumeText}\n\nJOB:${jobTitle || ''}\n\nJD:\n${jobDescription}`, maxTokens: 8192 });
+      return NextResponse.json({ resume: parseJSON(text2) });
+    }
   } catch (error: any) { console.error('Generate error:', error); return NextResponse.json({ error: error.message || 'Failed.' }, { status: 500 }); }
 }

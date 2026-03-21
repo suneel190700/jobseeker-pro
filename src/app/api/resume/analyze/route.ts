@@ -16,7 +16,12 @@ export async function POST(request: NextRequest) {
     if (!resumeText?.trim()) return NextResponse.json({ error: 'Could not extract text.' }, { status: 422 });
     if (!jobDescription?.trim()) return NextResponse.json({ error: 'Job description required.' }, { status: 400 });
 
-    const text = await callAI({ tier: 'cheap', system: PROMPT, user: `RESUME:\n${resumeText.slice(0, 4000)}\n\nJOB DESCRIPTION:\n${jobDescription.slice(0, 4000)}` });
-    return NextResponse.json(parseJSON(text));
+    const text = await callAI({ tier: 'cheap', system: PROMPT, user: `RESUME:\n${resumeText}\n\nJOB DESCRIPTION:\n${jobDescription}`, maxTokens: 8000 });
+    try { return NextResponse.json(parseJSON(text)); } catch (parseErr) {
+      console.error('JSON parse failed, retrying...', parseErr);
+      // Retry once with explicit instruction
+      const text2 = await callAI({ tier: 'cheap', system: PROMPT + '\n\nCRITICAL: Return ONLY a single valid JSON object. No text before or after. Keep response under 4000 tokens.', user: `RESUME:\n${resumeText}\n\nJOB DESCRIPTION:\n${jobDescription}`, maxTokens: 8000 });
+      return NextResponse.json(parseJSON(text2));
+    }
   } catch (error: any) { console.error('Analyze error:', error); return NextResponse.json({ error: error.message || 'Failed.' }, { status: 500 }); }
 }
