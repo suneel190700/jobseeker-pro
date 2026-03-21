@@ -77,7 +77,7 @@ export async function callAI(opts: {
     const res = await fetch(`${config.baseUrl}/models/${config.model}:generateContent?key=${config.apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: opts.system }] }, contents: [{ role: 'user', parts: [{ text: opts.user }] }], generationConfig: { maxOutputTokens: maxTokens } }),
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: opts.system }] }, contents: [{ role: 'user', parts: [{ text: opts.user }] }], generationConfig: { maxOutputTokens: maxTokens, responseMimeType: 'application/json' } }),
     });
     if (!res.ok) { const e = await res.text(); throw new Error(`Google AI error ${res.status}: ${e}`); }
     const data = await res.json();
@@ -88,9 +88,25 @@ export async function callAI(opts: {
 }
 
 export function parseJSON(text: string): any {
-  const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-  // Try to find JSON in the response
-  const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-  if (jsonMatch) return JSON.parse(jsonMatch[0]);
-  return JSON.parse(cleaned);
+  // Strip markdown fences
+  let cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+  // Remove any leading text before the first {
+  const firstBrace = cleaned.indexOf('{');
+  if (firstBrace > 0) cleaned = cleaned.slice(firstBrace);
+  // Remove any trailing text after the last }
+  const lastBrace = cleaned.lastIndexOf('}');
+  if (lastBrace > 0) cleaned = cleaned.slice(0, lastBrace + 1);
+  // Fix common JSON issues: trailing commas
+  cleaned = cleaned.replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+  // Fix unescaped newlines in strings
+  cleaned = cleaned.replace(/(?<=":[ ]*"[^"]*)\n/g, '\\n');
+  try { return JSON.parse(cleaned); } catch (e) {
+    // Last resort: try to find the outermost JSON object
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (match) {
+      const fixed = match[0].replace(/,\s*}/g, '}').replace(/,\s*]/g, ']');
+      return JSON.parse(fixed);
+    }
+    throw e;
+  }
 }
