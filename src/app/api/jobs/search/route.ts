@@ -79,7 +79,7 @@ function mapJSearch(item:any): MappedJob {
 
 async function fetchAdzunaWithKeys(appId:string, appKey:string, query:string, location:string, page:number): Promise<MappedJob[]> {
   try {
-    const p = new URLSearchParams({ app_id: appId, app_key: appKey, results_per_page: '20', what: query, content_type: 'application/json' });
+    const p = new URLSearchParams({ app_id: appId, app_key: appKey, results_per_page: '20', what: query });
     if (location) p.set('where', location);
     const url = `${ADZUNA_BASE}/${page}?${p}`;
     console.log('Adzuna URL:', url);
