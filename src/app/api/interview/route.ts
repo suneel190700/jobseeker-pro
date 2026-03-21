@@ -1,24 +1,16 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { callAI, parseJSON } from '@/lib/ai-router';
 
 export async function POST(request: NextRequest) {
   try {
-    if (!process.env.ANTHROPIC_API_KEY) return NextResponse.json({ error: 'AI not configured.' }, { status: 503 });
-    const { resumeText, jobDescription, jobTitle, companyName, type } = await request.json();
+    const { resumeText, jobDescription, jobTitle, companyName, prepType } = await request.json();
     if (!resumeText?.trim() || !jobDescription?.trim()) return NextResponse.json({ error: 'Resume and JD required.' }, { status: 400 });
-
-    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     let sys = '';
-    if (type === 'questions') {
-      sys = `Generate interview questions for this role. Return JSON: {"behavioral":[{"question":"","why_asked":"","tip":""}],"technical":[{"question":"","why_asked":"","tip":""}],"system_design":[{"question":"","why_asked":"","tip":""}],"role_specific":[{"question":"","why_asked":"","tip":""}]}. 3-4 per category, specific to the JD. ONLY JSON.`;
-    } else if (type === 'star') {
-      sys = `Convert resume bullets to STAR stories. Return JSON: {"stories":[{"title":"","relevant_for":"","situation":"","task":"","action":"","result":"","keywords":[""]}]}. 5-8 stories. ONLY JSON.`;
-    } else {
-      sys = `Company research brief. Return JSON: {"company_overview":"","recent_news":"topics to research","culture_values":[""],"interview_talking_points":[""],"questions_to_ask":[""],"red_flags_to_watch":[""]}. ONLY JSON.`;
-    }
-    const msg = await anthropic.messages.create({ model: 'claude-sonnet-4-20250514', max_tokens: 3000, system: sys, messages: [{ role: 'user', content: `RESUME:\n${resumeText.slice(0,3000)}\nJOB: ${jobTitle||'role'} at ${companyName||'company'}\nJD:\n${jobDescription.slice(0,3000)}` }] });
-    const c = msg.content[0]; if (c.type !== 'text') return NextResponse.json({ error: 'Unexpected.' }, { status: 500 });
-    return NextResponse.json(JSON.parse(c.text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()));
-  } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
+    if (prepType === 'questions') sys = 'Generate interview questions. Return ONLY JSON: {"technical_questions":[{"question":"","why_asked":"","tip":""}],"behavioral_questions":[{"question":"","what_they_want":"","tip":""}],"system_design":[{"question":"","context":""}],"questions_to_ask":[{"question":"","why_good":""}]}. 5 technical, 5 behavioral, 2 system design, 3 to ask.';
+    else if (prepType === 'star') sys = 'Create STAR stories from resume. Return ONLY JSON: {"stories":[{"title":"","best_for_question":"","situation":"","task":"","action":"","result":""}]}. 5-7 stories. No fabrication.';
+    else sys = `Company research brief for ${companyName || 'the company'}. Return ONLY JSON: {"company_overview":"","recent_news":"","culture_values":[],"tech_stack_likely":[],"talking_points":[],"why_you_fit":""}`;
+    const text = await callAI({ tier: 'cheap', system: sys, user: `RESUME:\n${resumeText.slice(0, 3000)}\n\nJOB: ${jobTitle || 'role'} at ${companyName || 'company'}\n\nJD:\n${jobDescription.slice(0, 3000)}` });
+    return NextResponse.json(parseJSON(text));
+  } catch (error: any) { console.error('Interview error:', error); return NextResponse.json({ error: error.message || 'Failed.' }, { status: 500 }); }
 }

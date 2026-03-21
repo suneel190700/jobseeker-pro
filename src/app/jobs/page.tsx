@@ -13,6 +13,7 @@ interface ScoreData { score:number; reason:string; }
 export default function JobsPage() {
   const [query,setQuery]=useState('');const [location,setLocation]=useState('');const [remoteFilter,setRemoteFilter]=useState('');const [datePosted,setDatePosted]=useState('');const [employmentType,setEmploymentType]=useState('');const [experienceLevel,setExperienceLevel]=useState('');const [showFilters,setShowFilters]=useState(false);
   const [jobs,setJobs]=useState<Job[]>([]);const [loading,setLoading]=useState(false);const [searched,setSearched]=useState(false);const [selectedJob,setSelectedJob]=useState<Job|null>(null);const [error,setError]=useState('');const [scores,setScores]=useState<Record<string,ScoreData>>({});const [scoringId,setScoringId]=useState<string|null>(null);
+  const [page,setPage]=useState(1);const [hasMore,setHasMore]=useState(false);const [loadingMore,setLoadingMore]=useState(false);
   const autoLoaded=useRef(false);const tracker=useTracker();const {profile,titles,loaded:pLoaded}=useResumeProfile();const router=useRouter();
 
   useEffect(()=>{getCachedScores().then(s=>setScores(s)).catch(()=>{});},[]);
@@ -28,9 +29,9 @@ export default function JobsPage() {
     return job.description||'';
   };
 
-  const doSearch=async(q:string,loc:string)=>{if(!q.trim())return;setLoading(true);setSearched(true);setError('');setSelectedJob(null);
+  const doSearch=async(q:string,loc:string,pg:number=1,append:boolean=false)=>{if(!q.trim())return;if(append)setLoadingMore(true);else{setLoading(true);setPage(1);}setSearched(true);setError('');if(!append)setSelectedJob(null);
     try{const p=new URLSearchParams({query:experienceLevel?`${experienceLevel} ${q}`:q});if(loc)p.set('location',loc);if(remoteFilter==='remote')p.set('remote','true');if(datePosted)p.set('date_posted',datePosted);if(employmentType)p.set('type',employmentType);
-      const r=await fetch(`/api/jobs/search?${p}`);const d=await r.json();if(d.error){setError(d.error);setJobs([]);}else{setJobs(d.jobs||[]);sessionStorage.setItem('jobseeker_search',JSON.stringify({query:q,location:loc,jobs:d.jobs||[]}));}}catch{setError('Failed.');setJobs([]);}finally{setLoading(false);}};
+      p.set('page',String(pg));const r=await fetch(`/api/jobs/search?${p}`);const d=await r.json();if(d.error){setError(d.error);setJobs([]);}else{setJobs(d.jobs||[]);sessionStorage.setItem('jobseeker_search',JSON.stringify({query:q,location:loc,jobs:d.jobs||[]}));}}catch{setError('Failed.');setJobs([]);}finally{setLoading(false);setLoadingMore(false);}};
 
   const handleSearch=(e?:React.FormEvent,oq?:string)=>{if(e)e.preventDefault();autoLoaded.current=true;const q=oq||query;if(oq)setQuery(oq);doSearch(q,location);};
 
@@ -100,6 +101,9 @@ export default function JobsPage() {
               </div>
             </div>
           </div>);})}
+        {hasMore&&!loading&&searched&&jobs.length>0&&(
+          <button onClick={()=>doSearch(query,location,page+1,true)} disabled={loadingMore} className="w-full rounded-xl border border-gray-200 bg-white py-3 text-sm font-semibold text-brand-600 hover:bg-brand-50 transition flex items-center justify-center gap-2 mt-3">{loadingMore?<><Loader2 className="h-4 w-4 animate-spin"/>Loading more...</>:'Load more jobs'}</button>
+        )}
       </div>
 
       {selectedJob&&(
