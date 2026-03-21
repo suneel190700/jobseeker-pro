@@ -1,181 +1,142 @@
 import { createClient } from '@/lib/supabase/client';
 
-// ---- Base Resume (stored in profiles table) ----
-
-export async function getBaseResume(): Promise<{ fileName: string; text: string; uploadedAt: string } | null> {
+// ========== HELPERS ==========
+async function getUser() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  return { supabase, user };
+}
+
+// ========== PROFILE / PERSONAL DETAILS ==========
+export async function getProfile() {
+  const { supabase, user } = await getUser();
   if (!user) return null;
+  const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+  return data;
+}
 
-  const { data } = await supabase
-    .from('resumes')
-    .select('file_name, raw_text, created_at')
-    .eq('user_id', user.id)
-    .eq('version_label', 'base')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+export async function saveProfile(details: { full_name: string; email: string; phone: string; location: string; linkedin_url: string; github_url: string; target_titles: string[] }) {
+  const { supabase, user } = await getUser();
+  if (!user) return;
+  await supabase.from('profiles').update({
+    full_name: details.full_name,
+    phone: details.phone,
+    location: details.location,
+    linkedin_url: details.linkedin_url,
+    github_url: details.github_url,
+    target_titles: details.target_titles,
+    updated_at: new Date().toISOString(),
+  }).eq('id', user.id);
+}
 
-  if (!data || !data.raw_text) return null;
+// ========== BASE RESUME ==========
+export async function getBaseResume() {
+  const { supabase, user } = await getUser();
+  if (!user) return null;
+  const { data } = await supabase.from('resumes').select('*').eq('user_id', user.id).eq('version_label', 'base').order('created_at', { ascending: false }).limit(1).single();
+  if (!data) return null;
   return { fileName: data.file_name, text: data.raw_text, uploadedAt: data.created_at };
 }
 
-export async function saveBaseResume(fileName: string, text: string): Promise<boolean> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-
-  // Upsert — delete old base resume, insert new
+export async function saveBaseResume(fileName: string, text: string) {
+  const { supabase, user } = await getUser();
+  if (!user) return;
   await supabase.from('resumes').delete().eq('user_id', user.id).eq('version_label', 'base');
-
-  const { error } = await supabase.from('resumes').insert({
-    user_id: user.id,
-    file_name: fileName,
-    file_url: '',
-    raw_text: text,
-    status: 'parsed',
-    version_label: 'base',
-  });
-
-  return !error;
+  await supabase.from('resumes').insert({ user_id: user.id, file_name: fileName, file_url: '', raw_text: text, status: 'parsed', version_label: 'base' });
 }
 
-export async function deleteBaseResume(): Promise<boolean> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-
-  const { error } = await supabase.from('resumes').delete().eq('user_id', user.id).eq('version_label', 'base');
-  return !error;
+export async function deleteBaseResume() {
+  const { supabase, user } = await getUser();
+  if (!user) return;
+  await supabase.from('resumes').delete().eq('user_id', user.id).eq('version_label', 'base');
 }
 
-// ---- Applications (Tracker Cards) ----
-
-export interface TrackerCard {
-  id: string;
-  company: string;
-  title: string;
-  stage: string;
-  applied_date: string;
-  notes: string;
-  url: string;
-  location?: string;
-  salary?: string;
-  match_score?: number;
-  match_reason?: string;
-}
-
-export async function getTrackerCards(): Promise<TrackerCard[]> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+// ========== RESUME VERSIONS ==========
+export async function getResumeVersions() {
+  const { supabase, user } = await getUser();
   if (!user) return [];
-
-  const { data } = await supabase
-    .from('applications')
-    .select(`
-      id, stage, applied_date, follow_up_date, salary_offered, contacts, created_at, updated_at,
-      saved_jobs (id, title, company, location, remote_type, description, salary_min, salary_max, source_url, match_score)
-    `)
-    .eq('user_id', user.id)
-    .order('updated_at', { ascending: false });
-
-  if (!data) return [];
-
-  return data.map((app: any) => ({
-    id: app.id,
-    company: app.saved_jobs?.company || '',
-    title: app.saved_jobs?.title || '',
-    stage: app.stage || 'saved',
-    applied_date: app.applied_date || '',
-    notes: '',
-    url: app.saved_jobs?.source_url || '',
-    location: app.saved_jobs?.location || '',
-    salary: app.salary_offered ? `$${app.salary_offered}` : '',
-    match_score: app.saved_jobs?.match_score,
+  const { data } = await supabase.from('resume_versions').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+  return (data || []).map((r: any) => ({
+    id: r.id, label: r.label, jobTitle: r.job_title, company: r.company,
+    resumeData: r.resume_data, score: r.score, originalScore: r.original_score, createdAt: r.created_at,
   }));
 }
 
-export async function addTrackerCard(card: Omit<TrackerCard, 'id'>): Promise<string | null> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+export async function saveResumeVersion(label: string, jobTitle: string, company: string, resumeData: any, score: number, originalScore: number) {
+  const { supabase, user } = await getUser();
   if (!user) return null;
-
-  // First create saved_job
-  const { data: job, error: jobError } = await supabase.from('saved_jobs').insert({
-    user_id: user.id,
-    title: card.title,
-    company: card.company,
-    location: card.location || '',
-    source_url: card.url,
-    match_score: card.match_score,
-  }).select('id').single();
-
-  if (jobError || !job) {
-    console.error('Failed to save job:', jobError);
-    return null;
-  }
-
-  // Then create application
-  const { data: app, error: appError } = await supabase.from('applications').insert({
-    user_id: user.id,
-    job_id: job.id,
-    stage: card.stage || 'saved',
-    applied_date: card.applied_date || null,
-  }).select('id').single();
-
-  if (appError) {
-    console.error('Failed to create application:', appError);
-    return null;
-  }
-
-  return app.id;
+  const { data } = await supabase.from('resume_versions').insert({
+    user_id: user.id, label, job_title: jobTitle, company, resume_data: resumeData, score, original_score: originalScore,
+  }).select().single();
+  return data ? { id: data.id, label, jobTitle, company, resumeData, score, originalScore, createdAt: data.created_at } : null;
 }
 
-export async function updateTrackerStage(appId: string, stage: string): Promise<boolean> {
-  const supabase = createClient();
-  const { error } = await supabase
-    .from('applications')
-    .update({ stage, updated_at: new Date().toISOString() })
-    .eq('id', appId);
-  return !error;
+export async function deleteResumeVersion(id: string) {
+  const { supabase, user } = await getUser();
+  if (!user) return;
+  await supabase.from('resume_versions').delete().eq('id', id).eq('user_id', user.id);
 }
 
-export async function deleteTrackerCard(appId: string): Promise<boolean> {
-  const supabase = createClient();
-  const { error } = await supabase.from('applications').delete().eq('id', appId);
-  return !error;
+// ========== TRACKER / APPLICATIONS ==========
+export async function getTrackerCards() {
+  const { supabase, user } = await getUser();
+  if (!user) return [];
+  const { data } = await supabase.from('applications').select('*').eq('user_id', user.id).order('created_at', { ascending: false });
+  return (data || []).map((a: any) => ({
+    id: a.id, title: a.title || '', company: a.company || '', stage: a.stage || 'saved',
+    date: a.applied_date || a.created_at, url: a.url || '', location: a.location || '',
+    salary: a.salary || '', notes: a.notes || '', match_score: a.match_score,
+  }));
 }
 
-export async function updateJobMatchScore(jobUrl: string, score: number): Promise<boolean> {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-
-  const { error } = await supabase
-    .from('saved_jobs')
-    .update({ match_score: score })
-    .eq('user_id', user.id)
-    .eq('source_url', jobUrl);
-  return !error;
+export async function saveTrackerCard(card: { title: string; company: string; stage?: string; url?: string; location?: string; salary?: string; notes?: string; match_score?: number }) {
+  const { supabase, user } = await getUser();
+  if (!user) return null;
+  const { data } = await supabase.from('applications').insert({
+    user_id: user.id, title: card.title, company: card.company, stage: card.stage || 'saved',
+    url: card.url || '', location: card.location || '', salary: card.salary || '',
+    notes: card.notes || '', match_score: card.match_score,
+  }).select().single();
+  return data ? { id: data.id, ...card, stage: card.stage || 'saved', date: data.created_at } : null;
 }
 
-// ---- Job Scores Cache (localStorage for non-saved jobs) ----
-
-const SCORE_CACHE_KEY = 'jobseeker_score_cache';
-
-export function getCachedScores(): Record<string, { score: number; reason: string }> {
-  if (typeof window === 'undefined') return {};
-  try {
-    const raw = localStorage.getItem(SCORE_CACHE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch { return {}; }
+export async function updateTrackerCard(id: string, updates: any) {
+  const { supabase, user } = await getUser();
+  if (!user) return;
+  await supabase.from('applications').update({
+    ...updates, updated_at: new Date().toISOString(),
+  }).eq('id', id).eq('user_id', user.id);
 }
 
-export function setCachedScore(jobId: string, score: number, reason: string) {
-  if (typeof window === 'undefined') return;
-  try {
-    const cache = getCachedScores();
-    cache[jobId] = { score, reason };
-    localStorage.setItem(SCORE_CACHE_KEY, JSON.stringify(cache));
-  } catch {}
+export async function deleteTrackerCard(id: string) {
+  const { supabase, user } = await getUser();
+  if (!user) return;
+  await supabase.from('applications').delete().eq('id', id).eq('user_id', user.id);
+}
+
+// ========== SCORE CACHE ==========
+export async function getCachedScores(): Promise<Record<string, { score: number; reason: string }>> {
+  const { supabase, user } = await getUser();
+  if (!user) return {};
+  const { data } = await supabase.from('score_cache').select('*').eq('user_id', user.id);
+  const cache: Record<string, { score: number; reason: string }> = {};
+  (data || []).forEach((s: any) => { cache[s.job_external_id] = { score: s.score, reason: s.reason }; });
+  return cache;
+}
+
+export async function setCachedScore(jobId: string, score: number, reason: string, analysisData?: any) {
+  const { supabase, user } = await getUser();
+  if (!user) return;
+  await supabase.from('score_cache').upsert({
+    user_id: user.id, job_external_id: jobId, score, reason, analysis_data: analysisData,
+  }, { onConflict: 'user_id,job_external_id' });
+}
+
+// ========== BACKWARD COMPAT (localStorage fallback for non-logged-in) ==========
+export function getLocalScoreCache(): Record<string, { score: number; reason: string }> {
+  try { const r = localStorage.getItem('jobseeker_score_cache'); return r ? JSON.parse(r) : {}; } catch { return {}; }
+}
+
+export function setLocalScoreCache(jobId: string, score: number, reason: string) {
+  try { const c = getLocalScoreCache(); c[jobId] = { score, reason }; localStorage.setItem('jobseeker_score_cache', JSON.stringify(c)); } catch {}
 }

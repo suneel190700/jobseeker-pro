@@ -1,91 +1,54 @@
 'use client';
-
 import { useState, useEffect, useCallback } from 'react';
+import { getTrackerCards, saveTrackerCard, updateTrackerCard, deleteTrackerCard } from '@/lib/db';
 
-export type Stage = 'saved' | 'applied' | 'screening' | 'interview' | 'offer' | 'rejected';
-
-export interface AppCard {
-  id: string;
-  company: string;
-  title: string;
-  stage: Stage;
-  applied_date: string;
-  notes: string;
-  url: string;
-  location?: string;
-  salary?: string;
-  match_score?: number;
-  match_reason?: string;
-}
-
-const STORAGE_KEY = 'jobseeker_tracker_cards';
-
-function loadLocal(): AppCard[] {
-  if (typeof window === 'undefined') return [];
-  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
-}
-
-function saveLocal(cards: AppCard[]) {
-  if (typeof window === 'undefined') return;
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cards)); } catch {}
+export interface TrackerCard {
+  id: string; title: string; company: string; stage: string;
+  date: string; url: string; location: string; salary: string;
+  notes: string; match_score?: number;
 }
 
 export function useTracker() {
-  const [cards, setCards] = useState<AppCard[]>([]);
+  const [cards, setCards] = useState<TrackerCard[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    setCards(loadLocal());
-    setLoaded(true);
+    async function load() {
+      try { const c = await getTrackerCards(); setCards(c); } catch (e) { console.error(e); }
+      setLoaded(true);
+    }
+    load();
   }, []);
 
-  useEffect(() => {
-    if (loaded) saveLocal(cards);
-  }, [cards, loaded]);
-
-  // Cross-tab sync
-  useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY && e.newValue) {
-        try { setCards(JSON.parse(e.newValue)); } catch {}
-      }
-    };
-    window.addEventListener('storage', handler);
-    return () => window.removeEventListener('storage', handler);
+  const saveJob = useCallback(async (job: { title: string; company: string; url?: string; location?: string; salary?: string; match_score?: number }) => {
+    const card = await saveTrackerCard({ ...job, stage: 'saved' });
+    if (card) setCards(p => [card as any, ...p]);
   }, []);
 
-  const addCard = useCallback((card: Omit<AppCard, 'id'>) => {
-    const newCard: AppCard = { ...card, id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6) };
-    setCards((prev) => [...prev, newCard]);
-    return newCard;
+  const unsaveJob = useCallback(async (url: string) => {
+    const card = cards.find(c => c.url === url);
+    if (card) { try { await deleteTrackerCard(card.id); } catch {} setCards(p => p.filter(c => c.url !== url)); }
+  }, [cards]);
+
+  const addCard = useCallback(async (card: Partial<TrackerCard>) => {
+    const saved = await saveTrackerCard({ title: card.title || '', company: card.company || '', stage: card.stage, url: card.url, location: card.location, salary: card.salary, notes: card.notes, match_score: card.match_score });
+    if (saved) setCards(p => [saved as any, ...p]);
   }, []);
 
-  const updateCard = useCallback((id: string, updates: Partial<AppCard>) => {
-    setCards((prev) => prev.map((c) => (c.id === id ? { ...c, ...updates } : c)));
+  const moveCard = useCallback(async (id: string, stage: string) => {
+    try { await updateTrackerCard(id, { stage }); } catch {}
+    setCards(p => p.map(c => c.id === id ? { ...c, stage } : c));
   }, []);
 
-  const deleteCard = useCallback((id: string) => {
-    setCards((prev) => prev.filter((c) => c.id !== id));
+  const editCard = useCallback(async (id: string, updates: Partial<TrackerCard>) => {
+    try { await updateTrackerCard(id, updates); } catch {}
+    setCards(p => p.map(c => c.id === id ? { ...c, ...updates } : c));
   }, []);
 
-  const moveCard = useCallback((id: string, newStage: Stage) => {
-    setCards((prev) => prev.map((c) => (c.id === id ? { ...c, stage: newStage } : c)));
+  const removeCard = useCallback(async (id: string) => {
+    try { await deleteTrackerCard(id); } catch {}
+    setCards(p => p.filter(c => c.id !== id));
   }, []);
 
-  const saveJob = useCallback((job: { title: string; company: string; url: string; location?: string; salary?: string; match_score?: number; match_reason?: string }) => {
-    if (cards.some((c) => c.url === job.url)) return null;
-    return addCard({
-      company: job.company, title: job.title, stage: 'saved',
-      applied_date: new Date().toISOString().split('T')[0],
-      notes: '', url: job.url, location: job.location, salary: job.salary,
-      match_score: job.match_score, match_reason: job.match_reason,
-    });
-  }, [cards, addCard]);
-
-  const unsaveJob = useCallback((url: string) => {
-    const card = cards.find((c) => c.url === url);
-    if (card) deleteCard(card.id);
-  }, [cards, deleteCard]);
-
-  return { cards, loaded, addCard, updateCard, deleteCard, moveCard, saveJob, unsaveJob, setCards };
+  return { cards, loaded, saveJob, unsaveJob, addCard, moveCard, editCard, removeCard };
 }

@@ -1,31 +1,20 @@
 import type { Metadata } from 'next';
-import { Toaster } from 'sonner';
 import '@/styles/globals.css';
+import { Toaster } from 'sonner';
 
-export const metadata: Metadata = {
-  title: 'JobSeeker Pro — Land Your Next Role',
-  description:
-    'AI-powered resume optimization, job matching, and application tracking for US job seekers.',
-};
+export const metadata: Metadata = { title: 'JobSeeker Pro', description: 'AI-powered job search platform' };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
+        <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
       </head>
-      <body className="min-h-screen bg-white font-sans" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+      <body>
         {children}
-        <Toaster position="bottom-right" richColors />
+        <Toaster theme="dark" position="bottom-right" richColors />
       </body>
     </html>
   );

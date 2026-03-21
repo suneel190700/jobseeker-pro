@@ -1,43 +1,34 @@
 'use client';
-
 import { useState, useEffect, useCallback } from 'react';
+import { getResumeVersions, saveResumeVersion, deleteResumeVersion as dbDeleteVersion } from '@/lib/db';
 
 export interface ResumeVersion {
-  id: string;
-  label: string;
-  jobTitle: string;
-  company: string;
-  resumeData: any;
-  score: number;
-  originalScore: number;
-  createdAt: string;
+  id: string; label: string; jobTitle: string; company: string;
+  resumeData: any; score: number; originalScore: number; createdAt: string;
 }
-
-const VERSIONS_KEY = 'jobseeker_resume_versions';
-const HISTORY_KEY = 'jobseeker_score_history';
 
 export function useResumeVersions() {
   const [versions, setVersions] = useState<ResumeVersion[]>([]);
-  const [history, setHistory] = useState<{ date: string; score: number; job: string }[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    try { const v = localStorage.getItem(VERSIONS_KEY); if (v) setVersions(JSON.parse(v)); } catch {}
-    try { const h = localStorage.getItem(HISTORY_KEY); if (h) setHistory(JSON.parse(h)); } catch {}
-    setLoaded(true);
+    async function load() {
+      try { const v = await getResumeVersions(); setVersions(v); } catch (e) { console.error(e); }
+      setLoaded(true);
+    }
+    load();
   }, []);
 
-  useEffect(() => { if (loaded) { try { localStorage.setItem(VERSIONS_KEY, JSON.stringify(versions)); } catch {} } }, [versions, loaded]);
-  useEffect(() => { if (loaded) { try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch {} } }, [history, loaded]);
-
-  const saveVersion = useCallback((label: string, jobTitle: string, company: string, resumeData: any, score: number, originalScore: number) => {
-    const v: ResumeVersion = { id: Date.now().toString(36), label, jobTitle, company, resumeData, score, originalScore, createdAt: new Date().toISOString() };
-    setVersions((p) => [v, ...p]);
-    setHistory((p) => [{ date: new Date().toISOString(), score, job: `${jobTitle} at ${company}` }, ...p].slice(0, 50));
+  const saveVersion = useCallback(async (label: string, jobTitle: string, company: string, resumeData: any, score: number, originalScore: number) => {
+    const v = await saveResumeVersion(label, jobTitle, company, resumeData, score, originalScore);
+    if (v) setVersions(p => [v, ...p]);
     return v;
   }, []);
 
-  const deleteVersion = useCallback((id: string) => { setVersions((p) => p.filter((v) => v.id !== id)); }, []);
+  const deleteVersion = useCallback(async (id: string) => {
+    try { await dbDeleteVersion(id); } catch {}
+    setVersions(p => p.filter(v => v.id !== id));
+  }, []);
 
-  return { versions, history, loaded, saveVersion, deleteVersion };
+  return { versions, loaded, saveVersion, deleteVersion };
 }
