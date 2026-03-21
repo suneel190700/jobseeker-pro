@@ -24,8 +24,15 @@ export default function JobsPage() {
   useEffect(()=>{if(selectedJob&&(!selectedJob.description||selectedJob.description.length<100)){fetchFullJD(selectedJob);}},[selectedJob?.id]);
 
   const fetchFullJD=async(job:Job):Promise<string>=>{
-    if(job.description&&job.description.length>100)return job.description;
-    try{const r=await fetch(`/api/jobs/search?job_id=${encodeURIComponent(job.id)}`);if(r.ok){const d=await r.json();if(d.job?.description?.length>50){job.description=d.job.description;setJobs(p=>p.map(j=>j.id===job.id?{...j,description:d.job.description}:j));if(selectedJob?.id===job.id)setSelectedJob({...job,description:d.job.description});return d.job.description;}}}catch{}
+    if(job.description&&job.description.length>500)return job.description;
+    // Try JSearch job-details first (for JSearch jobs)
+    if(!job.id.startsWith('adz_')){
+      try{const r=await fetch(`/api/jobs/search?job_id=${encodeURIComponent(job.id)}`);if(r.ok){const d=await r.json();if(d.job?.description?.length>200){const desc=d.job.description;setJobs(p=>p.map(j=>j.id===job.id?{...j,description:desc}:j));if(selectedJob?.id===job.id)setSelectedJob({...job,description:desc});return desc;}}}catch{}
+    }
+    // Try web scraping the job URL for full description
+    if(job.source_url&&job.source_url!=='#'){
+      try{const r=await fetch('/api/jobs/fetch-jd',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:job.source_url,currentDescription:job.description})});if(r.ok){const d=await r.json();if(d.description&&d.description.length>(job.description?.length||0)+100){setJobs(p=>p.map(j=>j.id===job.id?{...j,description:d.description}:j));if(selectedJob?.id===job.id)setSelectedJob({...job,description:d.description});return d.description;}}}catch{}
+    }
     return job.description||'';
   };
 
@@ -118,7 +125,7 @@ export default function JobsPage() {
               <div className="mt-3 flex gap-2"><a href={selectedJob.source_url} target="_blank" rel="noopener noreferrer" className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white text-center hover:bg-brand-700 transition flex items-center justify-center gap-2"><ExternalLink className="h-4 w-4"/>Apply</a><button onClick={()=>toggleSave(selectedJob)} className={['rounded-lg border px-4 py-2.5 text-sm font-semibold transition',isSaved(selectedJob)?'border-brand-300 bg-brand-50 text-brand-700':'border-gray-200 text-gray-600 hover:bg-gray-50'].join(' ')}>{isSaved(selectedJob)?'Saved':'Save'}</button></div>
               {profile&&<button onClick={()=>optimizeForJob(selectedJob)} className="mt-2 w-full rounded-lg bg-purple-50 border border-purple-200 px-4 py-2.5 text-sm font-semibold text-purple-700 hover:bg-purple-100 transition flex items-center justify-center gap-2"><Zap className="h-4 w-4"/>Optimize Resume</button>}
             </div>
-            <div className="p-5"><h3 className="text-sm font-semibold text-gray-700 mb-2">Job Description</h3><div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{selectedJob.description||<span className="text-gray-400 italic">Loading description...</span>}</div></div>
+            <div className="p-5"><h3 className="text-sm font-semibold text-gray-700 mb-2">Job Description</h3><div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{selectedJob.description||<span className="text-gray-400 italic">Loading description...</span>}</div>{selectedJob.description&&selectedJob.description.length<500&&selectedJob.source_url&&selectedJob.source_url!=='#'&&<a href={selectedJob.source_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700"><ExternalLink className="h-3.5 w-3.5"/>View full job description</a>}</div>
           </div>
         </div>
       )}
