@@ -18,7 +18,7 @@ function getConfig(tier: ModelTier): AIConfig | null {
 
   if (tier === 'cheap') {
     // For scoring, cover letters, LinkedIn, interview prep
-    if (process.env.GOOGLE_AI_API_KEY) return { provider: 'google', model: 'gemini-2.0-flash', apiKey: process.env.GOOGLE_AI_API_KEY, baseUrl: 'https://generativelanguage.googleapis.com/v1beta' };
+    if (process.env.GOOGLE_AI_API_KEY) return { provider: 'google', model: 'gemini-2.5-flash', apiKey: process.env.GOOGLE_AI_API_KEY, baseUrl: 'https://generativelanguage.googleapis.com/v1beta' };
     if (process.env.DEEPSEEK_API_KEY) return { provider: 'deepseek', model: 'deepseek-chat', apiKey: process.env.DEEPSEEK_API_KEY, baseUrl: 'https://api.deepseek.com/v1' };
     if (process.env.OPENAI_API_KEY) return { provider: 'openai', model: 'gpt-4.1-mini', apiKey: process.env.OPENAI_API_KEY, baseUrl: 'https://api.openai.com/v1' };
     if (process.env.ANTHROPIC_API_KEY) return { provider: 'anthropic', model: 'claude-haiku-4-5-20251001', apiKey: process.env.ANTHROPIC_API_KEY, baseUrl: 'https://api.anthropic.com' };
