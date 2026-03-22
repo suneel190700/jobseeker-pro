@@ -32,7 +32,10 @@ export async function GET(request: NextRequest) {
     ]);
 
     let allJobs: MappedJob[] = [];
-    for (const r of results) { if (r.status === 'fulfilled' && r.value) allJobs.push(...r.value); }
+    for (const r of results) {
+      if (r.status === 'fulfilled' && r.value) { console.log(`Source returned ${r.value.length} jobs`); allJobs.push(...r.value); }
+      else if (r.status === 'rejected') { console.error('Job fetch rejected:', r.reason?.message || r.reason); }
+    }
 
     // Deduplicate
     const seen = new Set<string>();
@@ -61,8 +64,9 @@ async function fetchJSearch(query:string, location:string, remote:boolean, dateP
 }
 
 async function fetchAdzuna(query:string, location:string, page:number): Promise<MappedJob[]> {
-  const appId = process.env.ADZUNA_APP_ID || '937a7fa3';
-  const appKey = process.env.ADZUNA_APP_KEY || 'b58dd04b479085796120caa7ef7924d7';
+  const appId = (process.env.ADZUNA_APP_ID && process.env.ADZUNA_APP_ID.length > 3) ? process.env.ADZUNA_APP_ID : '937a7fa3';
+  const appKey = (process.env.ADZUNA_APP_KEY && process.env.ADZUNA_APP_KEY.length > 10) ? process.env.ADZUNA_APP_KEY : 'b58dd04b479085796120caa7ef7924d7';
+  console.log('Adzuna using app_id:', appId.slice(0, 4) + '...');
   return fetchAdzunaWithKeys(appId, appKey, query, location, page);
 }
 
@@ -79,7 +83,7 @@ function mapJSearch(item:any): MappedJob {
 
 async function fetchAdzunaWithKeys(appId:string, appKey:string, query:string, location:string, page:number): Promise<MappedJob[]> {
   try {
-    const p = new URLSearchParams({ app_id: appId, app_key: appKey, results_per_page: '20', what: query, full_description: '1' });
+    const p = new URLSearchParams({ app_id: appId, app_key: appKey, results_per_page: '20', what: query });
     if (location) p.set('where', location);
     const url = `${ADZUNA_BASE}/${page}?${p}`;
     console.log('Adzuna URL:', url);

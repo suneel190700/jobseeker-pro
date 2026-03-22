@@ -110,3 +110,11 @@ export function parseJSON(text: string): any {
     throw e;
   }
 }
+
+// Smart truncation - keeps beginning and end, removes middle filler
+export function smartTruncate(text: string, maxChars: number = 15000): string {
+  if (text.length <= maxChars) return text;
+  const keepStart = Math.floor(maxChars * 0.7);
+  const keepEnd = Math.floor(maxChars * 0.25);
+  return text.slice(0, keepStart) + '\n\n[... content trimmed for processing ...]\n\n' + text.slice(-keepEnd);
+}

@@ -5,28 +5,15 @@
   "installCommand": "npm install",
   "regions": ["iad1"],
   "functions": {
-    "src/app/api/resume/analyze/route.ts": {
-      "maxDuration": 60
-    },
-    "src/app/api/jobs/search/route.ts": {
-      "maxDuration": 30
-    }
+    "src/app/api/resume/analyze/route.ts": { "maxDuration": 60 },
+    "src/app/api/resume/generate/route.ts": { "maxDuration": 60 },
+    "src/app/api/cover-letter/route.ts": { "maxDuration": 60 },
+    "src/app/api/interview/route.ts": { "maxDuration": 60 },
+    "src/app/api/linkedin/route.ts": { "maxDuration": 60 },
+    "src/app/api/jobs/search/route.ts": { "maxDuration": 30 },
+    "src/app/api/jobs/fetch-jd/route.ts": { "maxDuration": 15 }
   },
   "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        { "key": "X-DNS-Prefetch-Control", "value": "on" },
-        { "key": "Strict-Transport-Security", "value": "max-age=63072000; includeSubDomains; preload" }
-      ]
-    }
+    { "source": "/api/(.*)", "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }] }
   ]
 }

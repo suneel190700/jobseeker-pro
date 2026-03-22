@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { callAI, parseJSON } from '@/lib/ai-router';
+import { callAI, parseJSON, smartTruncate } from '@/lib/ai-router';
 
 export async function POST(request: NextRequest) {
   try {
