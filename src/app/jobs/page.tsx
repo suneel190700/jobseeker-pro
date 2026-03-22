@@ -13,6 +13,7 @@ interface ScoreData { score:number; reason:string; }
 export default function JobsPage() {
   const [query,setQuery]=useState('');const [location,setLocation]=useState('');const [remoteFilter,setRemoteFilter]=useState('');const [datePosted,setDatePosted]=useState('');const [employmentType,setEmploymentType]=useState('');const [experienceLevel,setExperienceLevel]=useState('');const [showFilters,setShowFilters]=useState(false);
   const [jobs,setJobs]=useState<Job[]>([]);const [loading,setLoading]=useState(false);const [searched,setSearched]=useState(false);const [selectedJob,setSelectedJob]=useState<Job|null>(null);const [error,setError]=useState('');const [scores,setScores]=useState<Record<string,ScoreData>>({});const [scoringId,setScoringId]=useState<string|null>(null);
+  const [showPasteJD,setShowPasteJD]=useState(false);const [pasteJD,setPasteJD]=useState('');
   const [page,setPage]=useState(1);const [hasMore,setHasMore]=useState(false);const [loadingMore,setLoadingMore]=useState(false);
   const autoLoaded=useRef(false);const tracker=useTracker();const {profile,titles,loaded:pLoaded}=useResumeProfile();const router=useRouter();
 
@@ -25,7 +26,7 @@ export default function JobsPage() {
 
   const fetchFullJD=async(job:Job):Promise<string>=>{
     if(job.description&&job.description.length>500)return job.description;
-    // Try JSearch job-details first (for JSearch jobs)
+    // Try JSearch job-details first (for JSearch across multiple sources)
     if(!job.id.startsWith('adz_')){
       try{const r=await fetch(`/api/jobs/search?job_id=${encodeURIComponent(job.id)}`);if(r.ok){const d=await r.json();if(d.job?.description?.length>200){const desc=d.job.description;setJobs(p=>p.map(j=>j.id===job.id?{...j,description:desc}:j));if(selectedJob?.id===job.id)setSelectedJob({...job,description:desc});return desc;}}}catch{}
     }
@@ -61,7 +62,7 @@ export default function JobsPage() {
 
   return(<div>
     <div className="flex items-center justify-between">
-      <div><h1 className="text-2xl font-bold text-gray-900">Jobs</h1><p className="mt-0.5 text-sm text-gray-500">Search across JSearch & Adzuna • {jobs.length} results</p></div>
+      <div><h1 className="text-2xl font-bold text-gray-900">Jobs</h1><p className="mt-0.5 text-sm text-gray-500">Search across multiple sources • {jobs.length} results</p></div>
       {!profile&&<a href="/profile" className="flex items-center gap-1.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs font-medium text-amber-700"><AlertCircle className="h-3.5 w-3.5"/>Upload resume</a>}
     </div>
     {titles.length>1&&<div className="mt-3 flex flex-wrap gap-2">{titles.map(t=>(<button key={t} onClick={()=>handleSearch(undefined,t)} className={['rounded-full border px-4 py-1.5 text-xs font-semibold transition',query===t&&searched?'border-brand-500 bg-brand-50 text-brand-700':'border-gray-300 text-gray-500 hover:bg-gray-100'].join(' ')}>{t}</button>))}</div>}
@@ -93,7 +94,7 @@ export default function JobsPage() {
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap"><h3 className="text-sm font-semibold text-gray-900">{job.title}</h3>{saved&&<CheckCircle className="h-3.5 w-3.5 text-green-500"/>}{sc&&<span className={['inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold border',sC(sc.score)].join(' ')}>{sc.score}%</span>}</div>
-                <p className="text-sm text-gray-600 flex items-center gap-1 mt-0.5"><Building2 className="h-3 w-3 text-gray-400"/>{job.company}<span className="text-gray-300 mx-1">•</span><span className="text-xs text-gray-400 capitalize">{job.source}</span></p>
+                <p className="text-sm text-gray-600 flex items-center gap-1 mt-0.5"><Building2 className="h-3 w-3 text-gray-400"/>{job.company}</p>
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-400">
                   <span className="flex items-center gap-1"><MapPin className="h-3 w-3"/>{job.location}</span>
                   {job.remote_type==='remote'&&<span className="rounded-full bg-green-50 border border-green-200 px-2 py-0.5 text-green-600 font-medium">Remote</span>}
@@ -118,14 +119,37 @@ export default function JobsPage() {
           <div className="sticky top-0 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden max-h-[calc(100vh-120px)] overflow-y-auto">
             <div className="p-5 border-b border-gray-100">
               <h2 className="text-lg font-bold text-gray-900">{selectedJob.title}</h2>
-              <p className="text-sm text-gray-600 mt-1">{selectedJob.company} <span className="text-xs text-gray-400 capitalize">via {selectedJob.source}</span></p>
+              <p className="text-sm text-gray-600 mt-1">{selectedJob.company} </p>
               {scores[selectedJob.id]&&<div className={['mt-3 rounded-lg p-3 border',sC(scores[selectedJob.id].score)].join(' ')}><span className="text-lg font-bold">{scores[selectedJob.id].score}%</span><span className="text-xs font-medium ml-1.5">ATS Match</span>{scores[selectedJob.id].reason&&<p className="text-xs mt-1 opacity-75">{scores[selectedJob.id].reason}</p>}</div>}
               {!scores[selectedJob.id]&&profile&&<button onClick={()=>scoreJob(selectedJob)} disabled={scoringId===selectedJob.id} className="mt-3 w-full rounded-lg bg-brand-50 border border-brand-200 px-4 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-100 transition flex items-center justify-center gap-2 disabled:opacity-50">{scoringId===selectedJob.id?<><Loader2 className="h-4 w-4 animate-spin"/>Scoring...</>:<><Target className="h-4 w-4"/>Get ATS Score</>}</button>}
               <div className="mt-3 flex flex-wrap gap-2 text-xs"><span className="rounded-full bg-gray-100 px-2.5 py-1 text-gray-600">{selectedJob.location}</span>{selectedJob.remote_type==='remote'&&<span className="rounded-full bg-green-50 border border-green-200 px-2.5 py-1 text-green-600">Remote</span>}{fS(selectedJob.salary_min,selectedJob.salary_max)&&<span className="rounded-full bg-blue-50 px-2.5 py-1 text-blue-600">{fS(selectedJob.salary_min,selectedJob.salary_max)}</span>}</div>
               <div className="mt-3 flex gap-2"><a href={selectedJob.source_url} target="_blank" rel="noopener noreferrer" className="flex-1 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white text-center hover:bg-brand-700 transition flex items-center justify-center gap-2"><ExternalLink className="h-4 w-4"/>Apply</a><button onClick={()=>toggleSave(selectedJob)} className={['rounded-lg border px-4 py-2.5 text-sm font-semibold transition',isSaved(selectedJob)?'border-brand-300 bg-brand-50 text-brand-700':'border-gray-200 text-gray-600 hover:bg-gray-50'].join(' ')}>{isSaved(selectedJob)?'Saved':'Save'}</button></div>
               {profile&&<button onClick={()=>optimizeForJob(selectedJob)} className="mt-2 w-full rounded-lg bg-purple-50 border border-purple-200 px-4 py-2.5 text-sm font-semibold text-purple-700 hover:bg-purple-100 transition flex items-center justify-center gap-2"><Zap className="h-4 w-4"/>Optimize Resume</button>}
             </div>
-            <div className="p-5"><h3 className="text-sm font-semibold text-gray-700 mb-2">Job Description</h3><div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{selectedJob.description||<span className="text-gray-400 italic">Loading description...</span>}</div>{selectedJob.description&&selectedJob.description.length<500&&selectedJob.source_url&&selectedJob.source_url!=='#'&&<a href={selectedJob.source_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:text-brand-700"><ExternalLink className="h-3.5 w-3.5"/>View full job description</a>}</div>
+            <div className="p-5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-gray-700">Job Description</h3>
+                {selectedJob.description&&selectedJob.description.length<500&&<button onClick={()=>{setShowPasteJD(!showPasteJD);setPasteJD('');}} className="text-xs font-semibold text-brand-600 hover:text-brand-700">{showPasteJD?'Cancel':'Paste full JD'}</button>}
+              </div>
+              {showPasteJD?(
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-400">Paste the complete job description for accurate ATS scoring:</p>
+                  <textarea rows={8} value={pasteJD} onChange={e=>setPasteJD(e.target.value)} placeholder="Paste the full job description here..." className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none"/>
+                  <button onClick={()=>{if(pasteJD.trim()){const updated={...selectedJob,description:pasteJD};setSelectedJob(updated);setJobs(p=>p.map(j=>j.id===selectedJob.id?updated:j));setShowPasteJD(false);toast.success('JD updated!');}}} disabled={!pasteJD.trim()} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition">Use this JD</button>
+                </div>
+              ):(
+                <div>
+                  <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">{selectedJob.description||<span className="text-gray-400 italic">Loading description...</span>}</div>
+                  {selectedJob.description&&selectedJob.description.length<500&&selectedJob.source_url&&selectedJob.source_url!=='#'&&(
+                    <div className="mt-3 flex items-center gap-3">
+                      <a href={selectedJob.source_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700"><ExternalLink className="h-3.5 w-3.5"/>View original posting</a>
+                      <span className="text-xs text-gray-300">|</span>
+                      <button onClick={()=>setShowPasteJD(true)} className="text-xs font-semibold text-purple-600 hover:text-purple-700">Paste full JD for scoring</button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

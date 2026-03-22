@@ -2,7 +2,7 @@ import { Search, Sparkles, FileSignature, MessageSquare, Linkedin, Kanban, User,
 import Link from 'next/link';
 const items=[
   {href:'/profile',label:'My Profile',desc:'Personal details, resume & target roles',icon:User,color:'bg-blue-50 text-blue-600'},
-  {href:'/jobs',label:'Job Search',desc:'Search across JSearch & Adzuna',icon:Search,color:'bg-green-50 text-green-600'},
+  {href:'/jobs',label:'Job Search',desc:'Find & score jobs',icon:Search,color:'bg-green-50 text-green-600'},
   {href:'/resume-optimizer',label:'Resume AI',desc:'ATS audit + AI-powered optimization',icon:Sparkles,color:'bg-purple-50 text-purple-600'},
   {href:'/resume-versions',label:'My Resumes',desc:'Saved tailored resume versions',icon:FolderOpen,color:'bg-gray-100 text-gray-600'},
   {href:'/cover-letter',label:'Cover Letter',desc:'AI-generated for each application',icon:FileSignature,color:'bg-green-50 text-green-600'},
