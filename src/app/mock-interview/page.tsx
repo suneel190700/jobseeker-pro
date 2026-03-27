@@ -79,22 +79,22 @@ export default function MockInterviewPage() {
   if(!started)return(
     <div className="max-w-2xl mx-auto">
       <h1 className="text-2xl font-bold text-white tracking-tight">AI Mock Interview</h1>
-      <p className="mt-1 text-sm text-slate-500">Practice with voice, get scored on content & delivery</p>
-      <div className="mt-6 glass p-6 space-y-4">
+      <p className="mt-1 text-sm text-white/35">Practice with voice, get scored on content & delivery</p>
+      <div className="mt-6 surface p-6 space-y-4">
         <div className="flex gap-2 mb-2">
           {(['practice','real'] as const).map(m=>(
-            <button key={m} onClick={()=>setMode(m)} className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${mode===m?'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30':'bg-[rgba(255,255,255,0.04)] text-slate-500 border border-white/[0.06] hover:text-slate-300'}`}>
+            <button key={m} onClick={()=>setMode(m)} className={`flex-1 rounded-[16px] py-2.5 text-sm font-semibold transition-all ${mode===m?'bg-[#30d158]/10 text-[#30d158] border border-emerald-500/30':'bg-[var(--surface-2)] text-white/35 border border-[var(--separator)] hover:text-white/70'}`}>
               {m==='practice'?'🎓 Practice Mode':'🎯 Real Mode'}
             </button>
           ))}
         </div>
-        <p className="text-xs text-slate-600">{mode==='practice'?'Shows suggested answers & key points for each question':'No hints — simulates a real interview'}</p>
+        <p className="text-xs text-white/25">{mode==='practice'?'Shows suggested answers & key points for each question':'No hints — simulates a real interview'}</p>
         <div className="grid grid-cols-2 gap-3">
-          <div><label className="label">Job Title</label><input value={role} onChange={e=>setRole(e.target.value)} placeholder="e.g. AI Engineer" className="input-dark"/></div>
-          <div><label className="label">Company</label><input value={company} onChange={e=>setCompany(e.target.value)} placeholder="e.g. Google" className="input-dark"/></div>
+          <div><label className="label">Job Title</label><input value={role} onChange={e=>setRole(e.target.value)} placeholder="e.g. AI Engineer" className="input-hig"/></div>
+          <div><label className="label">Company</label><input value={company} onChange={e=>setCompany(e.target.value)} placeholder="e.g. Google" className="input-hig"/></div>
         </div>
-        <div><label className="label">Job Description</label><textarea rows={5} value={jd} onChange={e=>setJd(e.target.value)} placeholder="Paste the full JD..." className="input-dark"/></div>
-        <button onClick={startInterview} disabled={!jd.trim()} className="btn-brand w-full py-3 flex items-center justify-center gap-2 disabled:opacity-40"><Mic className="h-4 w-4"/>Start Interview</button>
+        <div><label className="label">Job Description</label><textarea rows={5} value={jd} onChange={e=>setJd(e.target.value)} placeholder="Paste the full JD..." className="input-hig"/></div>
+        <button onClick={startInterview} disabled={!jd.trim()} className="btn-filled w-full py-3 flex items-center justify-center gap-2 disabled:opacity-40"><Mic className="h-4 w-4"/>Start Interview</button>
       </div>
     </div>
   );
@@ -102,11 +102,11 @@ export default function MockInterviewPage() {
   return(
     <div className="flex flex-col h-[calc(100vh-100px)]">
       <div className="flex items-center justify-between mb-3">
-        <div><h1 className="text-base font-bold text-white">{role||'Mock Interview'}{company?` — ${company}`:''}</h1><p className="text-xs text-slate-600">Q{qNum} • {mode} mode{avg>0?` • Avg: ${avg}/10`:''}</p></div>
+        <div><h1 className="text-base font-bold text-white">{role||'Mock Interview'}{company?` — ${company}`:''}</h1><p className="text-xs text-white/25">Q{qNum} • {mode} mode{avg>0?` • Avg: ${avg}/10`:''}</p></div>
         <div className="flex gap-2">
-          {mode==='practice'&&<button onClick={()=>setShowHints(!showHints)} className={`btn-outline text-xs px-3 py-1.5 flex items-center gap-1 ${showHints?'text-emerald-400':'text-slate-500'}`}>{showHints?<Eye className="h-3 w-3"/>:<EyeOff className="h-3 w-3"/>}Hints</button>}
-          {avg>0&&<div className={`badge-dark border px-2.5 py-1 ${avg>=7?'bg-emerald-500/10 text-emerald-400 border-emerald-500/20':avg>=5?'bg-amber-500/10 text-amber-400 border-amber-500/20':'bg-red-500/10 text-red-400 border-red-500/20'}`}><Star className="h-3 w-3 mr-1"/>{avg}/10</div>}
-          <button onClick={()=>{setStarted(false);setMsgs([]);setScores([]);setQNum(0);}} className="btn-outline text-xs px-3 py-1.5"><RotateCcw className="h-3 w-3 mr-1"/>New</button>
+          {mode==='practice'&&<button onClick={()=>setShowHints(!showHints)} className={`btn-gray text-xs px-3 py-1.5 flex items-center gap-1 ${showHints?'text-[#30d158]':'text-white/35'}`}>{showHints?<Eye className="h-3 w-3"/>:<EyeOff className="h-3 w-3"/>}Hints</button>}
+          {avg>0&&<div className={`pill border px-2.5 py-1 ${avg>=7?'bg-[#30d158]/10 text-[#30d158] border-[#30d158]/20':avg>=5?'bg-[#ff9f0a]/10 text-[#ff9f0a] border-[#ff9f0a]/20':'bg-[#ff453a]/10 text-[#ff453a] border-[#ff453a]/20'}`}><Star className="h-3 w-3 mr-1"/>{avg}/10</div>}
+          <button onClick={()=>{setStarted(false);setMsgs([]);setScores([]);setQNum(0);}} className="btn-gray text-xs px-3 py-1.5"><RotateCcw className="h-3 w-3 mr-1"/>New</button>
         </div>
       </div>
 
@@ -114,39 +114,39 @@ export default function MockInterviewPage() {
         {msgs.map((m,i)=>(
           <div key={i}>
             <div className={`flex ${m.role==='you'?'justify-end':'justify-start'}`}>
-              <div className={`max-w-[75%] rounded-xl px-4 py-3 text-sm leading-relaxed ${m.role==='interviewer'?'bg-[rgba(255,255,255,0.04)] border border-white/[0.06] text-slate-300':m.role==='you'?'bg-emerald-600 text-white':m.role==='feedback'?'bg-[rgba(255,255,255,0.04)] border border-white/[0.06]/50 text-slate-400':'bg-white/[0.03] text-slate-500 text-xs'}`}>
-                {m.role==='feedback'&&m.score!=null&&<div className={`badge-dark mb-2 ${m.score>=7?'bg-emerald-500/10 text-emerald-400':m.score>=5?'bg-amber-500/10 text-amber-400':'bg-red-500/10 text-red-400'}`}><Star className="h-3 w-3 mr-1"/>{m.score}/10</div>}
+              <div className={`max-w-[75%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${m.role==='interviewer'?'bg-[var(--surface-2)] border border-[var(--separator)] text-white/70':m.role==='you'?'bg-emerald-600 text-white':m.role==='feedback'?'bg-[var(--surface-2)] border border-[var(--separator)]/50 text-white/50':'bg-[var(--surface-1)] text-white/35 text-xs'}`}>
+                {m.role==='feedback'&&m.score!=null&&<div className={`pill mb-2 ${m.score>=7?'bg-[#30d158]/10 text-[#30d158]':m.score>=5?'bg-[#ff9f0a]/10 text-[#ff9f0a]':'bg-[#ff453a]/10 text-[#ff453a]'}`}><Star className="h-3 w-3 mr-1"/>{m.score}/10</div>}
                 {m.text}
               </div>
             </div>
             {/* Filler data */}
             {m.fillerData&&m.fillerData.count>0&&(
-              <div className="flex justify-end mt-1"><div className={`badge-dark gap-1 ${m.fillerData.count<=2?'bg-emerald-500/10 text-emerald-400':'bg-amber-500/10 text-amber-400'}`}>
+              <div className="flex justify-end mt-1"><div className={`pill gap-1 ${m.fillerData.count<=2?'bg-[#30d158]/10 text-[#30d158]':'bg-[#ff9f0a]/10 text-[#ff9f0a]'}`}>
                 <Volume2 className="h-3 w-3"/>{m.fillerData.count} fillers • {m.fillerData.wpm} wpm • {m.fillerData.rating}
               </div></div>
             )}
             {/* Hints */}
             {m.role==='interviewer'&&mode==='practice'&&showHints&&(m.suggestion||m.keyPoints)&&(
-              <div className="mt-2 ml-0 max-w-[75%] bg-emerald-500/5 border border-emerald-500/10 rounded-lg p-3">
-                <div className="flex items-center gap-1 mb-1.5"><Lightbulb className="h-3 w-3 text-emerald-400"/><span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Suggested Answer</span></div>
-                {m.keyPoints&&<div className="flex flex-wrap gap-1 mb-2">{m.keyPoints.map((k,j)=><span key={j} className="badge-dark bg-emerald-500/10 text-emerald-300 text-[10px]">{k}</span>)}</div>}
-                {m.suggestion&&<p className="text-xs text-slate-500 leading-relaxed">{m.suggestion}</p>}
+              <div className="mt-2 ml-0 max-w-[75%] bg-emerald-500/5 border border-emerald-500/10 rounded-[16px] p-3">
+                <div className="flex items-center gap-1 mb-1.5"><Lightbulb className="h-3 w-3 text-[#30d158]"/><span className="text-[10px] font-bold uppercase tracking-wider text-[#30d158]">Suggested Answer</span></div>
+                {m.keyPoints&&<div className="flex flex-wrap gap-1 mb-2">{m.keyPoints.map((k,j)=><span key={j} className="pill bg-[#30d158]/10 text-emerald-300 text-[10px]">{k}</span>)}</div>}
+                {m.suggestion&&<p className="text-xs text-white/35 leading-relaxed">{m.suggestion}</p>}
               </div>
             )}
           </div>
         ))}
-        {loading&&<div className="flex justify-start"><div className="bg-[rgba(255,255,255,0.04)] border border-white/[0.06] rounded-xl px-4 py-3"><Loader2 className="h-4 w-4 animate-spin text-emerald-400"/></div></div>}
+        {loading&&<div className="flex justify-start"><div className="bg-[var(--surface-2)] border border-[var(--separator)] rounded-2xl px-4 py-3"><Loader2 className="h-4 w-4 animate-spin text-[#30d158]"/></div></div>}
       </div>
 
       {/* Recording indicator */}
-      {recording&&<div className="mb-2 bg-red-500/10 border border-red-500/20 rounded-lg p-3 flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-red-500 animate-pulse"/><span className="text-xs text-red-400 font-medium">Recording...</span><span className="text-xs text-slate-600 flex-1">{transcript||'Listening...'}</span><button onClick={stopRecording} className="badge-dark bg-red-500/20 text-red-400 border border-red-500/30 cursor-pointer hover:bg-red-500/30">Stop</button></div>}
+      {recording&&<div className="mb-2 bg-[#ff453a]/10 border border-[#ff453a]/20 rounded-[16px] p-3 flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-red-500 animate-pulse"/><span className="text-xs text-[#ff453a] font-medium">Recording...</span><span className="text-xs text-white/25 flex-1">{transcript||'Listening...'}</span><button onClick={stopRecording} className="pill bg-red-500/20 text-[#ff453a] border border-red-500/30 cursor-pointer hover:bg-red-500/30">Stop</button></div>}
 
       <div className="flex gap-2">
-        <button onClick={recording?stopRecording:startRecording} className={`rounded-lg p-2.5 transition-all ${recording?'bg-red-500/20 text-red-400 border border-red-500/30':'bg-[rgba(255,255,255,0.04)] text-slate-500 border border-white/[0.06] hover:text-emerald-400 hover:border-emerald-500/30'}`}>
+        <button onClick={recording?stopRecording:startRecording} className={`rounded-[16px] p-2.5 transition-all ${recording?'bg-red-500/20 text-[#ff453a] border border-red-500/30':'bg-[var(--surface-2)] text-white/35 border border-[var(--separator)] hover:text-[#30d158] hover:border-emerald-500/30'}`}>
           {recording?<MicOff className="h-4 w-4"/>:<Mic className="h-4 w-4"/>}
         </button>
-        <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendAnswer()} placeholder="Type or use mic..." className="input-dark flex-1" disabled={loading||recording}/>
-        <button onClick={()=>sendAnswer()} disabled={loading||!input.trim()||recording} className="btn-brand px-4 disabled:opacity-40"><Send className="h-4 w-4"/></button>
+        <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendAnswer()} placeholder="Type or use mic..." className="input-hig flex-1" disabled={loading||recording}/>
+        <button onClick={()=>sendAnswer()} disabled={loading||!input.trim()||recording} className="btn-filled px-4 disabled:opacity-40"><Send className="h-4 w-4"/></button>
       </div>
     </div>
   );

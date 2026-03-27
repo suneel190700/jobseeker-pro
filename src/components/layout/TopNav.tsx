@@ -1,18 +1,18 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Sparkles, LogOut, ChevronDown, Mic, MoreHorizontal } from 'lucide-react';
+import { Sparkles, LogOut, ChevronDown, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState, useRef } from 'react';
 
-const primary = [
+const tabs = [
   { href:'/dashboard', label:'Home' },
   { href:'/jobs', label:'Jobs' },
   { href:'/resume-optimizer', label:'Resume AI' },
-  { href:'/tracker', label:'Tracker' },
   { href:'/mock-interview', label:'Interview' },
+  { href:'/tracker', label:'Tracker' },
 ];
-const more = [
+const moreItems = [
   { href:'/cover-letter', label:'Cover Letter' },
   { href:'/interview-prep', label:'Q&A Prep' },
   { href:'/linkedin', label:'LinkedIn' },
@@ -23,7 +23,7 @@ const more = [
 ];
 
 export default function TopNav() {
-  const p = usePathname(); const r = useRouter();
+  const path = usePathname(); const router = useRouter();
   const [name, setName] = useState('');
   const [showMore, setShowMore] = useState(false);
   const [showUser, setShowUser] = useState(false);
@@ -36,45 +36,57 @@ export default function TopNav() {
     document.addEventListener('mousedown', h); return () => document.removeEventListener('mousedown', h);
   }, []);
 
-  const logout = async () => { await createClient().auth.signOut(); r.push('/'); };
+  const logout = async () => { await createClient().auth.signOut(); router.push('/'); };
+  const isActive = (href: string) => path === href || (href !== '/dashboard' && path.startsWith(href));
 
   return (
-    <header className="sticky top-0 z-50 flex items-center justify-between h-14 px-6 border-b border-white/[0.04]" style={{ background: 'rgba(10,22,40,0.85)', backdropFilter: 'blur(20px)' }}>
-      <div className="flex items-center gap-6">
-        <Link href="/dashboard" className="flex items-center gap-2.5">
-          <div className="h-7 w-7 rounded-lg flex items-center justify-center" style={{background:'linear-gradient(135deg,#3b82f6,#6366f1)'}}><Sparkles className="h-3.5 w-3.5 text-white" /></div>
-          <span className="text-[15px] font-bold text-white hidden sm:block">JobSeeker Pro</span>
+    <header className="sticky top-0 z-50 vibrancy border-b" style={{ borderColor: 'var(--separator)' }}>
+      <div className="max-w-[1280px] mx-auto flex items-center h-[52px] px-5">
+        {/* Logo */}
+        <Link href="/dashboard" className="flex items-center gap-2 mr-8 press">
+          <div className="h-[28px] w-[28px] rounded-[8px] flex items-center justify-center" style={{background:'var(--accent)'}}><Sparkles className="h-[14px] w-[14px] text-white" /></div>
+          <span className="text-[15px] font-semibold text-white tracking-tight hidden sm:block">JobSeeker Pro</span>
         </Link>
-        <nav className="flex items-center gap-0.5">
-          {primary.map(n => {
-            const a = p === n.href || (n.href !== '/dashboard' && p.startsWith(n.href));
-            return <Link key={n.href} href={n.href} className={`px-3.5 py-1.5 rounded-lg text-[13px] font-medium transition-all ${a ? 'text-white bg-white/[0.08]' : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]'}`}>{n.label}</Link>;
-          })}
+
+        {/* Segmented-style tabs */}
+        <nav className="flex items-center gap-1">
+          {tabs.map(t => (
+            <Link key={t.href} href={t.href} className={`px-3 py-[6px] rounded-[8px] text-[13px] font-medium transition-all duration-200 ${isActive(t.href) ? 'text-white' : 'text-[rgba(255,255,255,0.5)] hover:text-[rgba(255,255,255,0.8)]'}`} style={isActive(t.href) ? { background: 'var(--surface-2)' } : {}}>
+              {t.label}
+            </Link>
+          ))}
           <div ref={moreRef} className="relative">
-            <button onClick={() => setShowMore(!showMore)} className={`px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all flex items-center gap-1 ${showMore || more.some(m => p.startsWith(m.href)) ? 'text-white bg-white/[0.08]' : 'text-slate-500 hover:text-slate-300'}`}>
-              More <ChevronDown className={`h-3 w-3 transition-transform ${showMore ? 'rotate-180' : ''}`} />
+            <button onClick={() => setShowMore(!showMore)} className={`flex items-center gap-1 px-3 py-[6px] rounded-[8px] text-[13px] font-medium transition-all ${showMore || moreItems.some(m => path.startsWith(m.href)) ? 'text-white' : 'text-[rgba(255,255,255,0.5)]'}`} style={showMore || moreItems.some(m => path.startsWith(m.href)) ? { background: 'var(--surface-2)' } : {}}>
+              More <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${showMore ? 'rotate-180' : ''}`} />
             </button>
             {showMore && (
-              <div className="absolute top-full left-0 mt-2 w-48 glass p-1.5 z-50" style={{boxShadow:'0 8px 30px rgba(0,0,0,0.4)'}}>
-                {more.map(n => (
-                  <Link key={n.href} href={n.href} onClick={() => setShowMore(false)} className={`block px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${p.startsWith(n.href) ? 'text-white bg-white/[0.08]' : 'text-slate-400 hover:text-white hover:bg-white/[0.06]'}`}>{n.label}</Link>
+              <div className="absolute top-full left-0 mt-2 w-52 surface-elevated p-[6px] z-50 shadow-2xl">
+                {moreItems.map(n => (
+                  <Link key={n.href} href={n.href} onClick={() => setShowMore(false)} className={`block px-3 py-[10px] rounded-[10px] text-[14px] font-medium transition-all ${isActive(n.href) ? 'text-white bg-[var(--surface-2)]' : 'text-[rgba(255,255,255,0.6)] hover:text-white hover:bg-[var(--surface-1)]'}`}>
+                    {n.label}
+                  </Link>
                 ))}
               </div>
             )}
           </div>
         </nav>
-      </div>
-      <div ref={userRef} className="relative">
-        <button onClick={() => setShowUser(!showUser)} className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-white/[0.04] transition">
-          <div className="h-7 w-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white" style={{background:'linear-gradient(135deg,#3b82f6,#6366f1)'}}>{name?.[0]?.toUpperCase() || 'U'}</div>
-          <span className="text-xs font-medium text-slate-400 hidden sm:block">{name}</span>
-        </button>
-        {showUser && (
-          <div className="absolute top-full right-0 mt-2 w-44 glass p-1.5 z-50" style={{boxShadow:'0 8px 30px rgba(0,0,0,0.4)'}}>
-            <Link href="/profile" onClick={() => setShowUser(false)} className="block px-3 py-2 rounded-lg text-[13px] text-slate-400 hover:text-white hover:bg-white/[0.06]">Profile</Link>
-            <button onClick={logout} className="w-full text-left px-3 py-2 rounded-lg text-[13px] text-red-400 hover:text-red-300 hover:bg-red-500/10">Sign out</button>
-          </div>
-        )}
+
+        <div className="flex-1" />
+
+        {/* User menu */}
+        <div ref={userRef} className="relative">
+          <button onClick={() => setShowUser(!showUser)} className="flex items-center gap-2 px-2 py-1 rounded-[8px] press hover:bg-[var(--surface-1)] transition-all">
+            <div className="h-[28px] w-[28px] rounded-full flex items-center justify-center text-[11px] font-semibold text-white" style={{background:'linear-gradient(135deg, #5E5CE6, #BF5AF2)'}}>{name?.[0]?.toUpperCase() || 'U'}</div>
+            <span className="text-[13px] font-medium text-[rgba(255,255,255,0.6)] hidden sm:block">{name}</span>
+          </button>
+          {showUser && (
+            <div className="absolute top-full right-0 mt-2 w-48 surface-elevated p-[6px] z-50 shadow-2xl">
+              <Link href="/profile" onClick={() => setShowUser(false)} className="flex items-center gap-2 px-3 py-[10px] rounded-[10px] text-[14px] text-[rgba(255,255,255,0.6)] hover:text-white hover:bg-[var(--surface-1)]"><User className="h-4 w-4" />Profile</Link>
+              <div className="divider my-[4px]" />
+              <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-[10px] rounded-[10px] text-[14px] text-[var(--destructive)] hover:bg-[rgba(255,69,58,0.1)]"><LogOut className="h-4 w-4" />Sign Out</button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
