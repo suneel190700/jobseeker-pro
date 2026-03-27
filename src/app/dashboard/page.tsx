@@ -33,12 +33,12 @@ export default function DashboardPage() {
 
   return (<div>
     <h1 className="text-2xl font-bold text-white tracking-tight">{name ? `Hey, ${name}` : 'Welcome back'}</h1>
-    <p className="mt-0.5 text-sm text-zinc-500">Your AI career command center</p>
+    <p className="mt-0.5 text-sm text-slate-500">Your AI career command center</p>
 
     {/* Stats */}
     <div className="mt-6 grid grid-cols-4 gap-3">
       {[{l:'Applied',v:s.applied,c:'text-emerald-400',b:'bg-emerald-500/10',i:Target},{l:'Interviews',v:s.interviews,c:'text-emerald-400',b:'bg-emerald-500/10',i:Calendar},{l:'Saved',v:s.saved,c:'text-blue-400',b:'bg-blue-500/10',i:Search},{l:'Offers',v:s.offers,c:'text-amber-400',b:'bg-amber-500/10',i:CheckCircle}].map(x=>(
-        <div key={x.l} className="card p-4"><div className="flex items-center justify-between"><span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">{x.l}</span><div className={`${x.b} rounded-md p-1`}><x.i className={`h-3 w-3 ${x.c}`}/></div></div><p className={`text-2xl font-bold mt-1 ${x.c}`}>{x.v}</p></div>
+        <div key={x.l} className="glass p-4"><div className="flex items-center justify-between"><span className="text-[10px] font-semibold uppercase tracking-widest text-slate-600">{x.l}</span><div className={`${x.b} rounded-md p-1`}><x.i className={`h-3 w-3 ${x.c}`}/></div></div><p className={`text-2xl font-bold mt-1 ${x.c}`}>{x.v}</p></div>
       ))}
     </div>
 
@@ -47,22 +47,22 @@ export default function DashboardPage() {
       <div className="col-span-2 space-y-4">
         <div className="grid grid-cols-3 gap-3">
           {actions.map(a=>(
-            <Link key={a.href} href={a.href} className="card card-h p-4 group">
+            <Link key={a.href} href={a.href} className="glass glass-h p-4 group">
               <div className={`inline-flex rounded-lg bg-gradient-to-br ${a.c} p-2`}><a.icon className="h-4 w-4 text-white"/></div>
-              <p className="mt-2 text-sm font-semibold text-zinc-200 group-hover:text-white transition">{a.label}</p>
+              <p className="mt-2 text-sm font-semibold text-slate-300 group-hover:text-white transition">{a.label}</p>
             </Link>
           ))}
         </div>
 
         {/* Checklist */}
-        <div className="card p-5">
-          <h2 className="text-sm font-bold text-zinc-300 mb-3">Getting Started</h2>
+        <div className="glass p-5">
+          <h2 className="text-sm font-bold text-slate-300 mb-3">Getting Started</h2>
           <div className="space-y-2">
             {[{done:!!profile,l:'Upload base resume',h:'/profile'},{done:titles.length>0,l:'Set target job titles',h:'/profile'},{done:s.applied>0,l:'Apply to a job',h:'/jobs'},{done:s.interviews>0,l:'Practice mock interview',h:'/mock-interview'}].map((x,i)=>(
-              <Link key={i} href={x.h} className={`flex items-center gap-3 rounded-lg p-2.5 transition ${x.done?'bg-emerald-500/5':'bg-bg-2 hover:bg-bg-3'}`}>
-                <div className={`h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0 ${x.done?'bg-emerald-500':'border border-zinc-700'}`}>{x.done&&<CheckCircle className="h-3.5 w-3.5 text-white"/>}</div>
-                <span className={`text-sm ${x.done?'text-emerald-400 line-through':'text-zinc-400'}`}>{x.l}</span>
-                {!x.done&&<ChevronRight className="h-3.5 w-3.5 text-zinc-700 ml-auto"/>}
+              <Link key={i} href={x.h} className={`flex items-center gap-3 rounded-lg p-2.5 transition ${x.done?'bg-emerald-500/5':'bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.06)]'}`}>
+                <div className={`h-5 w-5 rounded-full flex items-center justify-center flex-shrink-0 ${x.done?'bg-emerald-500':'border border-white/[0.08]'}`}>{x.done&&<CheckCircle className="h-3.5 w-3.5 text-white"/>}</div>
+                <span className={`text-sm ${x.done?'text-emerald-400 line-through':'text-slate-400'}`}>{x.l}</span>
+                {!x.done&&<ChevronRight className="h-3.5 w-3.5 text-slate-700 ml-auto"/>}
               </Link>
             ))}
           </div>
@@ -71,14 +71,14 @@ export default function DashboardPage() {
 
       {/* Right col */}
       <div className="space-y-4">
-        <div className="card p-4 border-emerald-500/20 bg-emerald-500/[0.03]">
+        <div className="glass p-4 border-emerald-500/20 bg-emerald-500/[0.03]">
           <div className="flex items-center gap-1.5 mb-2"><Lightbulb className="h-3.5 w-3.5 text-emerald-400"/><span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Pro Tip</span></div>
-          <p className="text-xs text-zinc-400 leading-relaxed">{tip}</p>
+          <p className="text-xs text-slate-400 leading-relaxed">{tip}</p>
         </div>
-        <div className="card p-4">
-          <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 mb-2">More Tools</p>
+        <div className="glass p-4">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-2">More Tools</p>
           {[{h:'/cover-letter',l:'Cover Letter',i:FileSignature},{h:'/interview-prep',l:'Interview Q&A',i:MessageSquare},{h:'/linkedin',l:'LinkedIn Optimizer',i:Linkedin},{h:'/resume-versions',l:'My Resumes',i:FolderOpen}].map(t=>(
-            <Link key={t.h} href={t.h} className="flex items-center gap-2 py-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition"><t.i className="h-3 w-3"/>{t.l}</Link>
+            <Link key={t.h} href={t.h} className="flex items-center gap-2 py-1.5 text-xs text-slate-500 hover:text-slate-300 transition"><t.i className="h-3 w-3"/>{t.l}</Link>
           ))}
         </div>
       </div>

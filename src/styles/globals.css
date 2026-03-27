@@ -1,22 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 *{box-sizing:border-box}
-body{font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#09090b;color:#fafafa}
-::selection{background:rgba(16,185,129,.2)}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#3f3f46;border-radius:10px}
+body{font-family:'Plus Jakarta Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#0a1628;color:#e2e8f0}
+::selection{background:rgba(59,130,246,.15)}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:10px}
 
 @layer components{
-  .card{@apply bg-bg-1 rounded-xl border border-zinc-800/60 transition-all duration-200}
-  .card-h{@apply hover:border-zinc-700 hover:bg-bg-2}
-  .btn-p{@apply text-white text-sm font-semibold rounded-lg px-4 py-2.5 transition-all duration-150 active:scale-[0.97];background:linear-gradient(135deg,#34d399,#059669)}
-  .btn-p:hover{box-shadow:0 0 20px -4px rgba(16,185,129,0.35)}
-  .btn-s{@apply text-sm font-medium rounded-lg px-4 py-2.5 text-zinc-300 bg-bg-2 border border-zinc-800 hover:border-zinc-700 hover:text-white transition-all duration-150}
-  .inp{@apply w-full rounded-lg border border-zinc-800 bg-bg-2 px-3.5 py-2.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-accent-500/50 focus:ring-1 focus:ring-accent-500/20 focus:outline-none transition-all}
-  .label{@apply block text-xs font-medium text-zinc-500 mb-1.5}
-  .badge{@apply inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-semibold}
-  .t-muted{@apply text-zinc-500}
-  .t-dim{@apply text-zinc-400}
+  .glass{border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);backdrop-filter:blur(20px);border-radius:16px}
+  .glass-hover{transition:all 0.2s;cursor:pointer}
+  .glass-hover:hover{border-color:rgba(255,255,255,0.1);background:rgba(255,255,255,0.04)}
+  .btn-brand{color:#fff;font-weight:600;border-radius:12px;padding:10px 20px;font-size:14px;transition:all 0.2s;background:linear-gradient(135deg,#3b82f6,#6366f1)}
+  .btn-brand:hover{box-shadow:0 0 25px -4px rgba(59,130,246,0.35)}
+  .btn-brand:active{transform:scale(0.97)}
+  .btn-outline{color:#94a3b8;font-weight:500;border-radius:12px;padding:10px 20px;font-size:14px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);transition:all 0.2s}
+  .btn-outline:hover{border-color:rgba(255,255,255,0.15);color:#e2e8f0;background:rgba(255,255,255,0.06)}
+  .input-dark{width:100%;border-radius:12px;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);padding:10px 14px;font-size:14px;color:#e2e8f0;transition:all 0.2s;outline:none}
+  .input-dark::placeholder{color:#475569}
+  .input-dark:focus{border-color:rgba(59,130,246,0.4);box-shadow:0 0 0 3px rgba(59,130,246,0.08)}
+  .label-dark{display:block;font-size:12px;font-weight:500;color:#64748b;margin-bottom:6px}
+  .badge-dark{display:inline-flex;align-items:center;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:600}
+  .section-dark{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#475569}
+  .glow-blue{box-shadow:0 0 20px -4px rgba(59,130,246,0.2)}
+  .glow-ring{box-shadow:0 0 0 1px rgba(59,130,246,0.3),0 0 25px -4px rgba(59,130,246,0.15)}
 }
