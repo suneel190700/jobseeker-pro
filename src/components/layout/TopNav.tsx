@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   BarChart3,
-  Briefcase,
   ChevronRight,
   FileSignature,
   FolderOpen,
@@ -26,12 +25,12 @@ import { createClient } from '@/lib/supabase/client';
 import { useEffect, useMemo, useState } from 'react';
 
 const primaryItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, desc: 'Overview' },
-  { href: '/jobs', label: 'Jobs', icon: Search, desc: 'Search roles' },
-  { href: '/resume-optimizer', label: 'Resume AI', icon: Sparkles, desc: 'ATS optimization' },
-  { href: '/cover-letter', label: 'Cover Letter', icon: FileSignature, desc: 'Tailored drafts' },
-  { href: '/mock-interview', label: 'Mock Interview', icon: Mic, desc: 'Voice practice' },
-  { href: '/tracker', label: 'Tracker', icon: Kanban, desc: 'Application pipeline' },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, desc: 'Executive view' },
+  { href: '/jobs', label: 'Jobs', icon: Search, desc: 'Research roles' },
+  { href: '/resume-optimizer', label: 'Resume AI', icon: Sparkles, desc: 'Polish fit' },
+  { href: '/cover-letter', label: 'Cover Letter', icon: FileSignature, desc: 'Tailor faster' },
+  { href: '/mock-interview', label: 'Mock Interview', icon: Mic, desc: 'Practice live' },
+  { href: '/tracker', label: 'Tracker', icon: Kanban, desc: 'Manage pipeline' },
 ];
 
 const secondaryItems = [
@@ -58,33 +57,25 @@ const titleMap: Record<string, string> = {
   '/profile': 'Profile',
 };
 
-function SidebarContent({
-  path,
-  name,
-  onNavigate,
-  onLogout,
-}: {
-  path: string;
-  name: string;
-  onNavigate?: () => void;
-  onLogout: () => void;
-}) {
+function SidebarContent({ path, name, onNavigate, onLogout }: { path: string; name: string; onNavigate?: () => void; onLogout: () => void }) {
   const isActive = (href: string) => path === href || (href !== '/dashboard' && path.startsWith(href));
 
   return (
     <>
-      <div className="mb-6 flex items-center gap-3 rounded-[28px] border border-white/10 bg-white/[0.03] px-4 py-4 shadow-[0_18px_50px_-28px_rgba(99,102,241,0.45)]">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#8b5cf6_0%,#6366f1_45%,#22d3ee_100%)] text-[#050816] shadow-[0_10px_30px_-14px_rgba(99,102,241,0.8)]">
-          <Sparkles className="h-5 w-5" strokeWidth={2.3} />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[15px] font-semibold tracking-tight text-white">JobSeeker Pro</p>
-          <p className="text-xs text-white/45">Premium career workspace</p>
+      <div className="mb-6 rounded-[28px] border border-[rgba(23,20,17,0.1)] bg-[rgba(255,252,247,0.86)] p-4 shadow-[0_22px_50px_-42px_rgba(23,20,17,0.24)]">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#1f4fcc_0%,#3a73eb_100%)] text-white shadow-[0_18px_34px_-24px_rgba(41,88,214,0.55)]">
+            <Sparkles className="h-5 w-5" strokeWidth={2.2} />
+          </div>
+          <div>
+            <p className="text-[15px] font-semibold tracking-tight text-[var(--text-primary)]">JobSeeker Pro</p>
+            <p className="text-xs text-[var(--text-secondary)]">Editorial workspace</p>
+          </div>
         </div>
       </div>
 
       <div className="space-y-1.5">
-        <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.26em] text-white/35">Workspace</p>
+        <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.26em] text-[var(--text-tertiary)]">Workspace</p>
         {primaryItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -95,32 +86,30 @@ function SidebarContent({
               className={[
                 'group flex items-center gap-3 rounded-2xl border px-3 py-3 transition-all duration-200',
                 active
-                  ? 'border-white/14 bg-white/[0.08] shadow-[0_16px_40px_-24px_rgba(99,102,241,0.75)]'
-                  : 'border-transparent bg-transparent hover:border-white/10 hover:bg-white/[0.04]',
+                  ? 'border-[rgba(41,88,214,0.16)] bg-[rgba(41,88,214,0.08)] shadow-[0_16px_30px_-26px_rgba(41,88,214,0.22)]'
+                  : 'border-transparent bg-transparent hover:border-[rgba(23,20,17,0.08)] hover:bg-[rgba(255,255,255,0.45)]',
               ].join(' ')}
             >
-              <div
-                className={[
-                  'flex h-10 w-10 items-center justify-center rounded-xl border transition-colors',
-                  active
-                    ? 'border-indigo-400/30 bg-[linear-gradient(135deg,rgba(99,102,241,.25),rgba(34,211,238,.18))] text-white'
-                    : 'border-white/8 bg-white/[0.03] text-white/60 group-hover:text-white/90',
-                ].join(' ')}
-              >
+              <div className={[
+                'flex h-10 w-10 items-center justify-center rounded-xl border transition-colors',
+                active
+                  ? 'border-[rgba(41,88,214,0.14)] bg-white text-[var(--accent)]'
+                  : 'border-[rgba(23,20,17,0.08)] bg-white/70 text-[var(--text-secondary)]',
+              ].join(' ')}>
                 <item.icon className="h-[18px] w-[18px]" strokeWidth={2.1} />
               </div>
               <div className="min-w-0 flex-1">
-                <p className={active ? 'text-sm font-semibold text-white' : 'text-sm font-medium text-white/78'}>{item.label}</p>
-                <p className="truncate text-[12px] text-white/38">{item.desc}</p>
+                <p className={active ? 'text-sm font-semibold text-[var(--text-primary)]' : 'text-sm font-medium text-[var(--text-primary)]'}>{item.label}</p>
+                <p className="truncate text-[12px] text-[var(--text-tertiary)]">{item.desc}</p>
               </div>
-              <ChevronRight className={active ? 'h-4 w-4 text-white/70' : 'h-4 w-4 text-white/20 transition group-hover:text-white/50'} />
+              <ChevronRight className={active ? 'h-4 w-4 text-[var(--accent)]' : 'h-4 w-4 text-[var(--text-tertiary)]'} />
             </Link>
           );
         })}
       </div>
 
       <div className="mt-6 space-y-1.5">
-        <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.26em] text-white/35">Tools</p>
+        <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.26em] text-[var(--text-tertiary)]">Modules</p>
         {secondaryItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -130,7 +119,7 @@ function SidebarContent({
               onClick={onNavigate}
               className={[
                 'group flex items-center gap-3 rounded-2xl px-3 py-2.5 transition-all duration-200',
-                active ? 'bg-white/[0.06] text-white' : 'text-white/60 hover:bg-white/[0.04] hover:text-white',
+                active ? 'bg-white/70 text-[var(--text-primary)]' : 'text-[var(--text-secondary)] hover:bg-white/45 hover:text-[var(--text-primary)]',
               ].join(' ')}
             >
               <item.icon className="h-4 w-4" strokeWidth={2} />
@@ -141,34 +130,27 @@ function SidebarContent({
       </div>
 
       <div className="mt-auto pt-6">
-        <div className="rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.03))] p-4 shadow-[0_20px_50px_-34px_rgba(34,211,238,0.7)]">
+        <div className="rounded-[26px] border border-[rgba(23,20,17,0.08)] bg-[rgba(255,252,247,0.82)] p-4 shadow-[0_22px_40px_-36px_rgba(23,20,17,0.22)]">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,rgba(99,102,241,.9),rgba(34,211,238,.95))] text-[13px] font-bold text-[#06101f]">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[rgba(41,88,214,0.12)] text-[13px] font-bold text-[var(--accent)]">
               {name?.[0]?.toUpperCase() || 'U'}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">{name || 'Your workspace'}</p>
-              <p className="truncate text-xs text-white/45">Premium plan visuals</p>
+              <p className="truncate text-sm font-semibold text-[var(--text-primary)]">{name || 'Your workspace'}</p>
+              <p className="truncate text-xs text-[var(--text-secondary)]">Unique visual system</p>
             </div>
-            <Link href="/profile" onClick={onNavigate} className="rounded-xl border border-white/10 p-2 text-white/55 transition hover:border-white/20 hover:text-white">
+            <Link href="/profile" onClick={onNavigate} className="rounded-xl border border-[rgba(23,20,17,0.08)] bg-white/70 p-2 text-[var(--text-secondary)] transition hover:text-[var(--text-primary)]">
               <Settings className="h-4 w-4" />
             </Link>
           </div>
-          <div className="mt-4 rounded-2xl border border-white/8 bg-black/20 p-3">
-            <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-white/35">
-              <span>Daily momentum</span>
-              <span>78%</span>
+          <div className="mt-4 rounded-2xl border border-[rgba(23,20,17,0.06)] bg-[#f9f6f0] p-3">
+            <div className="mb-2 flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-[var(--text-tertiary)]">
+              <span>Design direction</span>
+              <span>New</span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-white/8">
-              <div className="h-full w-[78%] rounded-full bg-[linear-gradient(90deg,#818cf8,#22d3ee)]" />
-            </div>
-            <p className="mt-3 text-xs leading-relaxed text-white/48">Clean shell, stronger hierarchy, and a more premium product feel across every core workflow.</p>
+            <p className="text-xs leading-relaxed text-[var(--text-secondary)]">Warm editorial layout, calmer palette, stronger typography, and zero dark-glass SaaS cloning.</p>
           </div>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-medium text-white/72 transition hover:bg-white/[0.07] hover:text-white"
-          >
+          <button type="button" onClick={onLogout} className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-[rgba(23,20,17,0.08)] bg-white/80 px-4 py-3 text-sm font-medium text-[var(--text-primary)] transition hover:bg-white">
             <LogOut className="h-4 w-4" />
             Sign out
           </button>
@@ -185,14 +167,10 @@ export default function TopNav() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    createClient()
-      .auth.getUser()
-      .then(({ data }) => setName(data?.user?.user_metadata?.full_name || data?.user?.email?.split('@')[0] || ''));
+    createClient().auth.getUser().then(({ data }) => setName(data?.user?.user_metadata?.full_name || data?.user?.email?.split('@')[0] || ''));
   }, []);
 
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [path]);
+  useEffect(() => { setSidebarOpen(false); }, [path]);
 
   const currentTitle = useMemo(() => {
     const exact = Object.entries(titleMap).find(([href]) => path === href || (href !== '/dashboard' && path.startsWith(href)));
@@ -206,49 +184,37 @@ export default function TopNav() {
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[292px] border-r border-white/8 bg-[rgba(7,9,15,0.92)] px-5 py-5 backdrop-blur-2xl xl:flex xl:flex-col">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[292px] border-r border-[rgba(23,20,17,0.08)] bg-[rgba(245,240,232,0.84)] px-5 py-5 backdrop-blur-xl xl:flex xl:flex-col">
         <SidebarContent path={path} name={name} onLogout={logout} />
       </aside>
 
-      <header className="sticky top-0 z-30 border-b border-white/8 bg-[rgba(7,9,15,0.78)] backdrop-blur-2xl xl:ml-[292px]">
+      <header className="sticky top-0 z-30 border-b border-[rgba(23,20,17,0.08)] bg-[rgba(247,243,236,0.78)] backdrop-blur-xl xl:ml-[292px]">
         <div className="flex min-h-[76px] items-center justify-between px-4 sm:px-6 xl:px-8">
           <div className="flex min-w-0 items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(true)}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/75 xl:hidden"
-            >
+            <button type="button" onClick={() => setSidebarOpen(true)} className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-[rgba(23,20,17,0.08)] bg-white/80 text-[var(--text-primary)] xl:hidden">
               <Menu className="h-5 w-5" />
             </button>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/35">Premium workspace</p>
-              <h1 className="truncate text-[22px] font-semibold tracking-tight text-white">{currentTitle}</h1>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--text-tertiary)]">Premium workspace</p>
+              <h1 className="truncate text-[22px] font-semibold tracking-tight text-[var(--text-primary)]">{currentTitle}</h1>
             </div>
           </div>
-
           <div className="hidden items-center gap-3 md:flex">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-white/35">Focus</p>
-              <p className="text-sm text-white/80">Design-first premium rebuild</p>
+            <div className="rounded-2xl border border-[rgba(23,20,17,0.08)] bg-white/70 px-4 py-3">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-[var(--text-tertiary)]">Theme</p>
+              <p className="text-sm text-[var(--text-secondary)]">Editorial calm</p>
             </div>
-            <Link href="/jobs" className="inline-flex items-center gap-2 rounded-2xl border border-indigo-400/25 bg-[linear-gradient(135deg,rgba(99,102,241,.25),rgba(34,211,238,.16))] px-4 py-3 text-sm font-semibold text-white shadow-[0_16px_40px_-22px_rgba(99,102,241,0.85)] transition hover:scale-[1.01]">
-              <Briefcase className="h-4 w-4" />
-              Search jobs
-            </Link>
+            <Link href="/jobs" className="btn-filled btn-sm !min-h-0 px-4 py-3">Search jobs</Link>
           </div>
         </div>
       </header>
 
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 xl:hidden">
-          <button type="button" aria-label="Close sidebar" onClick={() => setSidebarOpen(false)} className="absolute inset-0 bg-black/65" />
-          <div className="absolute inset-y-0 left-0 flex w-[92vw] max-w-[320px] flex-col border-r border-white/10 bg-[rgba(7,9,15,0.97)] px-5 py-5 backdrop-blur-2xl">
+          <button type="button" aria-label="Close sidebar" onClick={() => setSidebarOpen(false)} className="absolute inset-0 bg-black/25" />
+          <div className="absolute inset-y-0 left-0 flex w-[92vw] max-w-[320px] flex-col border-r border-[rgba(23,20,17,0.08)] bg-[rgba(247,243,236,0.96)] px-5 py-5 backdrop-blur-xl">
             <div className="mb-3 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(false)}
-                className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/70"
-              >
+              <button type="button" onClick={() => setSidebarOpen(false)} className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-[rgba(23,20,17,0.08)] bg-white/80 text-[var(--text-primary)]">
                 <X className="h-4 w-4" />
               </button>
             </div>
