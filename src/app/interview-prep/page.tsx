@@ -40,8 +40,9 @@ export default function InterviewPrepPage() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold text-white/90">Interview Prep</h1>
-      <p className="mt-1 text-sm text-white/35">AI-generated questions, STAR stories, and company research for your interview.</p>
+      <p className="page-eyebrow">Prep</p>
+      <h1 className="title-1 mt-1">Interview prep</h1>
+      <p className="subhead mt-1">Questions, STAR stories, and a tight company brief.</p>
 
       {!profile && <div className="mt-4 rounded-2xl bg-[#ff9f0a]/10 border border-[#ff9f0a]/20 p-3 text-sm text-[#ff9f0a]">Upload resume in <a href="/profile" className="font-medium underline">Profile</a> first.</div>}
 
@@ -54,10 +55,10 @@ export default function InterviewPrepPage() {
       {/* Tabs */}
       <div className="mt-6 flex gap-2 border-b border-[var(--separator)] pb-0">
         {[{ key: 'questions', label: 'Interview Questions', icon: MessageCircle }, { key: 'star', label: 'STAR Stories', icon: BookOpen }, { key: 'company', label: 'Company Brief', icon: Building2 }].map((t) => (
-          <button key={t.key} onClick={() => { setActiveTab(t.key as any); if (!data[t.key]) generate(t.key); }}
-            className={['flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition', activeTab === t.key ? 'border-brand-600 text-[#30d158]' : 'border-transparent text-white/25 hover:text-white/50'].join(' ')}>
+          <button type="button" key={t.key} onClick={() => { setActiveTab(t.key as 'questions' | 'star' | 'company'); if (!data[t.key]) generate(t.key); }}
+            className={['flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold border-b-2 transition', activeTab === t.key ? 'border-[var(--accent)] text-[var(--accent)]' : 'border-transparent text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]'].join(' ')}>
             <t.icon className="h-4 w-4" />{t.label}
-            {data[t.key] && <CheckCircle className="h-3 w-3 text-green-400" />}
+            {data[t.key] && <CheckCircle className="h-3 w-3 text-[var(--success)]" />}
           </button>
         ))}
       </div>
@@ -65,12 +66,12 @@ export default function InterviewPrepPage() {
       {error && <div className="mt-4 rounded-2xl bg-[#ff453a]/10 p-3 text-sm text-[#ff453a]">{error}</div>}
 
       <div className="mt-6">
-        {loading && <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[#30d158]" /></div>}
+        {loading && <div className="flex items-center justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-[var(--accent)]" /></div>}
 
         {/* Questions */}
         {!loading && activeTab === 'questions' && (
           !questions ? (
-            <div className="text-center py-12"><button onClick={() => generate('questions')} disabled={!profile || !jobDescription.trim()} className="rounded-2xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white/90 hover:bg-brand-700 disabled:opacity-50 transition">Generate Interview Questions</button></div>
+            <div className="text-center py-12"><button type="button" onClick={() => generate('questions')} disabled={!profile || !jobDescription.trim()} className="btn-filled disabled:opacity-50">Generate interview questions</button></div>
           ) : (
             <div className="space-y-6">
               {['behavioral', 'technical', 'system_design', 'role_specific'].map((cat) => (
@@ -94,7 +95,7 @@ export default function InterviewPrepPage() {
         {/* STAR */}
         {!loading && activeTab === 'star' && (
           !star ? (
-            <div className="text-center py-12"><button onClick={() => generate('star')} disabled={!profile || !jobDescription.trim()} className="rounded-2xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white/90 hover:bg-brand-700 disabled:opacity-50 transition">Generate STAR Stories</button></div>
+            <div className="text-center py-12"><button type="button" onClick={() => generate('star')} disabled={!profile || !jobDescription.trim()} className="btn-filled disabled:opacity-50">Generate STAR stories</button></div>
           ) : (
             <div className="space-y-4">{star.stories?.map((s: any, i: number) => (
               <div key={i} className="rounded-2xl border border-[var(--separator)] p-4">
@@ -114,13 +115,13 @@ export default function InterviewPrepPage() {
         {/* Company */}
         {!loading && activeTab === 'company' && (
           !company ? (
-            <div className="text-center py-12"><button onClick={() => generate('company')} disabled={!profile || !jobDescription.trim()} className="rounded-2xl bg-brand-600 px-6 py-3 text-sm font-semibold text-white/90 hover:bg-brand-700 disabled:opacity-50 transition">Generate Company Brief</button></div>
+            <div className="text-center py-12"><button type="button" onClick={() => generate('company')} disabled={!profile || !jobDescription.trim()} className="btn-filled disabled:opacity-50">Generate company brief</button></div>
           ) : (
             <div className="space-y-4">
-              {company.company_overview && <div className="rounded-2xl bg-[#0a84ff]/10 border border-blue-100 p-4"><h4 className="text-sm font-semibold text-blue-800">Overview</h4><p className="text-xs text-blue-700 mt-1">{company.company_overview}</p></div>}
+              {company.company_overview && <div className="rounded-[var(--radius-lg)] bg-[rgba(96,165,250,0.1)] border border-[var(--info)]/25 p-4"><h4 className="text-sm font-semibold text-[var(--info)]">Overview</h4><p className="text-xs text-[var(--text-secondary)] mt-1">{company.company_overview}</p></div>}
               {company.culture_values?.length > 0 && <div className="rounded-2xl border border-[var(--separator)] p-4"><h4 className="text-sm font-semibold text-white/70">Culture & Values</h4><div className="mt-2 flex flex-wrap gap-2">{company.culture_values.map((v: string) => (<span key={v} className="rounded-full bg-purple-500/10 px-3 py-1 text-xs text-purple-400">{v}</span>))}</div></div>}
               {company.interview_talking_points?.length > 0 && <div className="rounded-2xl border border-[var(--separator)] p-4"><h4 className="text-sm font-semibold text-white/70">Talking Points</h4><div className="mt-2 space-y-1">{company.interview_talking_points.map((t: string, i: number) => (<p key={i} className="text-xs text-white/50">• {t}</p>))}</div></div>}
-              {company.questions_to_ask?.length > 0 && <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-4"><h4 className="text-sm font-semibold text-green-800">Questions to Ask</h4><div className="mt-2 space-y-1">{company.questions_to_ask.map((q: string, i: number) => (<p key={i} className="text-xs text-green-400">• {q}</p>))}</div></div>}
+              {company.questions_to_ask?.length > 0 && <div className="rounded-[var(--radius-lg)] border border-[var(--success)]/25 bg-[var(--success)]/10 p-4"><h4 className="text-sm font-semibold text-[var(--success)]">Questions to ask</h4><div className="mt-2 space-y-1">{company.questions_to_ask.map((q: string, i: number) => (<p key={i} className="text-xs text-[var(--text-secondary)]">• {q}</p>))}</div></div>}
               {company.recent_news && <div className="rounded-2xl border border-[var(--separator)] p-4"><h4 className="text-sm font-semibold text-white/70">Research Before Interview</h4><p className="text-xs text-white/50 mt-1">{company.recent_news}</p></div>}
             </div>
           )

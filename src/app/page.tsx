@@ -1,157 +1,261 @@
 import Link from 'next/link';
-import { Sparkles, Search, FileText, Mic, Users, BarChart3, Zap, ArrowRight, CheckCircle, Shield, Globe, Target, Clock, Star, Briefcase, TrendingUp } from 'lucide-react';
+import {
+  Sparkles,
+  Search,
+  FileText,
+  Mic,
+  Users,
+  BarChart3,
+  Zap,
+  ArrowRight,
+  CheckCircle,
+  Shield,
+  Globe,
+  Target,
+  Clock,
+  Star,
+  Briefcase,
+  TrendingUp,
+} from 'lucide-react';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #0a1628 0%, #0d1f3c 40%, #0a1628 100%)' }}>
-      <div className="fixed inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse 60% 40% at 50% 0%, rgba(59,130,246,0.08) 0%, transparent 70%)' }} />
-
-      {/* Pill Navbar */}
-      <header className="relative z-50 flex justify-center pt-5 px-6">
-        <nav className="flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl px-2.5 py-1.5" style={{ boxShadow: '0 0 0 1px rgba(255,255,255,0.04), 0 4px 20px rgba(0,0,0,0.3)' }}>
-          <div className="flex items-center gap-2.5 pl-2 pr-4">
-            <div className="h-8 w-8 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}><Sparkles className="h-4 w-4 text-white" /></div>
-            <span className="text-[15px] font-semibold text-white">JobSeeker Pro</span>
-          </div>
-          <div className="hidden sm:flex items-center">
-            {['Features', 'How it Works', 'Pricing'].map(t => (
-              <a key={t} href={`#${t.toLowerCase().replace(/\s+/g, '-')}`} className="px-4 py-2 text-[13px] font-medium text-slate-400 hover:text-white transition-colors">{t}</a>
+    <div className="app-root min-h-screen text-[var(--text-primary)]">
+      <div className="app-ambient" aria-hidden />
+      <header className="relative z-10 border-b" style={{ borderColor: 'var(--separator)', background: 'rgba(5,6,8,0.72)', backdropFilter: 'blur(16px)' }}>
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-5 h-16">
+          <Link href="/" className="flex items-center gap-2.5 press">
+            <div
+              className="h-9 w-9 rounded-[var(--radius-sm)] flex items-center justify-center ring-1 ring-white/10"
+              style={{ background: 'linear-gradient(145deg, var(--accent), var(--accent-secondary))' }}
+            >
+              <Sparkles className="h-[18px] w-[18px] text-[var(--bg-primary)]" strokeWidth={2.2} />
+            </div>
+            <span className="font-bold text-[15px] tracking-tight">
+              JobSeeker<span className="text-[var(--accent)]"> Pro</span>
+            </span>
+          </Link>
+          <nav className="hidden md:flex items-center gap-1">
+            {['Features', 'How it Works', 'Pricing'].map((t) => (
+              <a
+                key={t}
+                href={`#${t.toLowerCase().replace(/\s+/g, '-')}`}
+                className="px-3 py-2 text-[13px] font-semibold rounded-[var(--radius-sm)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-1)] transition-colors"
+              >
+                {t}
+              </a>
             ))}
+          </nav>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/auth/login"
+              className="px-4 py-2 text-[13px] font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            >
+              Log in
+            </Link>
+            <Link href="/auth/signup" className="btn-filled btn-sm !min-h-0 py-2.5 px-5">
+              Get started
+            </Link>
           </div>
-          <div className="flex items-center gap-2 ml-2">
-            <Link href="/auth/login" className="px-4 py-2 text-[13px] font-medium text-slate-400 hover:text-white transition-colors">Login</Link>
-            <Link href="/auth/signup" className="px-5 py-2 text-[13px] font-semibold text-white rounded-full transition-all hover:shadow-[0_0_20px_rgba(59,130,246,0.3)]" style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>Get Started</Link>
-          </div>
-        </nav>
+        </div>
       </header>
 
-      {/* Powered by badges */}
-      <div className="relative z-10 flex justify-center mt-10">
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-slate-500">Powered by</span>
-          {[{ name: 'LinkedIn', color: '#0a66c2' }, { name: 'Indeed', color: '#2164f3' }, { name: 'Glassdoor', color: '#0caa41' }, { name: '16K+ ATS', color: '#8b5cf6' }].map(b => (
-            <span key={b.name} className="flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-slate-300">
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: b.color }} />{b.name}
+      <main className="relative z-[1]">
+        <section className="max-w-6xl mx-auto px-5 pt-16 pb-12 md:pt-24 md:pb-16 text-center">
+          <p className="page-eyebrow inline-block">AI career workspace</p>
+          <h1 className="mt-3 text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight leading-[1.08]">
+            Hire yourself into
+            <br />
+            <span
+              className="bg-gradient-to-r from-[var(--accent)] via-[var(--accent-secondary)] to-[var(--accent)] bg-clip-text text-transparent"
+              style={{ backgroundSize: '200% auto' }}
+            >
+              the right role
             </span>
-          ))}
-        </div>
-      </div>
+          </h1>
+          <p className="mt-6 text-lg md:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
+            One sleek workspace for job search, ATS-tuned resumes, voice interviews, and outreach — built for momentum, not clutter.
+          </p>
+          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/auth/signup" className="btn-filled gap-2">
+              Start free
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link href="/auth/login" className="btn-gray btn-sm !min-h-0 py-3 px-6">
+              I have an account
+            </Link>
+          </div>
+        </section>
 
-      {/* Hero */}
-      <section className="relative z-10 max-w-4xl mx-auto px-6 pt-14 pb-8 text-center">
-        <h1 className="text-6xl sm:text-7xl font-extrabold leading-[1.05] tracking-tight">
-          <span style={{ background: 'linear-gradient(135deg, #60a5fa, #818cf8, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>JobSeeker Pro</span>
-          <br /><span className="text-white">Career Intelligence</span>
-        </h1>
-        <p className="mt-6 text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">AI-powered resume optimization, job matching across 323K+ sites, voice mock interviews, and smart networking tools. Build your career with precision.</p>
-        <div className="mt-10 flex items-center justify-center gap-4">
-          <Link href="/auth/signup" className="group px-8 py-3.5 text-sm font-semibold text-white rounded-xl flex items-center gap-2 transition-all hover:shadow-[0_0_30px_rgba(59,130,246,0.3)]" style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>Explore Features <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" /></Link>
-          <Link href="/auth/login" className="px-8 py-3.5 text-sm font-semibold text-slate-300 rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] hover:border-white/[0.12] transition-all backdrop-blur-sm">View Demo</Link>
-        </div>
-      </section>
+        <section className="max-w-6xl mx-auto px-5 pb-16">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {[
+              { icon: Globe, value: '323K+', label: 'Sources', c: 'var(--info)' },
+              { icon: Target, value: '95+', label: 'ATS target', c: 'var(--accent-secondary)' },
+              { icon: Briefcase, value: 'TheirStack', label: 'Job data', c: 'var(--accent)' },
+              { icon: Shield, value: '16K+', label: 'ATS tools', c: 'var(--success)' },
+              { icon: TrendingUp, value: '195', label: 'Countries', c: 'var(--warning)' },
+              { icon: Star, value: '4.9', label: 'Avg rating', c: 'var(--destructive)' },
+            ].map((s) => (
+              <div
+                key={s.label}
+                className="surface-interactive p-5 text-center border border-[var(--separator)]"
+              >
+                <s.icon className="h-5 w-5 mx-auto mb-2" style={{ color: s.c }} />
+                <p className="text-xl font-bold">{s.value}</p>
+                <p className="caption mt-1 !normal-case !tracking-normal font-medium">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      {/* Stats - glassmorphic cards */}
-      <section className="relative z-10 max-w-5xl mx-auto px-6 mt-12">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {[{ icon: Globe, value: '323K+', label: 'Job Sources', color: '#3b82f6' }, { icon: Target, value: '95+', label: 'ATS Score', color: '#8b5cf6' }, { icon: Briefcase, value: '179M', label: 'Jobs Indexed', color: '#06b6d4' }, { icon: Shield, value: '16K+', label: 'ATS Platforms', color: '#10b981' }, { icon: TrendingUp, value: '195', label: 'Countries', color: '#f59e0b' }, { icon: Star, value: '4.9', label: 'User Rating', color: '#ec4899' }].map(s => (
-            <div key={s.label} className="rounded-2xl border border-white/[0.06] p-5 text-center transition-all hover:border-white/[0.1] hover:bg-white/[0.02]" style={{ background: 'rgba(255,255,255,0.02)', backdropFilter: 'blur(20px)' }}>
-              <s.icon className="h-5 w-5 mx-auto mb-2" style={{ color: s.color }} />
-              <p className="text-2xl font-bold text-white">{s.value}</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <section id="features" className="max-w-6xl mx-auto px-5 py-20 border-t border-[var(--separator)]">
+          <div className="text-center mb-14">
+            <span className="pill border border-[var(--accent-dim)] bg-[var(--accent-dim)] text-[var(--accent)] mb-4">
+              <Zap className="h-3.5 w-3.5" /> Toolkit
+            </span>
+            <h2 className="title-1 mt-4">Everything in one flow</h2>
+            <p className="subhead mt-3 max-w-lg mx-auto">Fewer tabs. Fewer templates. More signal on what actually gets you interviews.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { icon: FileText, title: 'Resume AI', desc: 'JD-aware rewrites, keyword coverage, and exports that stay readable to humans and ATS.', c: 'var(--accent)' },
+              { icon: Search, title: 'Job discovery', desc: 'Search powered by TheirStack with filters that respect how you actually want to work.', c: 'var(--info)' },
+              { icon: Mic, title: 'Voice mock interview', desc: 'Practice out loud with structured feedback — pacing, fillers, and clarity.', c: 'var(--accent-secondary)' },
+              { icon: Users, title: 'Networking', desc: 'Outreach drafts and recruiter angles without sounding like a mail-merge robot.', c: 'var(--success)' },
+              { icon: BarChart3, title: 'Analytics', desc: 'Funnel clarity from saved roles to offers — so you know where time pays off.', c: 'var(--warning)' },
+              { icon: Shield, title: 'Cover letters', desc: 'Tone-matched letters grounded in your resume and the posting.', c: 'var(--accent)' },
+            ].map((f) => (
+              <div
+                key={f.title}
+                className="group surface-elevated p-6 border border-[var(--separator)] transition-all duration-300 hover:border-[rgba(44,224,196,0.25)] hover:shadow-glow-sm"
+              >
+                <div
+                  className="h-11 w-11 rounded-[var(--radius-md)] flex items-center justify-center mb-4 border"
+                  style={{ background: 'var(--surface-1)', borderColor: 'var(--separator)' }}
+                >
+                  <f.icon className="h-5 w-5" style={{ color: f.c }} />
+                </div>
+                <h3 className="title-3 mb-2">{f.title}</h3>
+                <p className="subhead text-[15px] leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      {/* Features */}
-      <section id="features" className="relative z-10 max-w-5xl mx-auto px-6 mt-32">
-        <div className="text-center mb-16">
-          <span className="inline-flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/5 px-4 py-1.5 text-xs font-semibold text-blue-400 mb-4"><Zap className="h-3 w-3" /> Core Features</span>
-          <h2 className="text-4xl font-bold text-white">Everything you need to land the job</h2>
-          <p className="mt-3 text-base text-slate-500 max-w-xl mx-auto">Six AI-powered tools working together to maximize your chances.</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[{ icon: FileText, title: 'Resume AI Engine', desc: 'Deep JD analysis, ATS keyword matching, adaptive tone. Targets 95+ scores on Workday, Greenhouse, Lever.', color: '#3b82f6', glow: 'rgba(59,130,246,0.1)' }, { icon: Search, title: 'Smart Job Search', desc: 'Aggregates from LinkedIn, Indeed, Glassdoor & 16K+ ATS. Full descriptions, salary data, 1-click apply.', color: '#06b6d4', glow: 'rgba(6,182,212,0.1)' }, { icon: Mic, title: 'Voice Mock Interview', desc: 'AI interviewer with real-time scoring. Filler word detection, pace analysis, confidence rating.', color: '#ec4899', glow: 'rgba(236,72,153,0.1)' }, { icon: Users, title: 'Networking Suite', desc: 'Find hiring managers on LinkedIn, generate cold emails, discover referral paths into any company.', color: '#8b5cf6', glow: 'rgba(139,92,246,0.1)' }, { icon: BarChart3, title: 'Application Analytics', desc: 'Track your funnel: applied → screened → interviewed → offered. Conversion rates vs benchmarks.', color: '#f59e0b', glow: 'rgba(245,158,11,0.1)' }, { icon: Shield, title: 'AI Cover Letters', desc: 'Generate tailored cover letters per application. Matches company tone, references JD keywords.', color: '#10b981', glow: 'rgba(16,185,129,0.1)' }].map(f => (
-            <div key={f.title} className="group rounded-2xl border border-white/[0.06] p-6 transition-all duration-300 hover:border-white/[0.1]" style={{ background: `linear-gradient(180deg, ${f.glow} 0%, transparent 100%)` }}>
-              <div className="h-10 w-10 rounded-xl flex items-center justify-center mb-4" style={{ background: `${f.color}15`, border: `1px solid ${f.color}25` }}><f.icon className="h-5 w-5" style={{ color: f.color }} /></div>
-              <h3 className="text-base font-bold text-white mb-2">{f.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <section id="how-it-works" className="max-w-4xl mx-auto px-5 py-20 text-center border-t border-[var(--separator)]">
+          <span className="pill border border-[var(--separator)] bg-[var(--surface-1)] text-[var(--text-secondary)] mb-4">
+            <Clock className="h-3.5 w-3.5" /> Quick start
+          </span>
+          <h2 className="title-1 mt-4">Three steps, same afternoon</h2>
+          <div className="grid md:grid-cols-3 gap-10 mt-14 text-left">
+            {[
+              { n: '01', t: 'Bring your resume', d: 'Upload once. We structure it for scoring, rewrites, and job matching.', ac: 'var(--accent)' },
+              { n: '02', t: 'Search with intent', d: 'Run tight searches, save roles to the tracker, and score fit per posting.', ac: 'var(--accent-secondary)' },
+              { n: '03', t: 'Ship better applications', d: 'Optimize, draft outreach, and rehearse answers — all wired to the same job context.', ac: 'var(--success)' },
+            ].map((s) => (
+              <div key={s.n}>
+                <div
+                  className="inline-flex h-12 w-12 rounded-[var(--radius-md)] items-center justify-center font-bold border mb-4"
+                  style={{ borderColor: 'var(--separator)', color: s.ac, background: 'var(--surface-1)' }}
+                >
+                  {s.n}
+                </div>
+                <h3 className="headline mb-2">{s.t}</h3>
+                <p className="subhead leading-relaxed">{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-      {/* How it Works */}
-      <section id="how-it-works" className="relative z-10 max-w-4xl mx-auto px-6 mt-32">
-        <div className="text-center mb-16">
-          <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-4 py-1.5 text-xs font-semibold text-emerald-400 mb-4"><Clock className="h-3 w-3" /> Quick Start</span>
-          <h2 className="text-4xl font-bold text-white">Get started in 3 minutes</h2>
-        </div>
-        <div className="grid grid-cols-3 gap-8">
-          {[{ n: '01', title: 'Upload Resume', desc: 'Drop your PDF, DOCX or TXT. We parse it instantly.', color: '#3b82f6' }, { n: '02', title: 'Search & Match', desc: 'Jobs from 323K+ sites. AI scores each against your resume.', color: '#8b5cf6' }, { n: '03', title: 'Optimize & Apply', desc: 'AI rewrites your resume per job. Score jumps to 95+.', color: '#10b981' }].map(s => (
-            <div key={s.n} className="text-center">
-              <div className="inline-flex h-14 w-14 rounded-2xl items-center justify-center mb-5 border border-white/[0.06]" style={{ background: `${s.color}10` }}><span className="text-lg font-bold" style={{ color: s.color }}>{s.n}</span></div>
-              <h3 className="text-lg font-bold text-white mb-2">{s.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Testimonial */}
-      <section className="relative z-10 max-w-5xl mx-auto px-6 mt-32">
-        <div className="rounded-2xl border border-white/[0.06] p-10 text-center" style={{ background: 'rgba(255,255,255,0.02)' }}>
-          <div className="flex justify-center gap-1 mb-4">{[1,2,3,4,5].map(i => <Star key={i} className="h-5 w-5 text-amber-400 fill-amber-400" />)}</div>
-          <p className="text-xl text-slate-300 font-medium max-w-2xl mx-auto leading-relaxed">&ldquo;I went from zero callbacks to 5 interviews in 2 weeks. The ATS optimization is incredible — my score went from 42% to 97%.&rdquo;</p>
-          <p className="mt-4 text-sm text-slate-500">— Software Engineer, landed role at a Fortune 500</p>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="pricing" className="relative z-10 max-w-4xl mx-auto px-6 mt-32">
-        <div className="text-center mb-12">
-          <span className="inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-violet-500/5 px-4 py-1.5 text-xs font-semibold text-violet-400 mb-4"><Sparkles className="h-3 w-3" /> Pricing</span>
-          <h2 className="text-4xl font-bold text-white">Start free, upgrade when ready</h2>
-        </div>
-        <div className="grid grid-cols-2 gap-5">
-          <div className="rounded-2xl border border-white/[0.06] p-8" style={{ background: 'rgba(255,255,255,0.02)' }}>
-            <h3 className="text-lg font-bold text-white">Free</h3>
-            <p className="text-3xl font-bold text-white mt-2">$0<span className="text-sm font-normal text-slate-500">/month</span></p>
-            <div className="mt-6 space-y-3">
-              {['5 AI resume optimizations/day','10 job searches/day','3 mock interviews/day','2 downloads/day','Application tracker','LinkedIn optimizer'].map(f=>(
-                <div key={f} className="flex items-center gap-2.5 text-sm text-slate-400"><CheckCircle className="h-4 w-4 text-emerald-500 flex-shrink-0"/>{f}</div>
+        <section className="max-w-6xl mx-auto px-5 py-20 border-t border-[var(--separator)]">
+          <div className="surface-elevated p-10 md:p-12 text-center max-w-3xl mx-auto border border-[var(--separator)]">
+            <div className="flex justify-center gap-1 mb-5">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Star key={i} className="h-5 w-5 text-[var(--warning)] fill-[var(--warning)]" />
               ))}
             </div>
-            <Link href="/auth/signup" className="mt-8 block w-full py-3 text-sm font-semibold text-white text-center rounded-xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] transition-all">Get Started</Link>
+            <p className="text-xl md:text-2xl font-medium text-[var(--text-secondary)] leading-relaxed">
+              &ldquo;Callbacks jumped once the resume and JD were speaking the same language. The tracker meant I stopped losing roles in
+              spreadsheets.&rdquo;
+            </p>
+            <p className="mt-5 footnote">— Product manager, offer in 4 weeks</p>
           </div>
-          <div className="rounded-2xl border border-blue-500/20 p-8 relative" style={{ background: 'linear-gradient(180deg, rgba(59,130,246,0.05) 0%, rgba(99,102,241,0.02) 100%)' }}>
-            <div className="absolute top-4 right-4"><span className="inline-flex items-center rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[10px] font-semibold px-2 py-0.5">Coming Soon</span></div>
-            <h3 className="text-lg font-bold text-white">Pro</h3>
-            <p className="text-3xl font-bold text-white mt-2">$19<span className="text-sm font-normal text-slate-500">/month</span></p>
-            <div className="mt-6 space-y-3">
-              {['Unlimited AI optimizations','Unlimited job searches','Unlimited mock interviews','Unlimited downloads','Priority AI models','Recruiter finder & cold emails','Advanced analytics','Priority support'].map(f=>(
-                <div key={f} className="flex items-center gap-2.5 text-sm text-slate-400"><CheckCircle className="h-4 w-4 text-blue-400 flex-shrink-0"/>{f}</div>
-              ))}
+        </section>
+
+        <section id="pricing" className="max-w-6xl mx-auto px-5 py-20 border-t border-[var(--separator)]">
+          <div className="text-center mb-12">
+            <span className="pill border border-[var(--separator)] bg-[var(--surface-1)] text-[var(--text-secondary)] mb-4">
+              <Sparkles className="h-3.5 w-3.5" /> Pricing
+            </span>
+            <h2 className="title-1 mt-4">Free tier stays useful</h2>
+            <p className="subhead mt-2">Upgrade only when you outgrow daily limits.</p>
+          </div>
+          <div className="grid md:grid-cols-2 gap-5 max-w-3xl mx-auto">
+            <div className="surface-elevated p-8 border border-[var(--separator)]">
+              <h3 className="title-3">Free</h3>
+              <p className="text-3xl font-bold mt-2">
+                $0<span className="text-sm font-normal text-[var(--text-tertiary)]">/mo</span>
+              </p>
+              <ul className="mt-6 space-y-3 text-left">
+                {['Daily AI resume passes', 'Job search & saves', 'Mock interview sessions', 'Tracker & analytics basics'].map((f) => (
+                  <li key={f} className="flex items-center gap-2.5 text-[15px] text-[var(--text-secondary)]">
+                    <CheckCircle className="h-4 w-4 text-[var(--accent)] flex-shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/auth/signup" className="mt-8 block w-full btn-gray text-center py-3 !min-h-0">
+                Create account
+              </Link>
             </div>
-            <button disabled className="mt-8 block w-full py-3 text-sm font-semibold text-white text-center rounded-xl opacity-50 cursor-not-allowed" style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>Coming Soon</button>
+            <div
+              className="surface-elevated p-8 border relative overflow-hidden"
+              style={{ borderColor: 'rgba(44, 224, 196, 0.35)', background: 'linear-gradient(165deg, var(--accent-dim) 0%, var(--bg-elevated) 45%)' }}
+            >
+              <span className="pill absolute top-4 right-4 border border-[var(--accent-dim-strong)] bg-[var(--bg-elevated)] text-[var(--accent)] text-[10px]">
+                Coming soon
+              </span>
+              <h3 className="title-3">Pro</h3>
+              <p className="text-3xl font-bold mt-2">
+                $19<span className="text-sm font-normal text-[var(--text-tertiary)]">/mo</span>
+              </p>
+              <ul className="mt-6 space-y-3 text-left">
+                {['Higher daily limits', 'Priority models', 'Advanced analytics', 'Recruiter outreach depth'].map((f) => (
+                  <li key={f} className="flex items-center gap-2.5 text-[15px] text-[var(--text-secondary)]">
+                    <CheckCircle className="h-4 w-4 text-[var(--accent-secondary)] flex-shrink-0" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button type="button" disabled className="mt-8 w-full btn-filled opacity-40 cursor-not-allowed">
+                Coming soon
+              </button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Final CTA */}
-      <section className="relative z-10 max-w-3xl mx-auto px-6 mt-32 pb-20 text-center">
-        <h2 className="text-4xl font-bold text-white">Ready to accelerate your job search?</h2>
-        <p className="mt-4 text-base text-slate-500">Join thousands using AI to land more interviews.</p>
-        <div className="mt-8"><Link href="/auth/signup" className="group inline-flex px-8 py-3.5 text-sm font-semibold text-white rounded-xl items-center gap-2 transition-all hover:shadow-[0_0_30px_rgba(59,130,246,0.3)]" style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>Start Free Now <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" /></Link></div>
-        <div className="mt-5 flex items-center justify-center gap-5 text-xs text-slate-600">{['No credit card required','Free forever plan','Cancel anytime'].map(t=>(<span key={t} className="flex items-center gap-1.5"><CheckCircle className="h-3 w-3 text-emerald-500/50"/>{t}</span>))}</div>
-      </section>
+        <section className="max-w-3xl mx-auto px-5 py-24 text-center border-t border-[var(--separator)]">
+          <h2 className="title-1">Ready when you are</h2>
+          <p className="subhead mt-3 text-[17px]">No credit card for the free tier.</p>
+          <div className="mt-8">
+            <Link href="/auth/signup" className="btn-filled inline-flex gap-2">
+              Open the workspace
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
 
-      <footer className="relative z-10 border-t border-white/[0.04] py-8 px-6">
-        <div className="max-w-5xl mx-auto flex items-center justify-between text-xs text-slate-600">
-          <div className="flex items-center gap-2"><Sparkles className="h-3.5 w-3.5 text-blue-500" /><span className="font-medium">JobSeeker Pro</span></div>
-          <span>&copy; 2026 JobSeeker Pro. All rights reserved.</span>
-        </div>
-      </footer>
+        <footer className="border-t border-[var(--separator)] py-10 px-5">
+          <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-[13px] text-[var(--text-tertiary)]">
+            <div className="flex items-center gap-2 font-semibold text-[var(--text-secondary)]">
+              <Sparkles className="h-4 w-4 text-[var(--accent)]" />
+              JobSeeker Pro
+            </div>
+            <span>© {new Date().getFullYear()} JobSeeker Pro</span>
+          </div>
+        </footer>
+      </main>
     </div>
   );
 }

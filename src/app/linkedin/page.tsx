@@ -39,7 +39,7 @@ export default function LinkedInPage() {
           <div className="rounded-2xl bg-[#ff9f0a]/10 border border-[#ff9f0a]/20 p-4 text-sm text-[#ff9f0a]">Upload your base resume in <a href="/profile" className="font-medium underline">Profile</a> first.</div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-2xl bg-green-500/10 border border-green-100 p-3">
+            <div className="flex items-center justify-between rounded-[var(--radius-lg)] bg-[var(--success)]/10 border border-[var(--success)]/25 p-3">
               <div className="flex items-center gap-2 text-xs text-green-400"><CheckCircle className="h-4 w-4" /> Using: {profile.fileName}
                 {titles.length > 0 && <span className="text-green-400">| Targeting: {titles.join(', ')}</span>}
               </div>
@@ -62,7 +62,7 @@ export default function LinkedInPage() {
                   {copiedField === 'Headline' ? <CheckCircle className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />} Copy
                 </button>
               </div>
-              <div className="rounded-2xl bg-[#0a84ff]/10 border border-blue-100 p-4">
+              <div className="rounded-[var(--radius-lg)] bg-[rgba(96,165,250,0.1)] border border-[var(--info)]/25 p-4">
                 <p className="text-sm font-medium text-blue-900">{result.headline}</p>
               </div>
               <p className="mt-1 text-[10px] text-white/25">{result.headline?.length || 0}/220 characters</p>

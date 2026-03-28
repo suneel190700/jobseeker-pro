@@ -54,7 +54,7 @@ export default function NetworkingPage() {
 
       <div className="mt-5 flex gap-2">
         {[{id:'recruiter' as Tab,label:'Find Recruiter',icon:UserCheck},{id:'email' as Tab,label:'Cold Email',icon:Mail},{id:'referral' as Tab,label:'Referral Tips',icon:Users}].map(t => (
-          <button key={t.id} onClick={() => { setTab(t.id); setResult(null); }} className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-all ${tab === t.id ? 'bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20 shadow-xs' : 'text-white/35 hover:bg-[var(--surface-2)] border border-transparent'}`}>
+          <button type="button" key={t.id} onClick={() => { setTab(t.id); setResult(null); }} className={`flex items-center gap-2 rounded-[var(--radius-lg)] px-4 py-2.5 text-sm font-semibold transition-all border ${tab === t.id ? 'bg-[var(--accent-dim)] text-[var(--accent)] border-[var(--accent-dim-strong)]' : 'text-[var(--text-secondary)] hover:bg-[var(--surface-2)] border-transparent'}`}>
             <t.icon className="h-4 w-4" />{t.label}
           </button>
         ))}
@@ -80,13 +80,13 @@ export default function NetworkingPage() {
               <div className="space-y-3">
                 {result.recruiters.map((r: any, i: number) => (
                   <div key={i} className="flex items-center gap-3 bg-[var(--surface-1)] rounded-2xl p-3">
-                    <div className="h-10 w-10 rounded-full bg-emerald-500/15 flex items-center justify-center"><UserCheck className="h-5 w-5 text-[#30d158]" /></div>
+                    <div className="h-10 w-10 rounded-full bg-[var(--accent-dim)] flex items-center justify-center border border-[var(--accent-dim-strong)]"><UserCheck className="h-5 w-5 text-[var(--accent)]" /></div>
                     <div className="flex-1"><p className="text-sm font-semibold text-white/70">{r.name || r.title}</p><p className="text-xs text-white/25">{r.role || r.department}</p></div>
-                    {r.linkedin_search && <a href={r.linkedin_search} target="_blank" rel="noopener noreferrer" className="pill bg-[#0a84ff]/10 text-[#0a84ff] border border-[#0a84ff]/20 gap-1 cursor-pointer hover:bg-blue-100"><Linkedin className="h-3 w-3" />Find</a>}
+                    {r.linkedin_search && <a href={r.linkedin_search} target="_blank" rel="noopener noreferrer" className="pill bg-[rgba(96,165,250,0.12)] text-[var(--info)] border border-[var(--info)]/25 gap-1 cursor-pointer hover:bg-[rgba(96,165,250,0.18)]"><Linkedin className="h-3 w-3" />Find</a>}
                   </div>
                 ))}
               </div>
-              {result.tips && <div className="mt-3 bg-[#30d158]/10 rounded-2xl p-3 border border-emerald-500/10"><p className="text-xs text-[#30d158]">{result.tips}</p></div>}
+              {result.tips && <div className="mt-3 bg-[var(--accent-dim)] rounded-[var(--radius-lg)] p-3 border border-[var(--accent-dim-strong)]"><p className="text-xs text-[var(--accent)]">{result.tips}</p></div>}
             </div>
           )}
           {tab === 'email' && result.email && (

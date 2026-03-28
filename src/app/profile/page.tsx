@@ -35,7 +35,7 @@ export default function ProfilePage() {
 
       {/* Personal Details */}
       <div className="mt-8 surface overflow-hidden">
-        <div className="px-6 py-4 bg-[var(--surface-1)] border-b border-[var(--separator)]"><h2 className="text-sm font-bold text-white/70 flex items-center gap-2"><User className="h-4 w-4 text-[#30d158]" />Personal Details</h2></div>
+        <div className="px-6 py-4 bg-[var(--surface-1)] border-b border-[var(--separator)]"><h2 className="text-sm font-bold text-white/70 flex items-center gap-2"><User className="h-4 w-4 text-[var(--accent)]" />Personal Details</h2></div>
         <div className="p-6 space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div><label className="block text-xs font-semibold text-white/35 mb-1.5">Full Name</label><input type="text" value={form.fullName} onChange={e => upd('fullName', e.target.value)} placeholder="Your name" className="input-hig" /></div>
@@ -55,21 +55,21 @@ export default function ProfilePage() {
 
       {/* Base Resume */}
       <div className="mt-5 surface overflow-hidden">
-        <div className="px-6 py-4 bg-[var(--surface-1)] border-b border-[var(--separator)]"><h2 className="text-sm font-bold text-white/70 flex items-center gap-2"><FileText className="h-4 w-4 text-emerald-500" />Base Resume</h2></div>
+        <div className="px-6 py-4 bg-[var(--surface-1)] border-b border-[var(--separator)]"><h2 className="text-sm font-bold text-white/70 flex items-center gap-2"><FileText className="h-4 w-4 text-[var(--accent)]" />Base resume</h2></div>
         <div className="p-6">
           {profile ? (
             <div className="space-y-3">
-              <div className="flex items-center justify-between rounded-2xl bg-[#30d158]/10 border border-[#30d158]/20 p-4">
-                <div className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-[#30d158]" /><div><p className="text-sm font-bold text-[#30d158]">{profile.fileName}</p><p className="text-xs text-[#30d158] flex items-center gap-1"><Clock className="h-3 w-3" />{new Date(profile.uploadedAt).toLocaleDateString()}</p></div></div>
+              <div className="flex items-center justify-between rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 p-4">
+                <div className="flex items-center gap-3"><CheckCircle className="h-5 w-5 text-[var(--accent)]" /><div><p className="text-sm font-bold text-[var(--accent)]">{profile.fileName}</p><p className="text-xs text-[var(--accent)] flex items-center gap-1"><Clock className="h-3 w-3" />{new Date(profile.uploadedAt).toLocaleDateString()}</p></div></div>
                 <button onClick={() => { clearResume(); toast('Removed'); }} className="rounded-2xl border border-[#ff453a]/20 bg-[var(--surface-1)] px-3 py-1.5 text-xs font-semibold text-[#ff453a] hover:bg-[#ff453a]/10 flex items-center gap-1 transition"><Trash2 className="h-3 w-3" />Remove</button>
               </div>
-              <div {...getRootProps()} className={`rounded-2xl border-2 border-dashed p-3 text-center cursor-pointer text-xs transition-all ${isDragActive ? 'border-emerald-500/40 bg-[#30d158]/10' : 'border-[var(--separator)] text-white/25 hover:border-[var(--separator)]'}`}><input {...getInputProps()} />{uploading ? 'Uploading...' : 'Drop a new file to replace'}</div>
+              <div {...getRootProps()} className={`rounded-[var(--radius-lg)] border-2 border-dashed p-3 text-center cursor-pointer text-xs transition-all ${isDragActive ? 'border-[var(--accent)]/50 bg-[var(--accent-dim)]' : 'border-[var(--separator)] text-[var(--text-tertiary)] hover:border-[var(--accent-dim-strong)]'}`}><input {...getInputProps()} />{uploading ? 'Uploading...' : 'Drop a new file to replace'}</div>
             </div>
           ) : (
             <div>
-              <div {...getRootProps()} className={`flex flex-col items-center rounded-2xl border-2 border-dashed p-12 text-center cursor-pointer transition-all ${isDragActive ? 'border-emerald-500/40 bg-[#30d158]/10' : 'border-[var(--separator)] hover:border-emerald-500/40 hover:bg-[#30d158]/10/30'}`}>
+              <div {...getRootProps()} className={`flex flex-col items-center rounded-[var(--radius-lg)] border-2 border-dashed p-12 text-center cursor-pointer transition-all ${isDragActive ? 'border-[var(--accent)]/50 bg-[var(--accent-dim)]' : 'border-[var(--separator)] hover:border-[var(--accent-dim-strong)] hover:bg-[var(--accent-dim)]'}`}>
                 <input {...getInputProps()} />
-                {uploading ? <Loader2 className="h-10 w-10 animate-spin text-[#30d158]" /> : <Upload className="h-10 w-10 text-white/25" />}
+                {uploading ? <Loader2 className="h-10 w-10 animate-spin text-[var(--accent)]" /> : <Upload className="h-10 w-10 text-white/25" />}
                 <p className="mt-4 text-sm font-semibold text-white/50">{uploading ? 'Parsing...' : 'Drop your resume here'}</p>
                 <p className="text-xs text-white/25 mt-1">PDF, DOCX, or TXT — up to 10 MB</p>
               </div>
@@ -90,7 +90,7 @@ export default function ProfilePage() {
           {titles.length > 0 ? (
             <div className="flex flex-wrap gap-2">{titles.map(t => (<span key={t} className="pill bg-[#bf5af2]/10 text-[#bf5af2] border border-[#bf5af2]/20 gap-1.5 pl-3 pr-2 py-1.5">{t}<button onClick={() => removeTitle(t)} className="text-violet-300 hover:text-[#bf5af2] transition"><X className="h-3.5 w-3.5" /></button></span>))}</div>
           ) : (
-            <div><p className="text-xs text-white/25 mb-2">Quick add:</p><div className="flex flex-wrap gap-2">{['AI Engineer','ML Engineer','Data Scientist','MLOps Engineer','Software Engineer','Product Manager','DevOps Engineer'].map(s => (<button key={s} onClick={() => addTitle(s)} className="pill bg-[var(--surface-1)] text-white/35 border border-[var(--separator)] hover:bg-[#30d158]/10 hover:text-[#30d158] hover:border-[#30d158]/20 transition cursor-pointer">{s}</button>))}</div></div>
+            <div><p className="text-xs text-white/25 mb-2">Quick add:</p><div className="flex flex-wrap gap-2">{['AI Engineer','ML Engineer','Data Scientist','MLOps Engineer','Software Engineer','Product Manager','DevOps Engineer'].map(s => (<button key={s} onClick={() => addTitle(s)} className="pill bg-[var(--surface-1)] text-white/35 border border-[var(--separator)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)] hover:border-[var(--accent)]/20 transition cursor-pointer">{s}</button>))}</div></div>
           )}
         </div>
       </div>

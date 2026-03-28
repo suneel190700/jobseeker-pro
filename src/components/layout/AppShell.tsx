@@ -1,13 +1,14 @@
 import TopNav from './TopNav';
+import { APP_CONTENT_MAX } from './constants';
 
-/** Matches TopNav inner width for edge-aligned content */
-export const APP_CONTENT_MAX = 'max-w-[1280px]';
+export { APP_CONTENT_MAX };
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="app-root">
+      <div className="app-ambient" aria-hidden />
       <TopNav />
-      <main className={`mx-auto ${APP_CONTENT_MAX} px-5 py-8`}>{children}</main>
+      <main className={`mx-auto ${APP_CONTENT_MAX} px-5 py-8 md:py-10`}>{children}</main>
     </div>
   );
 }
