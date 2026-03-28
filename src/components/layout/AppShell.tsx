@@ -8,7 +8,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="app-root">
       <div className="app-ambient" aria-hidden />
       <TopNav />
-      <main className={`mx-auto ${APP_CONTENT_MAX} px-5 py-8 md:py-10`}>{children}</main>
+      <main className={`relative z-[1] px-4 pb-8 pt-6 sm:px-6 xl:ml-[292px] xl:px-8 xl:pt-8`}>
+        <div className={`mx-auto ${APP_CONTENT_MAX}`}>{children}</div>
+      </main>
     </div>
   );
 }
