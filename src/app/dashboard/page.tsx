@@ -141,7 +141,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-2">
       <PageHeader
         eyebrow="Dashboard"
         title="Your job search, organized like a premium SaaS workspace"
@@ -275,7 +275,7 @@ export default function DashboardPage() {
           <div className="mt-6 space-y-4">
             {displayCards.map((card) => (
               <div key={card.id} className="soft-card-hover rounded-[20px] border border-slate-200 bg-white px-6 py-6">
-                <div className="flex flex-col gap-5 xl:flex-row xl:items-center">
+                <div className="grid grid-cols-1 gap-5 xl:grid-cols-[280px_minmax(0,1fr)_132px] xl:items-center">
                   <div className="flex items-center gap-4 xl:min-w-[280px]">
                     <CompanyLogoPlaceholder name={card.company} />
                     <div>
@@ -284,7 +284,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <div className="grid flex-1 gap-3 sm:grid-cols-3">
+                  <div className="grid gap-3 sm:grid-cols-3 xl:min-w-0">
                     <div>
                       <p className="text-[15px] text-[var(--text-secondary)]">{card.location || 'Remote'}</p>
                       <p className="mt-1 text-sm text-[var(--text-tertiary)]">
