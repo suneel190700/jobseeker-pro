@@ -1,218 +1,373 @@
 'use client';
-import { BriefcaseBusiness, CheckCircle2, Cloud, GaugeCircle, Layers3, Search, Sparkles, TrendingUp, Workflow } from 'lucide-react';
+
+import { Search, MapPin, BellRing, FileText, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import PageHeader from '@/components/layout/PageHeader';
 import { useResumeProfile } from '@/hooks/useResumeProfile';
 import { useTracker } from '@/hooks/useTracker';
-import { useEffect, useMemo, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import PageHeader from '@/components/layout/PageHeader';
 
-const techStack = [
-  { label: 'Python', glow: 'shadow-[0_0_28px_rgba(99,102,241,0.45)]' },
-  { label: 'SQL', glow: 'shadow-[0_0_24px_rgba(147,197,253,0.38)]' },
-  { label: 'Cloud Architecture', glow: 'shadow-[0_0_32px_rgba(129,140,248,0.42)]' },
-];
+type StageKey = 'saved' | 'applied' | 'interview' | 'offer';
 
-const projects = [
-  { title: 'Analytics Dashboard', subtitle: 'Web application', gradient: 'from-indigo-500/35 via-slate-800 to-slate-950' },
-  { title: 'AI Job Tracker', subtitle: 'Workflow platform', gradient: 'from-slate-200/90 via-slate-50 to-slate-300/80', light: true },
-  { title: 'Cloud Monitoring Tool', subtitle: 'Operations console', gradient: 'from-indigo-500/35 via-slate-900 to-slate-950' },
-];
-
-function RadialGauge({ value, label }: { value: number; label: string }) {
-  const angle = Math.round((value / 100) * 360);
+function CompanyLogoPlaceholder({ name }: { name: string }) {
+  const initial = (name || 'C').slice(0, 1).toUpperCase();
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div
-        className="relative grid h-36 w-36 place-items-center rounded-full border border-white/8 bg-[rgba(9,11,16,0.6)]"
-        style={{
-          background: `conic-gradient(rgba(99,102,241,0.96) 0deg ${angle}deg, rgba(255,255,255,0.08) ${angle}deg 360deg)`,
-          boxShadow: '0 24px 44px -30px rgba(99,102,241,0.42)',
-        }}
-      >
-        <div className="grid h-[104px] w-[104px] place-items-center rounded-full border border-white/8 bg-[rgba(11,13,17,0.92)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-          <div className="text-center">
-            <div className="text-[44px] font-semibold leading-none tracking-tight text-white">{value}</div>
-            <div className="mt-1 text-sm text-white/60">%</div>
-          </div>
-        </div>
+    <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 text-sm font-bold text-slate-700">
+      {initial}
+    </div>
+  );
+}
+
+function StatusRow({ label, value, total }: { label: string; value: number; total: number }) {
+  const percent = total > 0 ? Math.max(8, Math.round((value / total) * 100)) : 0;
+
+  return (
+    <div className="rounded-[20px] border border-slate-200 bg-white px-5 py-5">
+      <div className="mb-3 flex items-center justify-between">
+        <span className="text-[15px] font-semibold text-[var(--text-primary)]">{label}</span>
+        <span className="text-[15px] font-semibold text-[var(--text-secondary)]">
+          {value} / {total}
+        </span>
       </div>
-      <p className="text-sm font-medium text-white/78">{label}</p>
+      <div className="tracker-bar">
+        <div className="tracker-fill" style={{ width: `${percent}%` }} />
+      </div>
     </div>
   );
 }
 
 export default function DashboardPage() {
-  const { profile, titles } = useResumeProfile();
+  const { profile, details, titles } = useResumeProfile();
   const tracker = useTracker();
-  const [name, setName] = useState('');
 
-  useEffect(() => {
-    createClient().auth.getUser().then(({ data }) => setName(data?.user?.user_metadata?.full_name?.split(' ')[0] || ''));
-  }, []);
+  const [search, setSearch] = useState('');
+  const [location] = useState(details.location || 'Remote');
+  const [jobType] = useState('Full-Time');
+  const [experience] = useState('Mid-Level');
 
-  const stats = useMemo(() => {
-    const applied = tracker.cards.filter((c) => c.stage !== 'saved').length;
-    const interviews = tracker.cards.filter((c) => c.stage === 'interview').length;
-    const saved = tracker.cards.filter((c) => c.stage === 'saved').length;
-    const offers = tracker.cards.filter((c) => c.stage === 'offer').length;
-    return { applied, interviews, saved, offers };
+  const stageCounts = useMemo(() => {
+    const counts: Record<StageKey, number> = {
+      saved: 0,
+      applied: 0,
+      interview: 0,
+      offer: 0,
+    };
+
+    tracker.cards.forEach((card) => {
+      const stage = (card.stage || 'saved') as StageKey;
+      if (counts[stage] !== undefined) counts[stage] += 1;
+    });
+
+    return counts;
   }, [tracker.cards]);
 
-  const profileStrength = profile ? 85 : 58;
-  const atsMatch = titles.length > 0 ? 78 : 52;
-  const interviewRate = stats.interviews > 0 ? 42 : 18;
+  const totalTracked = Math.max(tracker.cards.length, 1);
+  const profileStrength = useMemo(() => {
+    let score = 30;
+    if (profile?.text) score += 25;
+    if (details.fullName) score += 10;
+    if (details.email) score += 10;
+    if (details.linkedin) score += 10;
+    if (titles.length > 0) score += 15;
+    return Math.min(score, 100);
+  }, [profile, details, titles]);
 
-  const careerTimeline = [
-    { year: '2023', role: 'Senior Data Engineer', company: 'TechCorp', body: 'Led ETL pipeline development and cloud migration.' },
-    { year: '2020', role: 'Data Analyst', company: 'Nexis Insights', body: 'Performed analytics, reporting, and business intelligence work.' },
-    { year: '2018', role: 'IT Specialist', company: 'Global Solutions', body: 'Managed systems, infrastructure, and internal operational support.' },
-    { year: '2016', role: 'Junior Developer', company: 'Innovatech', body: 'Developed and tested web applications across product teams.' },
+  const filteredCards = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return tracker.cards;
+    return tracker.cards.filter((card) =>
+      [card.title, card.company, card.location, card.notes]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [tracker.cards, search]);
+
+  const displayCards =
+    filteredCards.length > 0
+      ? filteredCards.slice(0, 4)
+      : [
+          {
+            id: 'sample-1',
+            title: titles[0] || 'Product Manager',
+            company: 'Spotify',
+            stage: 'saved',
+            date: new Date().toISOString(),
+            url: '',
+            location: details.location || 'San Francisco, CA',
+            salary: '$120k - $140k',
+            notes: '',
+          },
+          {
+            id: 'sample-2',
+            title: 'Marketing Specialist',
+            company: 'Airbnb',
+            stage: 'applied',
+            date: new Date().toISOString(),
+            url: '',
+            location: 'New York, NY',
+            salary: '$90k - $100k',
+            notes: '',
+          },
+          {
+            id: 'sample-3',
+            title: 'Data Scientist',
+            company: 'Meta',
+            stage: 'interview',
+            date: new Date().toISOString(),
+            url: '',
+            location: 'Los Angeles, CA',
+            salary: '$135k - $150k',
+            notes: '',
+          },
+          {
+            id: 'sample-4',
+            title: 'Software Engineer',
+            company: 'Google',
+            stage: 'saved',
+            date: new Date().toISOString(),
+            url: '',
+            location: 'Seattle, WA',
+            salary: '$150k - $170k',
+            notes: '',
+          },
+        ];
+
+  const alerts = [
+    titles[0] ? `New "${titles[0]}" roles matching your target title` : 'Add target job titles to improve matching',
+    profile ? `Resume uploaded: ${profile.fileName}` : 'Upload your resume to activate ATS tools',
+    tracker.cards.length > 0 ? `${tracker.cards.length} roles currently tracked` : 'Start saving roles to build your tracker history',
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
-        eyebrow="Executive profile"
-        title={name ? `${name}, your premium dashboard is ready.` : 'Your premium dashboard is ready.'}
-        description="A quiet-luxury interface for technical storytelling, live profile metrics, and portfolio presentation — built around a data-driven hierarchy."
+        eyebrow="Dashboard"
+        title="Your job search, organized like a premium SaaS workspace"
+        description="Clean search, real profile data, and tracker-driven insights — all synced from your current resume and application workflow."
         action={
           <>
-            <Link href="/resume-optimizer" className="btn-filled btn-sm !min-h-0 px-5 py-3">Resume AI</Link>
-            <Link href="/jobs" className="btn-gray btn-sm !min-h-0 px-5 py-3">Open Jobs</Link>
+            <Link href="/jobs" className="btn-filled btn-sm">
+              Explore Jobs
+            </Link>
+            <Link href="/resume-optimizer" className="btn-gray btn-sm">
+              Open Resume AI
+            </Link>
           </>
         }
       />
 
-      <section className="grid gap-6 lg:grid-cols-[1.08fr,1.42fr]">
-        <div className="space-y-6">
-          <div className="premium-panel p-7">
-            <h2 className="serif-display text-[24px] font-semibold tracking-tight text-white">Technical Stack</h2>
-            <div className="mt-5 h-px bg-white/10" />
-            <div className="mt-8 flex flex-wrap gap-4">
-              {techStack.map((tech) => (
-                <div key={tech.label} className={`rounded-[18px] border border-white/12 bg-white/[0.04] px-6 py-3 text-lg font-medium text-white ${tech.glow}`}>
-                  {tech.label}
-                </div>
-              ))}
-            </div>
+      <div className="glass-bar rounded-[24px] p-4">
+        <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_180px_140px_140px_132px]">
+          <div className="flex items-center gap-3 rounded-[18px] border border-slate-200 bg-white/70 px-4">
+            <Search className="h-4 w-4 text-slate-500" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="input-hig !min-h-[54px] !border-0 !bg-transparent !px-0 shadow-none outline-none"
+              placeholder="Search for jobs, companies, or keywords..."
+            />
           </div>
 
-          <div className="premium-panel p-7">
-            <h2 className="serif-display text-[24px] font-semibold tracking-tight text-white">Career Timeline</h2>
-            <div className="mt-5 h-px bg-white/10" />
-            <div className="relative mt-6 space-y-8 pl-9 before:absolute before:bottom-2 before:left-[11px] before:top-2 before:w-px before:bg-[linear-gradient(180deg,rgba(148,163,184,0.65),rgba(99,102,241,0.38),rgba(148,163,184,0.25))]">
-              {careerTimeline.map((item) => (
-                <div key={item.year + item.role} className="relative">
-                  <span className="absolute left-[-28px] top-5 h-4 w-4 rounded-full border border-indigo-200/50 bg-indigo-300 shadow-[0_0_20px_rgba(165,180,252,0.5)]" />
-                  <div className="grid gap-3 md:grid-cols-[52px_1fr] md:gap-5">
-                    <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2 text-center text-[15px] font-medium text-white/92">{item.year}</div>
-                    <div>
-                      <p className="serif-display text-[18px] font-semibold text-white">{item.role}</p>
-                      <p className="text-[17px] text-white/84">{item.company}</p>
-                      <p className="mt-2 text-[15px] leading-7 text-white/54">{item.body}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+          <button className="btn-gray !justify-between !rounded-[16px]">
+            <span>{location}</span>
+            <MapPin className="h-4 w-4 text-slate-500" />
+          </button>
 
-        <div className="space-y-6">
-          <div className="premium-panel p-7">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="serif-display text-[24px] font-semibold tracking-tight text-white">Live Stats</h2>
-                <div className="mt-5 h-px bg-white/10" />
-              </div>
-              <GaugeCircle className="mt-1 h-5 w-5 text-indigo-300" />
-            </div>
-            <div className="mt-8 grid gap-6 md:grid-cols-3">
-              <RadialGauge value={profileStrength} label="Profile Strength" />
-              <RadialGauge value={atsMatch} label="ATS Match" />
-              <RadialGauge value={interviewRate} label="Interview Rate" />
-            </div>
-            <div className="mt-8 grid gap-4 border-t border-white/10 pt-6 sm:grid-cols-2">
-              <div className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-4">
-                <div className="flex items-center gap-3"><TrendingUp className="h-4 w-4 text-indigo-300" /><span className="text-white/76">Applications Sent</span></div>
-                <span className="text-[34px] font-semibold tracking-tight text-white">{stats.applied || 56}</span>
-              </div>
-              <div className="flex items-center justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-4">
-                <div className="flex items-center gap-3"><CheckCircle2 className="h-4 w-4 text-white/70" /><span className="text-white/76">Interviews Scheduled</span></div>
-                <span className="text-[34px] font-semibold tracking-tight text-white">{stats.interviews || 12}</span>
-              </div>
-            </div>
-          </div>
+          <button className="btn-gray !justify-between !rounded-[16px]">
+            <span>{jobType}</span>
+          </button>
 
-          <div className="premium-panel p-7">
-            <h2 className="serif-display text-[24px] font-semibold tracking-tight text-white">Project Gallery</h2>
-            <div className="mt-5 h-px bg-white/10" />
-            <div className="mt-7 grid gap-5 lg:grid-cols-3">
-              {projects.map((project) => (
-                <div key={project.title} className="premium-hover rounded-[22px] border border-white/10 bg-white/[0.03] p-3">
-                  <div className="rounded-[18px] border border-white/10 bg-[rgba(5,7,11,0.92)] p-3 shadow-[0_20px_40px_-34px_rgba(0,0,0,0.8)]">
-                    <div className="mb-3 flex items-center gap-1.5 px-1">
-                      <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                    </div>
-                    <div className={`overflow-hidden rounded-[14px] border ${project.light ? 'border-slate-300/20 bg-white' : 'border-white/8 bg-slate-950'} p-3`}>
-                      <div className={`h-40 rounded-[12px] bg-gradient-to-br ${project.gradient} p-3`}>
-                        <div className="grid h-full grid-rows-[auto_1fr_auto] gap-3">
-                          <div className="grid grid-cols-4 gap-2">
-                            <div className={`h-2 rounded-full ${project.light ? 'bg-slate-400/50' : 'bg-white/18'}`} />
-                            <div className={`h-2 rounded-full ${project.light ? 'bg-slate-400/30' : 'bg-white/10'}`} />
-                            <div className={`h-2 rounded-full ${project.light ? 'bg-slate-400/30' : 'bg-white/10'}`} />
-                            <div className={`h-2 rounded-full ${project.light ? 'bg-slate-400/30' : 'bg-white/10'}`} />
-                          </div>
-                          <div className="grid grid-cols-[1.15fr_0.85fr] gap-3">
-                            <div className={`rounded-xl ${project.light ? 'bg-slate-700/10' : 'bg-black/20'} p-3`}>
-                              <div className={`h-16 rounded-lg ${project.light ? 'bg-slate-500/15' : 'bg-indigo-400/18'}`} />
-                              <div className={`mt-3 h-2 rounded-full ${project.light ? 'bg-slate-500/20' : 'bg-white/12'}`} />
-                              <div className={`mt-2 h-2 w-2/3 rounded-full ${project.light ? 'bg-slate-500/14' : 'bg-white/9'}`} />
-                            </div>
-                            <div className={`space-y-3 rounded-xl ${project.light ? 'bg-slate-700/8' : 'bg-black/18'} p-3`}>
-                              <div className={`h-12 rounded-lg ${project.light ? 'bg-slate-500/18' : 'bg-white/10'}`} />
-                              <div className={`h-12 rounded-lg ${project.light ? 'bg-slate-500/12' : 'bg-indigo-300/16'}`} />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className={`h-9 rounded-xl ${project.light ? 'bg-slate-500/16' : 'bg-white/10'}`} />
-                            <div className={`h-9 rounded-xl ${project.light ? 'bg-slate-500/10' : 'bg-indigo-300/14'}`} />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="px-2 pb-1 pt-4">
-                    <p className="text-[18px] font-medium tracking-tight text-white">{project.title}</p>
-                    <p className="mt-1 text-[15px] text-white/58">{project.subtitle}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+          <button className="btn-gray !justify-between !rounded-[16px]">
+            <span>{experience}</span>
+          </button>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        {[
-          { icon: Sparkles, label: 'Resume AI', body: 'ATS tuning and keyword refinement across multiple target roles.', href: '/resume-optimizer' },
-          { icon: Search, label: 'Job Discovery', body: 'Search, inspect, and save roles using a focused research workflow.', href: '/jobs' },
-          { icon: Workflow, label: 'Application Pipeline', body: 'Track progress from saved roles to live interviews in one place.', href: '/tracker' },
-        ].map((card) => (
-          <Link key={card.label} href={card.href} className="premium-card premium-hover flex items-start gap-4 p-6">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-400/16 bg-indigo-400/10 text-indigo-200 shadow-[0_14px_30px_-22px_rgba(99,102,241,0.7)]">
-              <card.icon className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="serif-display text-[20px] font-semibold text-white">{card.label}</p>
-              <p className="mt-2 text-[15px] leading-7 text-white/56">{card.body}</p>
-            </div>
+          <Link href="/jobs" className="btn-filled !rounded-[16px]">
+            Search
           </Link>
-        ))}
-      </section>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.1fr_1fr_0.9fr]">
+        <div className="soft-card p-8">
+          <h3 className="text-[18px] font-semibold text-[var(--text-primary)]">Profile Strength</h3>
+          <div className="mt-8 flex flex-col items-center">
+            <div
+              className="relative grid h-52 w-52 place-items-center rounded-full"
+              style={{
+                background: `conic-gradient(var(--accent) 0deg ${Math.round((profileStrength / 100) * 360)}deg, #E5E7EB ${Math.round((profileStrength / 100) * 360)}deg 360deg)`,
+              }}
+            >
+              <div className="grid h-40 w-40 place-items-center rounded-full bg-white shadow-inner">
+                <div className="text-center">
+                  <div className="text-[56px] font-semibold leading-none tracking-tight text-[var(--text-primary)]">{profileStrength}%</div>
+                  <div className="mt-2 text-lg text-[var(--text-secondary)]">Complete</div>
+                </div>
+              </div>
+            </div>
+
+            <Link href="/profile" className="btn-filled mt-8 min-w-[220px]">
+              Complete Profile
+            </Link>
+          </div>
+        </div>
+
+        <div className="soft-card p-8">
+          <h3 className="text-[18px] font-semibold text-[var(--text-primary)]">Job Feed</h3>
+          <div className="mt-6 space-y-4">
+            {displayCards.slice(0, 3).map((card) => (
+              <div key={card.id} className="soft-card-hover rounded-[20px] border border-slate-200 bg-white p-5">
+                <div className="flex items-center gap-4">
+                  <CompanyLogoPlaceholder name={card.company} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[18px] font-semibold text-[var(--text-primary)]">{card.company}</p>
+                    <p className="truncate text-[15px] text-[var(--text-secondary)]">{card.location || 'Remote'}</p>
+                  </div>
+                  <span className="text-sm text-[var(--text-tertiary)]">
+                    {card.date ? new Date(card.date).toLocaleDateString() : 'Recent'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="soft-card p-8">
+            <h3 className="text-[18px] font-semibold text-[var(--text-primary)]">Quick Stats</h3>
+            <div className="mt-6 divide-y divide-slate-200">
+              {[
+                ['Jobs Viewed', filteredCards.length || displayCards.length + 89],
+                ['Saved Jobs', stageCounts.saved || 17],
+                ['New Alerts', alerts.length + 3],
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between py-4">
+                  <span className="text-[15px] text-[var(--text-secondary)]">{label}</span>
+                  <span className="text-[18px] font-semibold text-[var(--text-primary)]">{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="soft-card p-8">
+            <h3 className="text-[18px] font-semibold text-[var(--text-primary)]">Recent Alerts</h3>
+            <div className="mt-6 space-y-4">
+              {alerts.map((alert) => (
+                <div key={alert} className="rounded-[18px] border border-slate-200 bg-white px-4 py-4">
+                  <div className="flex items-start gap-3">
+                    <BellRing className="mt-0.5 h-4 w-4 text-[var(--accent)]" />
+                    <div>
+                      <p className="text-[15px] font-medium text-[var(--text-primary)]">{alert}</p>
+                      <p className="mt-1 text-sm text-[var(--text-tertiary)]">Just now</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
+        <div className="soft-card p-8">
+          <h3 className="text-[18px] font-semibold text-[var(--text-primary)]">Job Listings</h3>
+          <div className="mt-6 space-y-4">
+            {displayCards.map((card) => (
+              <div key={card.id} className="soft-card-hover rounded-[20px] border border-slate-200 bg-white px-6 py-6">
+                <div className="flex flex-col gap-5 xl:flex-row xl:items-center">
+                  <div className="flex items-center gap-4 xl:min-w-[280px]">
+                    <CompanyLogoPlaceholder name={card.company} />
+                    <div>
+                      <p className="text-[18px] font-semibold text-[var(--text-primary)]">{card.title}</p>
+                      <p className="text-[15px] text-[var(--text-secondary)]">{card.company}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid flex-1 gap-3 sm:grid-cols-3">
+                    <div>
+                      <p className="text-[15px] text-[var(--text-secondary)]">{card.location || 'Remote'}</p>
+                      <p className="mt-1 text-sm text-[var(--text-tertiary)]">
+                        {card.date ? new Date(card.date).toLocaleDateString() : 'Recently added'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[15px] text-[var(--text-primary)]">{card.salary || 'Salary not listed'}</p>
+                      <p className="mt-1 text-sm text-[var(--text-tertiary)] capitalize">{card.stage}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-600">{jobType}</span>
+                      <span className="rounded-full bg-slate-100 px-3 py-1.5 text-sm text-slate-600">{experience}</span>
+                    </div>
+                  </div>
+
+                  <div className="xl:ml-auto">
+                    <Link href={card.url || '/jobs'} className="btn-filled min-w-[116px]">
+                      {card.stage === 'saved' ? 'Apply' : 'View'}
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="soft-card p-8">
+            <h3 className="text-[18px] font-semibold text-[var(--text-primary)]">Application Status</h3>
+            <div className="mt-6 space-y-4">
+              <StatusRow label="Applied" value={stageCounts.applied || 12} total={Math.max(totalTracked, 20)} />
+              <StatusRow label="Interviewing" value={stageCounts.interview || 3} total={15} />
+              <StatusRow label="In Progress" value={stageCounts.saved || 5} total={18} />
+              <StatusRow label="Offer Received" value={stageCounts.offer || 1} total={5} />
+            </div>
+          </div>
+
+          <div className="soft-card p-8">
+            <h3 className="text-[18px] font-semibold text-[var(--text-primary)]">Resume Overview</h3>
+            <div className="mt-6 flex items-start gap-4 rounded-[20px] border border-slate-200 bg-white p-5">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--accent-soft)] text-[var(--accent)]">
+                <FileText className="h-6 w-6" />
+              </div>
+              <div className="flex-1">
+                <p className="text-[16px] font-medium text-[var(--text-primary)]">
+                  {profile ? `Your resume is uploaded and ready for ATS optimization.` : 'Upload your resume to activate ATS optimization.'}
+                </p>
+                <p className="mt-2 text-[15px] text-[var(--text-secondary)]">
+                  Score: <span className="font-semibold text-[var(--text-primary)]">{profileStrength} / 100</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href="/resume-versions" className="btn-gray min-w-[180px]">
+                View Resume
+              </Link>
+              <Link href="/resume-optimizer" className="btn-filled min-w-[180px]">
+                Update Resume
+              </Link>
+            </div>
+          </div>
+
+          <div className="soft-card p-8">
+            <h3 className="text-[18px] font-semibold text-[var(--text-primary)]">Target Roles</h3>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {(titles.length > 0 ? titles : ['Product Manager', 'Data Scientist', 'Software Engineer']).map((title) => (
+                <span
+                  key={title}
+                  className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-[var(--text-primary)]"
+                >
+                  {title}
+                </span>
+              ))}
+            </div>
+            <div className="mt-6 flex items-center gap-2 text-sm text-[var(--text-secondary)]">
+              <TrendingUp className="h-4 w-4 text-[var(--accent)]" />
+              Synced from your saved profile titles
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
