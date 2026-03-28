@@ -1,7 +1,7 @@
 export default function PageHeader({ eyebrow, title, description, action }: { eyebrow?: string; title: string; description?: string; action?: React.ReactNode; }) {
   return (
     <div className="premium-panel mb-8 overflow-hidden p-6 sm:p-7 md:mb-10 md:p-8">
-      <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(0,194,255,.7),rgba(124,58,237,.7),transparent)]" />
+      <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(99,102,241,.85),transparent)]" />
       <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           {eyebrow && <p className="page-eyebrow">{eyebrow}</p>}
