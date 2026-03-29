@@ -39,9 +39,9 @@ export default function LoginPage() {
           className="inline-flex h-10 w-10 rounded-[10px] items-center justify-center mb-4"
           style={{ background: 'var(--accent)' }}
         >
-          <Sparkles className="h-5 w-5 text-white" />
+          <Sparkles className="h-5 w-5 text-[var(--text-primary)]" />
         </div>
-        <h1 className="title-3 text-white">Welcome back</h1>
+        <h1 className="title-3 text-[var(--text-primary)]">Welcome back</h1>
         <p className="subhead mt-1">Sign in to continue</p>
       </div>
       <div className="surface-elevated p-6 vibrancy" style={{ borderColor: 'var(--separator)' }}>

@@ -32,7 +32,7 @@ export default function AdminLoginPage() {
         <div className="inline-flex h-12 w-12 rounded-[12px] items-center justify-center mx-auto mb-3" style={{ background: 'var(--surface-2)' }}>
           <Shield className="h-6 w-6" style={{ color: 'var(--accent)' }} />
         </div>
-        <h1 className="title-3 text-white">Admin Access</h1>
+        <h1 className="title-3 text-[var(--text-primary)]">Admin Access</h1>
       </div>
       <div className="surface-elevated p-6 vibrancy" style={{ borderColor: 'var(--separator)' }}>
         <form onSubmit={handle} className="space-y-3.5">

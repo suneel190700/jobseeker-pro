@@ -1,28 +1,54 @@
 'use client';
+import { useState } from 'react';
+import { FileText, Trash2, Download, Clock, Target, Loader2 } from 'lucide-react';
 import { useResumeVersions } from '@/hooks/useResumeVersions';
-import { StitchCard, StitchBadge } from '@/components/ui/stitch';
-import { StitchPageScaffold } from '@/components/ui/StitchPageScaffold';
+import { toast } from 'sonner';
 
 export default function ResumeVersionsPage() {
-  const { versions, loaded } = useResumeVersions();
+  const { versions, loaded, deleteVersion } = useResumeVersions();
+  const [selected, setSelected] = useState<any>(null);
+  const [dling, setDling] = useState('');
+
+  const doDownload = async (v: any) => {
+    const resume = v.resumeData; if (!resume) { toast.error('No data'); return; } setDling(v.id);
+    try { const res = await fetch('/api/resume/download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resume }) }); if (!res.ok) throw new Error('Failed'); const blob = await res.blob(); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `resume_${(v.label || 'v').replace(/\s+/g, '_')}.docx`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); toast.success('Downloaded!'); } catch { toast.error('Failed'); } finally { setDling(''); }
+  };
+
+  if (!loaded) return <div className="py-20 text-center text-sm text-[var(--text-tertiary)]"><Loader2 className="h-5 w-5 animate-spin mx-auto mb-2"/>Loading...</div>;
+
   return (
-    <StitchPageScaffold eyebrow="Archive" title="Saved Resume Versions" description="Browse your tailored variants, compare fit, and keep a clean record of what was generated.">
-      <div className="space-y-4">
-        {!loaded ? <StitchCard className="p-8 text-slate-400">Loading saved versions…</StitchCard> : versions.length ? versions.map((v) => (
-          <StitchCard key={v.id} className="p-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <div>
-                <p className="text-xl font-bold text-white">{v.label || 'Untitled version'}</p>
-                <p className="text-slate-400 text-sm mt-1">{v.jobTitle} {v.company ? `• ${v.company}` : ''}</p>
+    <div>
+      <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">My Resumes</h1>
+      <p className="mt-1 text-sm text-[var(--text-tertiary)]">{versions.length} tailored version{versions.length !== 1 ? 's' : ''} saved</p>
+
+      {versions.length === 0 ? (
+        <div className="mt-12 surface text-center py-16 px-6"><FileText className="h-12 w-12 text-[var(--text-tertiary)] mx-auto" /><p className="mt-3 text-sm font-semibold text-[var(--text-secondary)]">No saved versions yet</p><p className="mt-1 text-xs text-[var(--text-tertiary)]">Optimize a resume and save it here.</p><a href="/resume-optimizer" className="mt-4 inline-block btn-filled px-6 py-2.5 text-sm">Go to Resume AI</a></div>
+      ) : (
+        <div className="mt-6 flex gap-5">
+          <div className="flex-1 space-y-2">
+            {versions.map(v => (
+              <div key={v.id} onClick={() => setSelected(v)} className={`surface surface-h p-4 cursor-pointer ${selected?.id === v.id ? 'border-[var(--accent-dim-strong)] shadow-sm-sm ring-1 ring-[var(--accent)]/25' : ''}`}>
+                <div className="flex items-start justify-between">
+                  <div><h3 className="text-sm font-bold text-[var(--text-primary)]">{v.label || 'Untitled'}</h3><p className="text-xs text-[var(--text-tertiary)] mt-0.5">{v.jobTitle} {v.company ? `at ${v.company}` : ''}</p><div className="mt-2 flex items-center gap-3 text-xs text-[var(--text-tertiary)]"><span className="flex items-center gap-1"><Target className="h-3 w-3" /><span className={v.score >= 80 ? 'text-[var(--success)] font-bold' : v.score >= 60 ? 'text-[var(--warning)] font-bold' : 'text-[var(--destructive)] font-bold'}>{v.score}%</span></span><span className="flex items-center gap-1"><Clock className="h-3 w-3" />{new Date(v.createdAt).toLocaleDateString()}</span></div></div>
+                  <div className="flex gap-1"><button onClick={e => { e.stopPropagation(); doDownload(v); }} disabled={dling === v.id} className="p-2 rounded-2xl text-[var(--text-tertiary)] hover:text-[var(--success)] hover:bg-[var(--accent-dim)] transition">{dling === v.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}</button><button onClick={e => { e.stopPropagation(); deleteVersion(v.id); if (selected?.id === v.id) setSelected(null); toast('Deleted'); }} className="p-2 rounded-2xl text-[var(--text-tertiary)] hover:text-[var(--destructive)] hover:bg-[rgba(220,38,38,0.10)] transition"><Trash2 className="h-4 w-4" /></button></div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <StitchBadge label={`${v.score || 0}%`} variant="lime" size="sm" />
-                <StitchBadge label={new Date(v.createdAt).toLocaleDateString()} variant="secondary" size="sm" />
+            ))}
+          </div>
+          {selected?.resumeData && (
+            <div className="hidden lg:block w-[400px] flex-shrink-0"><div className="sticky top-0 surface overflow-hidden max-h-[calc(100vh-150px)] overflow-y-auto">
+              <div className="px-5 py-4 bg-[var(--surface-2)] border-b border-[var(--separator)] flex items-center justify-between"><h2 className="text-sm font-bold text-[var(--text-secondary)]">{selected.label}</h2><span className={`pill border ${selected.score >= 80 ? 'bg-[var(--accent-dim)] text-[var(--success)] border-[#30d158]/20' : 'bg-[rgba(217,119,6,0.10)] text-[var(--warning)] border-[#ff9f0a]/20'}`}>{selected.score}%</span></div>
+              <div className="p-5">
+                <div className="text-center border-b border-[var(--separator)] pb-4 mb-4"><p className="text-lg font-bold text-[var(--text-primary)]">{selected.resumeData?.name}</p><p className="text-xs text-[var(--text-tertiary)] mt-1">{[selected.resumeData?.email, selected.resumeData?.phone, selected.resumeData?.location].filter(Boolean).join(' • ')}</p></div>
+                {selected.resumeData?.summary && <div className="mb-4"><p className="t-muted text-[10px] font-semibold uppercase tracking-widest mb-1">Summary</p><p className="text-xs text-[var(--text-secondary)] leading-relaxed">{selected.resumeData.summary}</p></div>}
+                {selected.resumeData?.skills_grouped && Object.keys(selected.resumeData.skills_grouped).length > 0 && (<div className="mb-4"><p className="t-muted text-[10px] font-semibold uppercase tracking-widest mb-1">Skills</p>{Object.entries(selected.resumeData.skills_grouped).map(([c, s]) => Array.isArray(s) && s.length ? <p key={c} className="text-xs text-[var(--text-secondary)] mt-0.5"><span className="font-semibold text-[var(--text-secondary)]">{c}:</span> {(s as string[]).join(', ')}</p> : null)}</div>)}
+                {selected.resumeData?.experience?.map((exp: any, i: number) => (<div key={i} className="mb-3"><p className="text-xs font-bold text-[var(--text-secondary)]">{exp?.title} — {exp?.company}</p><p className="text-[10px] text-[var(--text-tertiary)]">{exp?.dates}</p>{exp?.bullets?.slice(0, 3).map((b: string, j: number) => <p key={j} className="text-[10px] text-[var(--text-tertiary)] mt-0.5 pl-2 border-l-2 border-[var(--separator)]">{b}</p>)}</div>))}
+                <button onClick={() => doDownload(selected)} disabled={dling === selected.id} className="mt-4 w-full btn-filled py-2.5 text-sm flex items-center justify-center gap-2"><Download className="h-4 w-4" />Download DOCX</button>
               </div>
-            </div>
-          </StitchCard>
-        )) : <StitchCard className="p-8 text-slate-400">No saved resume versions yet.</StitchCard>}
-      </div>
-    </StitchPageScaffold>
+            </div></div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
