@@ -1,30 +1,50 @@
 'use client';
-
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Bell, Home, Mail, Search, Star, UserRound, BarChart3, LogOut, CalendarDays, FolderKanban } from 'lucide-react';
+import { Sparkles, LogOut, ChevronDown, User } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
-import { useEffect, useState } from 'react';
-import { APP_CONTENT_MAX } from './constants';
+import { useEffect, useState, useRef } from 'react';
+import { APP_CONTENT_MAX } from '@/components/layout/constants';
 
-const items = [
-  { href: '/dashboard', icon: Home, label: 'Dashboard' },
-  { href: '/jobs', icon: Search, label: 'Jobs' },
-  { href: '/resume-optimizer', icon: Star, label: 'Resume AI' },
-  { href: '/tracker', icon: FolderKanban, label: 'Tracker' },
-  { href: '/analytics', icon: BarChart3, label: 'Analytics' },
-  { href: '/networking', icon: Mail, label: 'Networking' },
-  { href: '/profile', icon: UserRound, label: 'Profile' },
-  { href: '/cover-letter', icon: CalendarDays, label: 'Cover Letter' },
+const tabs = [
+  { href: '/dashboard', label: 'Home' },
+  { href: '/jobs', label: 'Jobs' },
+  { href: '/resume-optimizer', label: 'Resume AI' },
+  { href: '/mock-interview', label: 'Interview' },
+  { href: '/tracker', label: 'Tracker' },
+];
+const moreItems = [
+  { href: '/cover-letter', label: 'Cover Letter' },
+  { href: '/interview-prep', label: 'Q&A Prep' },
+  { href: '/linkedin', label: 'LinkedIn' },
+  { href: '/analytics', label: 'Analytics' },
+  { href: '/networking', label: 'Networking' },
+  { href: '/resume-versions', label: 'My Resumes' },
+  { href: '/profile', label: 'Profile' },
 ];
 
 export default function TopNav() {
   const path = usePathname();
   const router = useRouter();
   const [name, setName] = useState('');
+  const [showMore, setShowMore] = useState(false);
+  const [showUser, setShowUser] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+  const userRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    createClient().auth.getUser().then(({ data }) => setName(data?.user?.user_metadata?.full_name || data?.user?.email?.split('@')[0] || ''));
+    createClient()
+      .auth.getUser()
+      .then(({ data }) => setName(data?.user?.user_metadata?.full_name || data?.user?.email?.split('@')[0] || ''));
+  }, []);
+
+  useEffect(() => {
+    const h = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) setShowMore(false);
+      if (userRef.current && !userRef.current.contains(e.target as Node)) setShowUser(false);
+    };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
   }, []);
 
   const logout = async () => {
@@ -34,37 +54,117 @@ export default function TopNav() {
 
   const isActive = (href: string) => path === href || (href !== '/dashboard' && path.startsWith(href));
 
+  const navLink = (active: boolean) =>
+    [
+      'relative px-3 py-2 rounded-[var(--radius-sm)] text-[13px] font-semibold transition-colors',
+      active
+        ? 'text-[var(--bg-primary)] bg-[var(--accent)] shadow-glow-sm'
+        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-1)]',
+    ].join(' ');
+
   return (
-    <>
-      <aside className="sidebar-pill fixed bottom-6 left-6 top-6 z-40 hidden w-[72px] flex-col justify-between p-3 lg:flex">
-        <div className="space-y-3">
-          {items.map((item) => (
-            <Link key={item.href} href={item.href} title={item.label} className={[
-              'flex h-12 w-12 items-center justify-center rounded-2xl border transition',
-              isActive(item.href) ? 'border-slate-200 bg-slate-100 text-[var(--text-primary)] shadow-inner' : 'border-transparent text-slate-500 hover:bg-slate-50',
-            ].join(' ')}>
-              <item.icon className="h-5 w-5" strokeWidth={1.9} />
+    <header className="sticky top-0 z-50 border-b" style={{ borderColor: 'var(--separator)', background: 'rgba(5,6,8,0.85)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }}>
+      <div className={`${APP_CONTENT_MAX} mx-auto flex items-center min-h-[56px] px-4 md:px-5 gap-2`}>
+        <Link href="/dashboard" className="flex items-center gap-2.5 mr-4 md:mr-8 press flex-shrink-0">
+          <div
+            className="h-9 w-9 rounded-[var(--radius-sm)] flex items-center justify-center ring-1 ring-white/10"
+            style={{ background: 'linear-gradient(145deg, var(--accent), var(--accent-secondary))' }}
+          >
+            <Sparkles className="h-[18px] w-[18px] text-[var(--bg-primary)]" strokeWidth={2.2} />
+          </div>
+          <span className="text-[15px] font-bold tracking-tight hidden sm:block bg-gradient-to-r from-white to-[var(--text-secondary)] bg-clip-text text-transparent">
+            JobSeeker
+            <span className="text-[var(--accent)]"> Pro</span>
+          </span>
+        </Link>
+
+        <nav className="flex items-center gap-0.5 flex-1 min-w-0 overflow-x-auto no-scrollbar py-1">
+          {tabs.map((t) => (
+            <Link key={t.href} href={t.href} className={navLink(isActive(t.href))}>
+              {t.label}
             </Link>
           ))}
-        </div>
-        <div className="space-y-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700">{name?.[0]?.toUpperCase() || 'U'}</div>
-          <button type="button" onClick={logout} className="flex h-12 w-12 items-center justify-center rounded-2xl border border-transparent text-slate-500 transition hover:bg-slate-50" title="Sign out"><LogOut className="h-5 w-5" strokeWidth={1.9} /></button>
-        </div>
-      </aside>
-      <div className={`${APP_CONTENT_MAX} mx-auto px-4 pt-6 sm:px-6 lg:pl-[96px] xl:px-8`}>
-        <header className="soft-card flex min-h-[84px] items-center justify-between px-6">
-          <div>
-            <h1 className="serif-display text-[28px] font-semibold tracking-tight text-[var(--text-primary)]">Job Seeker Dashboard</h1>
-            <p className="mt-1 text-sm text-[var(--text-secondary)]">Premium SaaS minimalism with real profile-driven content</p>
+          <div ref={moreRef} className="relative flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowMore(!showMore)}
+              className={[
+                'flex items-center gap-1 px-3 py-2 rounded-[var(--radius-sm)] text-[13px] font-semibold transition-colors',
+                showMore || moreItems.some((m) => path.startsWith(m.href))
+                  ? 'text-[var(--text-primary)] bg-[var(--surface-2)]'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-1)]',
+              ].join(' ')}
+            >
+              More
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${showMore ? 'rotate-180' : ''}`} />
+            </button>
+            {showMore && (
+              <div
+                className="absolute top-full left-0 mt-2 w-56 rounded-[var(--radius-md)] p-1.5 z-50 border shadow-glow"
+                style={{ background: 'var(--bg-elevated)', borderColor: 'var(--separator)' }}
+              >
+                {moreItems.map((n) => (
+                  <Link
+                    key={n.href}
+                    href={n.href}
+                    onClick={() => setShowMore(false)}
+                    className={[
+                      'block px-3 py-2.5 rounded-[10px] text-[14px] font-medium transition-colors',
+                      isActive(n.href)
+                        ? 'text-[var(--accent)] bg-[var(--accent-dim)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-1)]',
+                    ].join(' ')}
+                  >
+                    {n.label}
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="flex items-center gap-3">
-            <button className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600"><Bell className="h-4 w-4" /></button>
-            <button className="flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600"><Mail className="h-4 w-4" /></button>
-            <Link href="/profile" className="flex h-11 min-w-[44px] items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700">{name || 'Profile'}</Link>
-          </div>
-        </header>
+        </nav>
+
+        <div ref={userRef} className="relative flex-shrink-0 pl-2">
+          <button
+            type="button"
+            onClick={() => setShowUser(!showUser)}
+            className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-[var(--radius-md)] press transition-colors hover:bg-[var(--surface-1)] border border-transparent hover:border-[var(--separator)]"
+          >
+            <div
+              className="h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-bold text-[var(--bg-primary)] ring-2 ring-[var(--accent)]/30"
+              style={{ background: 'linear-gradient(145deg, var(--accent-secondary), var(--accent))' }}
+            >
+              {name?.[0]?.toUpperCase() || 'U'}
+            </div>
+            <span className="text-[13px] font-semibold text-[var(--text-secondary)] hidden md:block max-w-[120px] truncate">
+              {name}
+            </span>
+          </button>
+          {showUser && (
+            <div
+              className="absolute top-full right-0 mt-2 w-52 rounded-[var(--radius-md)] p-1.5 z-50 border shadow-glow"
+              style={{ background: 'var(--bg-elevated)', borderColor: 'var(--separator)' }}
+            >
+              <Link
+                href="/profile"
+                onClick={() => setShowUser(false)}
+                className="flex items-center gap-2 px-3 py-2.5 rounded-[10px] text-[14px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-1)]"
+              >
+                <User className="h-4 w-4" />
+                Profile
+              </Link>
+              <div className="divider my-1" />
+              <button
+                type="button"
+                onClick={logout}
+                className="w-full flex items-center gap-2 px-3 py-2.5 rounded-[10px] text-[14px] text-[var(--destructive)] hover:bg-[rgba(251,113,133,0.08)]"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </>
+    </header>
   );
 }

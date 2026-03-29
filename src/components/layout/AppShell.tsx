@@ -1,12 +1,14 @@
 import TopNav from './TopNav';
+import { APP_CONTENT_MAX } from './constants';
+
+export { APP_CONTENT_MAX };
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#F9FAFB]">
+    <div className="app-root">
+      <div className="app-ambient" aria-hidden />
       <TopNav />
-      <main className="px-4 pb-10 pt-6 sm:px-6 lg:ml-[96px] xl:px-8">
-        <div className="mx-auto max-w-[1400px]">{children}</div>
-      </main>
+      <main className={`mx-auto ${APP_CONTENT_MAX} px-5 py-8 md:py-10`}>{children}</main>
     </div>
   );
 }

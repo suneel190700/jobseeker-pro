@@ -32,7 +32,7 @@ export default function SignupPage() {
       <AuthShell>
         <div className="surface-elevated p-6 text-center vibrancy" style={{ borderColor: 'var(--separator)' }}>
           <Sparkles className="h-8 w-8 mx-auto mb-3" style={{ color: 'var(--accent)' }} />
-          <h1 className="title-3 text-[var(--text-primary)]">Check your email</h1>
+          <h1 className="title-3 text-white">Check your email</h1>
           <p className="subhead mt-1">Confirmation sent to {email}</p>
           <Link href="/auth/login" className="mt-4 inline-block btn-plain font-medium">
             Back to sign in
@@ -46,9 +46,9 @@ export default function SignupPage() {
     <AuthShell>
       <div className="text-center mb-8">
         <div className="inline-flex h-10 w-10 rounded-[10px] items-center justify-center mb-4" style={{ background: 'var(--accent)' }}>
-          <Sparkles className="h-5 w-5 text-[var(--text-primary)]" />
+          <Sparkles className="h-5 w-5 text-white" />
         </div>
-        <h1 className="title-3 text-[var(--text-primary)]">Create account</h1>
+        <h1 className="title-3 text-white">Create account</h1>
         <p className="subhead mt-1">Start your job search</p>
       </div>
       <div className="surface-elevated p-6 vibrancy" style={{ borderColor: 'var(--separator)' }}>
