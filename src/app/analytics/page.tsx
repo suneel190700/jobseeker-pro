@@ -39,7 +39,7 @@ export default function AnalyticsPage() {
 
       {/* Funnel */}
       <div className="mt-6 surface p-6">
-        <h2 className="text-sm font-bold text-[var(--text-secondary)] flex items-center gap-2"><BarChart3 className="h-4 w-4 text-[var(--accent)]" />Application funnel</h2>
+        <h2 className="text-sm font-bold text-[var(--text-secondary)] flex items-center gap-2"><BarChart3 className="h-4 w-4 text-[var(--text-primary)]" />Application funnel</h2>
         <div className="mt-4 flex items-end gap-3">
           {stageCounts.map((s, i) => {
             const maxC = Math.max(...stageCounts.map(x => x.count), 1);
@@ -57,7 +57,7 @@ export default function AnalyticsPage() {
         {applied > 0 && (
           <div className="mt-5 grid grid-cols-3 gap-3">
             {[{label:'Screen Rate',mine:myRates.screening,bench:benchmarks.screening},{label:'Interview Rate',mine:myRates.interview,bench:benchmarks.interview},{label:'Offer Rate',mine:myRates.offer,bench:benchmarks.offer}].map(r => (
-              <div key={r.label} className="bg-[var(--surface-1)] rounded-[var(--radius-lg)] p-3 border border-[var(--separator)]">
+              <div key={r.label} className="bg-[var(--surface-2)] rounded-[var(--radius-lg)] p-3 border border-[var(--separator)]">
                 <p className="text-[10px] font-semibold text-[var(--text-tertiary)] uppercase">{r.label}</p>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className={`text-xl font-bold ${r.mine >= r.bench ? 'text-[var(--success)]' : 'text-[var(--warning)]'}`}>{r.mine}%</span>
@@ -73,7 +73,7 @@ export default function AnalyticsPage() {
       <div className="mt-5 grid grid-cols-2 gap-5">
         {/* Timing Optimizer */}
         <div className="surface p-6">
-          <h2 className="text-sm font-bold text-[var(--text-secondary)] flex items-center gap-2"><Clock className="h-4 w-4 text-[var(--accent-secondary)]" />Best time to apply</h2>
+          <h2 className="text-sm font-bold text-[var(--text-secondary)] flex items-center gap-2"><Clock className="h-4 w-4 text-[var(--text-tertiary)]" />Best time to apply</h2>
           <p className="text-xs text-[var(--text-tertiary)] mt-1">Heuristic recruiter-activity curve</p>
           <div className="mt-4 space-y-2">
             {bestTimes.map(t => (
@@ -87,21 +87,21 @@ export default function AnalyticsPage() {
             ))}
           </div>
           <div className="mt-4 bg-[var(--accent-dim)] rounded-[var(--radius-lg)] p-3 border border-[var(--accent-dim-strong)]">
-            <p className="text-xs font-semibold text-[var(--accent)]">Tip: Tuesday–Wednesday mornings often see the highest signal.</p>
+            <p className="text-xs font-semibold text-[var(--text-primary)]">Tip: Tuesday–Wednesday mornings often see the highest signal.</p>
           </div>
         </div>
 
         {/* Resume A/B Testing */}
         <div className="surface p-6">
-          <h2 className="text-sm font-bold text-[var(--text-secondary)] flex items-center gap-2"><FileText className="h-4 w-4 text-[var(--info)]" />Resume A/B testing</h2>
-          <p className="text-xs text-white/25 mt-1">Track which resume version performs better</p>
-          <div className="mt-4 bg-[var(--surface-1)] rounded-2xl p-4 text-center">
-            <Zap className="h-8 w-8 text-white/25 mx-auto" />
-            <p className="mt-2 text-sm font-semibold text-white/50">Coming Soon</p>
-            <p className="text-xs text-white/25 mt-1">Generate 2 resume versions for a job, track which gets more callbacks. Assign versions A/B in tracker.</p>
+          <h2 className="text-sm font-bold text-[var(--text-secondary)] flex items-center gap-2"><FileText className="h-4 w-4 text-[var(--text-tertiary)]" />Resume A/B testing</h2>
+          <p className="text-xs text-[var(--text-tertiary)] mt-1">Track which resume version performs better</p>
+          <div className="mt-4 bg-[var(--surface-2)] rounded-2xl p-4 text-center">
+            <Zap className="h-8 w-8 text-[var(--text-tertiary)] mx-auto" />
+            <p className="mt-2 text-sm font-semibold text-[var(--text-secondary)]">Coming Soon</p>
+            <p className="text-xs text-[var(--text-tertiary)] mt-1">Generate 2 resume versions for a job, track which gets more callbacks. Assign versions A/B in tracker.</p>
             <div className="mt-3 flex gap-2 justify-center">
               <div className="pill bg-[#0a84ff]/10 text-[#0a84ff] border border-[#0a84ff]/20">Version A</div>
-              <span className="text-xs text-white/25 self-center">vs</span>
+              <span className="text-xs text-[var(--text-tertiary)] self-center">vs</span>
               <div className="pill bg-purple-500/10 text-purple-400 border border-purple-500/20">Version B</div>
             </div>
           </div>

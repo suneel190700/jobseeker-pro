@@ -87,7 +87,7 @@ export default function TrackerPage() {
               onDragOver={(e) => handleDragOver(e, key)}
               onDragLeave={handleDragLeave}
               onDrop={() => handleDrop(key)}
-              className={['flex w-64 flex-shrink-0 flex-col rounded-[var(--radius-lg)] p-2.5 transition-colors min-h-[300px] border', isOver ? 'bg-[var(--accent-dim)] ring-2 ring-[var(--accent)]/35 border-[var(--accent-dim-strong)]' : 'bg-[var(--surface-1)] border-[var(--separator)]'].join(' ')}
+              className={['flex w-64 flex-shrink-0 flex-col rounded-[var(--radius-lg)] p-2.5 transition-colors min-h-[300px] border', isOver ? 'bg-[var(--accent-dim)] ring-2 ring-[var(--accent)]/35 border-[var(--accent-dim-strong)]' : 'bg-[var(--surface-2)] border-[var(--separator)]'].join(' ')}
             >
               <div className="flex items-center justify-between px-1 pb-2">
                 <div className="flex items-center gap-2">
@@ -108,7 +108,7 @@ export default function TrackerPage() {
                       draggable
                       onDragStart={() => handleDragStart(card.id)}
                       onDragEnd={handleDragEnd}
-                      className={['cursor-grab active:cursor-grabbing rounded-[var(--radius-lg)] border bg-[var(--bg-elevated)] p-3 transition hover:border-[var(--accent-dim-strong)]', dragCard === card.id ? 'opacity-50 border-[var(--accent)]/35' : 'border-[var(--separator)]'].join(' ')}
+                      className={['cursor-grab active:cursor-grabbing rounded-[var(--radius-lg)] border bg-white p-3 transition hover:border-[var(--accent-dim-strong)]', dragCard === card.id ? 'opacity-50 border-[var(--accent)]/35' : 'border-[var(--separator)]'].join(' ')}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-2 min-w-0">
@@ -162,7 +162,7 @@ export default function TrackerPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 backdrop-blur-sm px-4" onClick={() => setShowModal(false)}>
-          <div className="w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--separator)] bg-[var(--bg-elevated)] p-6 shadow-glow mx-4" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-md rounded-[var(--radius-xl)] border border-[var(--separator)] bg-white p-6 shadow-sm mx-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold">{editCard ? 'Edit application' : 'Add application'}</h2>
               <button type="button" onClick={() => setShowModal(false)} className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"><X className="h-5 w-5" /></button>
@@ -179,13 +179,13 @@ export default function TrackerPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="input-label !normal-case !tracking-normal">Stage</label>
-                  <select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value as Stage })} className="w-full rounded-[var(--radius-md)] border border-[var(--separator)] bg-[rgba(0,0,0,0.2)] px-3 py-2 text-sm text-[var(--text-primary)]">
+                  <select value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value as Stage })} className="w-full rounded-[var(--radius-md)] border border-[var(--separator)] bg-white px-3 py-2 text-sm text-[var(--text-primary)]">
                     {STAGES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="input-label !normal-case !tracking-normal">Date</label>
-                  <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="w-full rounded-[var(--radius-md)] border border-[var(--separator)] bg-[rgba(0,0,0,0.2)] px-3 py-2 text-sm text-[var(--text-primary)]" />
+                  <input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="w-full rounded-[var(--radius-md)] border border-[var(--separator)] bg-white px-3 py-2 text-sm text-[var(--text-primary)]" />
                 </div>
               </div>
               <div>

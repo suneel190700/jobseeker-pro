@@ -121,7 +121,7 @@ export default function MockInterviewPage() {
                   m.role === 'interviewer' && 'bg-[var(--surface-2)] border-[var(--separator)] text-[var(--text-secondary)]',
                   m.role === 'you' && 'bg-gradient-to-br from-[var(--accent)] to-[var(--accent-secondary)] border-[var(--accent-dim-strong)] text-[var(--bg-primary)]',
                   m.role === 'feedback' && 'bg-[var(--surface-2)] border-[var(--separator)] text-[var(--text-tertiary)]',
-                  m.role === 'system' && 'bg-[var(--surface-1)] border-[var(--separator)] text-[var(--text-tertiary)] text-xs',
+                  m.role === 'system' && 'bg-[var(--surface-2)] border-[var(--separator)] text-[var(--text-tertiary)] text-xs',
                 ].filter(Boolean).join(' ')}
               >
                 {m.role==='feedback'&&m.score!=null&&<div className={`pill mb-2 ${m.score>=7?'bg-[var(--accent-dim)] text-[var(--accent)]':m.score>=5?'bg-[var(--warning)]/12 text-[var(--warning)]':'bg-[var(--destructive)]/12 text-[var(--destructive)]'}`}><Star className="h-3 w-3 mr-1"/>{m.score}/10</div>}
@@ -148,10 +148,10 @@ export default function MockInterviewPage() {
       </div>
 
       {/* Recording indicator */}
-      {recording&&<div className="mb-2 bg-[#ff453a]/10 border border-[#ff453a]/20 rounded-[16px] p-3 flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-red-500 animate-pulse"/><span className="text-xs text-[#ff453a] font-medium">Recording...</span><span className="text-xs text-white/25 flex-1">{transcript||'Listening...'}</span><button onClick={stopRecording} className="pill bg-red-500/20 text-[#ff453a] border border-red-500/30 cursor-pointer hover:bg-red-500/30">Stop</button></div>}
+      {recording&&<div className="mb-2 bg-[rgba(220,38,38,0.10)] border border-[#ff453a]/20 rounded-[16px] p-3 flex items-center gap-2"><div className="h-2 w-2 rounded-full bg-red-500 animate-pulse"/><span className="text-xs text-[var(--destructive)] font-medium">Recording...</span><span className="text-xs text-[var(--text-tertiary)] flex-1">{transcript||'Listening...'}</span><button onClick={stopRecording} className="pill bg-red-500/20 text-[var(--destructive)] border border-red-500/30 cursor-pointer hover:bg-red-500/30">Stop</button></div>}
 
       <div className="flex gap-2">
-        <button type="button" onClick={recording?stopRecording:startRecording} className={`rounded-[var(--radius-md)] p-2.5 transition-all border ${recording?'bg-red-500/20 text-[#ff453a] border-red-500/30':'bg-[var(--surface-2)] text-[var(--text-tertiary)] border-[var(--separator)] hover:text-[var(--accent)] hover:border-[var(--accent-dim-strong)]'}`}>
+        <button type="button" onClick={recording?stopRecording:startRecording} className={`rounded-[var(--radius-md)] p-2.5 transition-all border ${recording?'bg-red-500/20 text-[var(--destructive)] border-red-500/30':'bg-[var(--surface-2)] text-[var(--text-tertiary)] border-[var(--separator)] hover:text-[var(--accent)] hover:border-[var(--accent-dim-strong)]'}`}>
           {recording?<MicOff className="h-4 w-4"/>:<Mic className="h-4 w-4"/>}
         </button>
         <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendAnswer()} placeholder="Type or use mic..." className="input-hig flex-1" disabled={loading||recording}/>
