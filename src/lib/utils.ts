@@ -31,16 +31,15 @@ export function truncate(str: string, length: number): string {
   return str.slice(0, length) + '...';
 }
 
-/** Pill styles for pipeline stages — tuned for dark UI */
 export function getStageColor(stage: string): string {
   const colors: Record<string, string> = {
-    saved: 'bg-[var(--surface-2)] text-[var(--text-secondary)] border-[var(--separator)]',
-    applied: 'bg-[rgba(96,165,250,0.15)] text-[var(--info)] border-[rgba(96,165,250,0.25)]',
-    screening: 'bg-[rgba(251,191,36,0.12)] text-[var(--warning)] border-[rgba(251,191,36,0.22)]',
-    interview: 'bg-[rgba(139,157,255,0.15)] text-[var(--accent-secondary)] border-[rgba(139,157,255,0.28)]',
-    offer: 'bg-[rgba(74,222,128,0.14)] text-[var(--success)] border-[rgba(74,222,128,0.28)]',
-    rejected: 'bg-[rgba(251,113,133,0.12)] text-[var(--destructive)] border-[rgba(251,113,133,0.25)]',
-    withdrawn: 'bg-[var(--surface-1)] text-[var(--text-tertiary)] border-[var(--separator)]',
+    saved: 'bg-slate-100 text-slate-700',
+    applied: 'bg-blue-100 text-blue-700',
+    screening: 'bg-amber-100 text-amber-700',
+    interview: 'bg-purple-100 text-purple-700',
+    offer: 'bg-green-100 text-green-700',
+    rejected: 'bg-red-100 text-red-700',
+    withdrawn: 'bg-gray-100 text-gray-500',
   };
   return colors[stage] || colors.saved;
 }

@@ -1,70 +1,95 @@
 export const dynamic = 'force-dynamic';
-
 import { NextRequest, NextResponse } from 'next/server';
-import { Document, Packer, Paragraph, TextRun, AlignmentType, BorderStyle } from 'docx';
 
 export async function POST(request: NextRequest) {
   try {
-    const { resume } = await request.json();
-    if (!resume) return NextResponse.json({ error: 'Resume data required.' }, { status: 400 });
+    const { resume, format } = await request.json();
+    if (!resume) return NextResponse.json({ error: 'No resume data' }, { status: 400 });
 
-    const isOnePage = (resume.page_target || 1) === 1;
-    const bodySize = isOnePage ? 20 : 21;
-    const nameSize = isOnePage ? 28 : 32;
-    const headSize = isOnePage ? 21 : 22;
-    const margin = isOnePage ? 900 : 1000;
-
-    const children: any[] = [];
-
-    children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 20 }, children: [new TextRun({ text: resume.name || 'Your Name', bold: true, size: nameSize, font: 'Calibri' })] }));
-    const contact = [resume.email, resume.phone, resume.location, resume.linkedin, resume.github].filter(Boolean);
-    if (contact.length) children.push(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 }, children: [new TextRun({ text: contact.join('  |  '), size: 17, font: 'Calibri', color: '555555' })] }));
-    children.push(new Paragraph({ spacing: { after: 80 }, border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' } }, children: [] }));
-
-    if (resume.summary) { children.push(sHead('PROFESSIONAL SUMMARY', headSize)); children.push(new Paragraph({ spacing: { after: 140 }, children: [new TextRun({ text: resume.summary, size: bodySize, font: 'Calibri' })] })); }
-
-    if (resume.skills_grouped && Object.keys(resume.skills_grouped).length > 0) {
-      children.push(sHead('TECHNICAL SKILLS', headSize));
-      for (const [cat, skills] of Object.entries(resume.skills_grouped)) {
-        children.push(new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: `${cat}: `, bold: true, size: bodySize, font: 'Calibri' }), new TextRun({ text: (skills as string[]).join(', '), size: bodySize, font: 'Calibri' })] }));
-      }
-      children.push(new Paragraph({ spacing: { after: 80 }, children: [] }));
-    } else if (resume.skills?.length) {
-      children.push(sHead('TECHNICAL SKILLS', headSize));
-      children.push(new Paragraph({ spacing: { after: 140 }, children: [new TextRun({ text: resume.skills.join('  •  '), size: bodySize, font: 'Calibri' })] }));
-    }
-
-    if (resume.experience?.length) {
-      children.push(sHead('PROFESSIONAL EXPERIENCE', headSize));
-      for (const exp of resume.experience) {
-        children.push(new Paragraph({ spacing: { before: 80, after: 0 }, children: [new TextRun({ text: exp.company || '', bold: true, size: bodySize + 1, font: 'Calibri' }), new TextRun({ text: exp.dates ? `  |  ${exp.dates}` : '', size: bodySize - 1, font: 'Calibri', color: '666666' })] }));
-        children.push(new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: exp.title || '', italics: true, size: bodySize, font: 'Calibri' }), new TextRun({ text: exp.location ? `  |  ${exp.location}` : '', size: bodySize - 1, font: 'Calibri', color: '666666' })] }));
-        for (const b of (exp.bullets || [])) { children.push(new Paragraph({ spacing: { after: 30 }, indent: { left: 280 }, children: [new TextRun({ text: '- ', size: bodySize, font: 'Calibri' }), new TextRun({ text: b, size: bodySize, font: 'Calibri' })] })); }
-      }
-    }
-
-    if (resume.education?.length) {
-      children.push(sHead('EDUCATION', headSize));
-      for (const edu of resume.education) {
-        children.push(new Paragraph({ spacing: { before: 40, after: 0 }, children: [new TextRun({ text: edu.institution || '', bold: true, size: bodySize + 1, font: 'Calibri' }), new TextRun({ text: edu.dates ? `  |  ${edu.dates}` : '', size: bodySize - 1, font: 'Calibri', color: '666666' })] }));
-        children.push(new Paragraph({ spacing: { after: 30 }, children: [new TextRun({ text: edu.degree || '', italics: true, size: bodySize, font: 'Calibri' })] }));
-        if (edu.details) children.push(new Paragraph({ spacing: { after: 40 }, indent: { left: 280 }, children: [new TextRun({ text: edu.details, size: bodySize - 1, font: 'Calibri', color: '555555' })] }));
-      }
-    }
-
-    if (resume.certifications?.filter(Boolean).length > 0) {
-      children.push(sHead('CERTIFICATIONS', headSize));
-      for (const c of resume.certifications.filter(Boolean)) { children.push(new Paragraph({ spacing: { after: 30 }, indent: { left: 280 }, children: [new TextRun({ text: `- ${c}`, size: bodySize, font: 'Calibri' })] })); }
-    }
-
-    const doc = new Document({ sections: [{ properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: margin, right: margin, bottom: margin, left: margin } } }, children }] });
-    const buffer = await Packer.toBuffer(doc);
-    return new NextResponse(new Uint8Array(buffer), { headers: { 'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'Content-Disposition': 'attachment; filename="optimized_resume.docx"' } });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+    if (format === 'pdf') return generatePDF(resume);
+    return generateDOCX(resume);
+  } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }
 
-function sHead(text: string, size: number) {
-  return new Paragraph({ spacing: { before: 160, after: 60 }, border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' } }, children: [new TextRun({ text, bold: true, size, font: 'Calibri', color: '1a365d' })] });
+async function generatePDF(resume: any) {
+  const { jsPDF } = await import('jspdf');
+  const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+  const w = doc.internal.pageSize.getWidth();
+  let y = 50;
+  const margin = 50;
+  const lineW = w - margin * 2;
+
+  const addText = (text: string, size: number, style: string = 'normal', color: number[] = [0,0,0]) => {
+    doc.setFontSize(size); doc.setTextColor(color[0], color[1], color[2]);
+    if (style === 'bold') doc.setFont('helvetica', 'bold'); else doc.setFont('helvetica', 'normal');
+    const lines = doc.splitTextToSize(text, lineW);
+    for (const line of lines) { if (y > 730) { doc.addPage(); y = 50; } doc.text(line, margin, y); y += size * 1.4; }
+  };
+  const addLine = () => { doc.setDrawColor(200); doc.line(margin, y, w - margin, y); y += 10; };
+
+  // Header
+  if (resume.name) { addText(resume.name, 16, 'bold'); }
+  const contact = [resume.email, resume.phone, resume.location, resume.linkedin, resume.github].filter(Boolean).join(' | ');
+  if (contact) { addText(contact, 9, 'normal', [100,100,100]); }
+  y += 5; addLine();
+
+  // Summary
+  if (resume.summary) { addText('SUMMARY', 10, 'bold'); y += 2; addText(resume.summary, 10); y += 8; }
+
+  // Skills
+  if (resume.skills_grouped && Object.keys(resume.skills_grouped).length) {
+    addText('SKILLS', 10, 'bold'); y += 2;
+    for (const [cat, skills] of Object.entries(resume.skills_grouped)) {
+      if (Array.isArray(skills) && skills.length) addText(`${cat}: ${skills.join(', ')}`, 9);
+    }
+    y += 8;
+  }
+
+  // Experience
+  if (resume.experience?.length) {
+    addText('EXPERIENCE', 10, 'bold'); y += 2;
+    for (const exp of resume.experience) {
+      addText(`${exp.title || ''} — ${exp.company || ''}`, 10, 'bold');
+      if (exp.dates) addText(exp.dates, 8, 'normal', [120,120,120]);
+      for (const b of (exp.bullets || [])) { addText(`• ${b}`, 9); }
+      y += 6;
+    }
+  }
+
+  // Education
+  if (resume.education?.length) {
+    addText('EDUCATION', 10, 'bold'); y += 2;
+    for (const ed of resume.education) {
+      addText(`${ed.degree || ''} — ${ed.institution || ''}`, 10, 'bold');
+      if (ed.dates) addText(ed.dates, 8, 'normal', [120,120,120]);
+    }
+  }
+
+  const buf = new Uint8Array(doc.output('arraybuffer'));
+  return new NextResponse(buf as any, { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename=resume.pdf' } });
+}
+
+async function generateDOCX(resume: any) {
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } = await import('docx');
+  const children: any[] = [];
+  
+  if (resume.name) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: resume.name, bold: true, size: 28, font: 'Calibri' })] }));
+  const contact = [resume.email, resume.phone, resume.location, resume.linkedin, resume.github].filter(Boolean).join(' | ');
+  if (contact) children.push(new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: contact, size: 18, color: '666666', font: 'Calibri' })] }));
+  
+  const sectionHead = (title: string) => new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 200, after: 80 }, border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' } }, children: [new TextRun({ text: title, bold: true, size: 22, font: 'Calibri' })] });
+  
+  if (resume.summary) { children.push(sectionHead('SUMMARY')); children.push(new Paragraph({ children: [new TextRun({ text: resume.summary, size: 20, font: 'Calibri' })] })); }
+  
+  if (resume.skills_grouped) { children.push(sectionHead('SKILLS')); for (const [cat, skills] of Object.entries(resume.skills_grouped)) { if (Array.isArray(skills) && skills.length) children.push(new Paragraph({ children: [new TextRun({ text: `${cat}: `, bold: true, size: 20, font: 'Calibri' }), new TextRun({ text: skills.join(', '), size: 20, font: 'Calibri' })] })); } }
+  
+  if (resume.experience?.length) { children.push(sectionHead('EXPERIENCE')); for (const exp of resume.experience) { children.push(new Paragraph({ spacing: { before: 120 }, children: [new TextRun({ text: `${exp.title || ''} — ${exp.company || ''}`, bold: true, size: 20, font: 'Calibri' })] })); if (exp.dates) children.push(new Paragraph({ children: [new TextRun({ text: exp.dates, size: 18, color: '888888', font: 'Calibri' })] })); for (const b of (exp.bullets || [])) children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: b, size: 20, font: 'Calibri' })] })); } }
+  
+  if (resume.education?.length) { children.push(sectionHead('EDUCATION')); for (const ed of resume.education) { children.push(new Paragraph({ children: [new TextRun({ text: `${ed.degree || ''} — ${ed.institution || ''}`, bold: true, size: 20, font: 'Calibri' })] })); if (ed.dates) children.push(new Paragraph({ children: [new TextRun({ text: ed.dates, size: 18, color: '888888', font: 'Calibri' })] })); } }
+
+  if (resume.certifications?.length) { children.push(sectionHead('CERTIFICATIONS')); for (const c of resume.certifications.filter(Boolean)) children.push(new Paragraph({ bullet: { level: 0 }, children: [new TextRun({ text: c, size: 20, font: 'Calibri' })] })); }
+
+  const doc = new Document({ sections: [{ properties: { page: { margin: { top: 720, bottom: 720, left: 720, right: 720 } } }, children }] });
+  const buf = await Packer.toBuffer(doc);
+  return new NextResponse(buf as any, { headers: { 'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'Content-Disposition': 'attachment; filename=resume.docx' } });
 }

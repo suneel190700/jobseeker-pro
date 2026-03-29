@@ -49,12 +49,12 @@ export default function NetworkingPage() {
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Networking</h1>
-      <p className="mt-1 text-sm text-[var(--text-tertiary)]">Find recruiters, generate outreach emails & discover referral paths</p>
+      <h1 className="text-2xl font-bold text-white/90 tracking-tight">Networking</h1>
+      <p className="mt-1 text-sm text-white/25">Find recruiters, generate outreach emails & discover referral paths</p>
 
       <div className="mt-5 flex gap-2">
         {[{id:'recruiter' as Tab,label:'Find Recruiter',icon:UserCheck},{id:'email' as Tab,label:'Cold Email',icon:Mail},{id:'referral' as Tab,label:'Referral Tips',icon:Users}].map(t => (
-          <button type="button" key={t.id} onClick={() => { setTab(t.id); setResult(null); }} className={`flex items-center gap-2 rounded-[var(--radius-lg)] px-4 py-2.5 text-sm font-semibold transition-all border ${tab === t.id ? 'bg-[var(--accent-dim)] text-[var(--accent)] border-[var(--accent-dim-strong)]' : 'text-[var(--text-secondary)] hover:bg-[var(--surface-2)] border-transparent'}`}>
+          <button key={t.id} onClick={() => { setTab(t.id); setResult(null); }} className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold transition-all ${tab === t.id ? 'bg-[#30d158]/10 text-[#30d158] border border-[#30d158]/20 shadow-xs' : 'text-white/35 hover:bg-[var(--surface-2)] border border-transparent'}`}>
             <t.icon className="h-4 w-4" />{t.label}
           </button>
         ))}
@@ -62,10 +62,10 @@ export default function NetworkingPage() {
 
       <div className="mt-5 surface p-6">
         <div className="grid grid-cols-2 gap-4">
-          <div><label className="block text-xs font-semibold text-[var(--text-tertiary)] mb-1.5">Company</label><input type="text" value={company} onChange={e => setCompany(e.target.value)} placeholder="e.g. Google, Meta" className="input-hig" /></div>
-          <div><label className="block text-xs font-semibold text-[var(--text-tertiary)] mb-1.5">Job Title</label><input type="text" value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="e.g. AI Engineer" className="input-hig" /></div>
+          <div><label className="block text-xs font-semibold text-white/35 mb-1.5">Company</label><input type="text" value={company} onChange={e => setCompany(e.target.value)} placeholder="e.g. Google, Meta" className="input-hig" /></div>
+          <div><label className="block text-xs font-semibold text-white/35 mb-1.5">Job Title</label><input type="text" value={jobTitle} onChange={e => setJobTitle(e.target.value)} placeholder="e.g. AI Engineer" className="input-hig" /></div>
         </div>
-        {tab === 'email' && <div className="mt-4"><label className="block text-xs font-semibold text-[var(--text-tertiary)] mb-1.5">Job Description (optional)</label><textarea rows={4} value={jd} onChange={e => setJd(e.target.value)} placeholder="Paste JD for personalized email..." className="input-hig" /></div>}
+        {tab === 'email' && <div className="mt-4"><label className="block text-xs font-semibold text-white/35 mb-1.5">Job Description (optional)</label><textarea rows={4} value={jd} onChange={e => setJd(e.target.value)} placeholder="Paste JD for personalized email..." className="input-hig" /></div>}
         <button onClick={tab === 'recruiter' ? findRecruiter : tab === 'email' ? generateEmail : findReferrals} disabled={loading || !company.trim()} className="mt-4 btn-filled px-6 py-2.5 text-sm flex items-center gap-2 disabled:opacity-50">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : tab === 'recruiter' ? <Search className="h-4 w-4" /> : tab === 'email' ? <Mail className="h-4 w-4" /> : <Users className="h-4 w-4" />}
           {loading ? 'Generating...' : tab === 'recruiter' ? 'Find Recruiters' : tab === 'email' ? 'Generate Email' : 'Find Referral Paths'}
@@ -76,32 +76,32 @@ export default function NetworkingPage() {
         <div className="mt-5 surface p-6">
           {tab === 'recruiter' && result.recruiters && (
             <div>
-              <h3 className="text-sm font-bold text-[var(--text-secondary)] mb-3">Likely Hiring Contacts at {company}</h3>
+              <h3 className="text-sm font-bold text-white/70 mb-3">Likely Hiring Contacts at {company}</h3>
               <div className="space-y-3">
                 {result.recruiters.map((r: any, i: number) => (
-                  <div key={i} className="flex items-center gap-3 bg-[var(--surface-2)] rounded-2xl p-3">
-                    <div className="h-10 w-10 rounded-full bg-[var(--accent-dim)] flex items-center justify-center border border-[var(--accent-dim-strong)]"><UserCheck className="h-5 w-5 text-[var(--accent)]" /></div>
-                    <div className="flex-1"><p className="text-sm font-semibold text-[var(--text-secondary)]">{r.name || r.title}</p><p className="text-xs text-[var(--text-tertiary)]">{r.role || r.department}</p></div>
-                    {r.linkedin_search && <a href={r.linkedin_search} target="_blank" rel="noopener noreferrer" className="pill bg-[rgba(96,165,250,0.12)] text-[var(--info)] border border-[var(--info)]/25 gap-1 cursor-pointer hover:bg-[rgba(96,165,250,0.18)]"><Linkedin className="h-3 w-3" />Find</a>}
+                  <div key={i} className="flex items-center gap-3 bg-[var(--surface-1)] rounded-2xl p-3">
+                    <div className="h-10 w-10 rounded-full bg-emerald-500/15 flex items-center justify-center"><UserCheck className="h-5 w-5 text-[#30d158]" /></div>
+                    <div className="flex-1"><p className="text-sm font-semibold text-white/70">{r.name || r.title}</p><p className="text-xs text-white/25">{r.role || r.department}</p></div>
+                    {r.linkedin_search && <a href={r.linkedin_search} target="_blank" rel="noopener noreferrer" className="pill bg-[#0a84ff]/10 text-[#0a84ff] border border-[#0a84ff]/20 gap-1 cursor-pointer hover:bg-blue-100"><Linkedin className="h-3 w-3" />Find</a>}
                   </div>
                 ))}
               </div>
-              {result.tips && <div className="mt-3 bg-[var(--accent-dim)] rounded-[var(--radius-lg)] p-3 border border-[var(--accent-dim-strong)]"><p className="text-xs text-[var(--accent)]">{result.tips}</p></div>}
+              {result.tips && <div className="mt-3 bg-[#30d158]/10 rounded-2xl p-3 border border-emerald-500/10"><p className="text-xs text-[#30d158]">{result.tips}</p></div>}
             </div>
           )}
           {tab === 'email' && result.email && (
             <div>
-              <div className="flex items-center justify-between mb-3"><h3 className="text-sm font-bold text-[var(--text-secondary)]">Cold Outreach Email</h3><button onClick={() => copy(result.subject + '\n\n' + result.email)} className="pill bg-[var(--surface-2)] text-[var(--text-secondary)] border border-[var(--separator)] gap-1 cursor-pointer hover:bg-[var(--surface-2)]"><Copy className="h-3 w-3" />Copy</button></div>
-              {result.subject && <p className="text-xs text-[var(--text-tertiary)] mb-2">Subject: <span className="text-[var(--text-secondary)] font-semibold">{result.subject}</span></p>}
-              <div className="bg-[var(--surface-2)] rounded-2xl p-4 text-sm text-[var(--text-secondary)] whitespace-pre-wrap leading-relaxed">{result.email}</div>
+              <div className="flex items-center justify-between mb-3"><h3 className="text-sm font-bold text-white/70">Cold Outreach Email</h3><button onClick={() => copy(result.subject + '\n\n' + result.email)} className="pill bg-[var(--surface-1)] text-white/50 border border-[var(--separator)] gap-1 cursor-pointer hover:bg-[var(--surface-2)]"><Copy className="h-3 w-3" />Copy</button></div>
+              {result.subject && <p className="text-xs text-white/25 mb-2">Subject: <span className="text-white/50 font-semibold">{result.subject}</span></p>}
+              <div className="bg-[var(--surface-1)] rounded-2xl p-4 text-sm text-white/70 whitespace-pre-wrap leading-relaxed">{result.email}</div>
             </div>
           )}
           {tab === 'referral' && result.strategies && (
             <div>
-              <h3 className="text-sm font-bold text-[var(--text-secondary)] mb-3">Referral Strategies for {company}</h3>
+              <h3 className="text-sm font-bold text-white/70 mb-3">Referral Strategies for {company}</h3>
               <div className="space-y-2">
                 {result.strategies.map((s: any, i: number) => (
-                  <div key={i} className="bg-[var(--surface-2)] rounded-2xl p-3"><p className="text-sm font-semibold text-[var(--text-secondary)]">{s.title}</p><p className="text-xs text-[var(--text-tertiary)] mt-1">{s.description}</p></div>
+                  <div key={i} className="bg-[var(--surface-1)] rounded-2xl p-3"><p className="text-sm font-semibold text-white/70">{s.title}</p><p className="text-xs text-white/35 mt-1">{s.description}</p></div>
                 ))}
               </div>
             </div>
