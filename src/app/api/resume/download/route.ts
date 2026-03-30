@@ -3,15 +3,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { resume, format } = await request.json();
+    const { resume, format, filename } = await request.json();
     if (!resume) return NextResponse.json({ error: 'No resume data' }, { status: 400 });
 
-    if (format === 'pdf') return generatePDF(resume);
-    return generateDOCX(resume);
+    if (format === 'pdf') return generatePDF(resume, filename || 'resume');
+    return generateDOCX(resume, filename || 'resume');
   } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }
 
-async function generatePDF(resume: any) {
+async function generatePDF(resume: any, filename: string) {
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
   const w = doc.internal.pageSize.getWidth();
@@ -66,10 +66,10 @@ async function generatePDF(resume: any) {
   }
 
   const buf = new Uint8Array(doc.output('arraybuffer'));
-  return new NextResponse(buf as any, { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': 'attachment; filename=resume.pdf' } });
+  return new NextResponse(buf as any, { headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename=${filename || 'resume'}.pdf` } });
 }
 
-async function generateDOCX(resume: any) {
+async function generateDOCX(resume: any, filename: string) {
   const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } = await import('docx');
   const children: any[] = [];
   
@@ -91,5 +91,5 @@ async function generateDOCX(resume: any) {
 
   const doc = new Document({ sections: [{ properties: { page: { margin: { top: 720, bottom: 720, left: 720, right: 720 } } }, children }] });
   const buf = await Packer.toBuffer(doc);
-  return new NextResponse(buf as any, { headers: { 'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'Content-Disposition': 'attachment; filename=resume.docx' } });
+  return new NextResponse(buf as any, { headers: { 'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'Content-Disposition': `attachment; filename=${filename || 'resume'}.docx` } });
 }
