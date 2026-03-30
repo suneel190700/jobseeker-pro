@@ -48,8 +48,8 @@ export default function CoverLetterPage() {
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          {!profile && !optResume && <div className="rounded-2xl bg-[#5203d5]/10 border border-[#ff9f0a]/20 p-3 text-sm text-[#cdbdff]">Upload resume in <a href="/profile" className="font-medium underline">Profile</a> first.</div>}
-          {optResume && <div className="rounded-2xl bg-[#3c59fd]/10 border border-[#0a84ff]/20 p-3 text-xs text-[#bbc3ff] flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Using optimized resume from Resume AI</div>}
+          {!profile && !optResume && <div className="rounded-2xl bg-[#5203d5]/10 border border-[#cdbdff]/20 p-3 text-sm text-[#cdbdff]">Upload resume in <a href="/profile" className="font-medium underline">Profile</a> first.</div>}
+          {optResume && <div className="rounded-2xl bg-[#3c59fd]/10 border border-[#bbc3ff]/20 p-3 text-xs text-[#bbc3ff] flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Using optimized resume from Resume AI</div>}
           {!optResume && profile && <div className="rounded-2xl bg-green-500/10 border border-green-100 p-3 text-xs text-green-400 flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Using: {profile.fileName}</div>}
 
           <div className="grid grid-cols-2 gap-3">
@@ -57,7 +57,7 @@ export default function CoverLetterPage() {
             <div><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Company</label><input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="e.g. Google" className="kinetic-input" /></div>
           </div>
           <div><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Tone</label>
-            <div className="flex gap-2">{[{ v: 'professional', l: 'Professional' }, { v: 'formal', l: 'Formal' }, { v: 'enthusiastic', l: 'Enthusiastic' }].map((t) => (<button key={t.v} onClick={() => setTone(t.v)} className={`rounded-2xl border px-3 py-1.5 text-xs font-medium transition ${tone === t.v ? 'border-[#0a84ff]/30 bg-[#3c59fd]/10 text-[#bbc3ff]' : 'border-white/[0.08] text-[#8e90a2]'}`}>{t.l}</button>))}</div>
+            <div className="flex gap-2">{[{ v: 'professional', l: 'Professional' }, { v: 'formal', l: 'Formal' }, { v: 'enthusiastic', l: 'Enthusiastic' }].map((t) => (<button key={t.v} onClick={() => setTone(t.v)} className={`rounded-2xl border px-3 py-1.5 text-xs font-medium transition ${tone === t.v ? 'border-[#bbc3ff]/30 bg-[#3c59fd]/10 text-[#bbc3ff]' : 'border-white/[0.08] text-[#8e90a2]'}`}>{t.l}</button>))}</div>
           </div>
           <div><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Job Description</label><textarea rows={10} value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} placeholder="Paste full JD..." className="kinetic-input" /></div>
           <button onClick={handleGenerate} disabled={generating || (!profile && !optResume) || !jobDescription.trim()} className="kinetic-btn w-full py-3 flex items-center justify-center gap-2 disabled:opacity-50">

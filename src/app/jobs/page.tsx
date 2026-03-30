@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { Search, MapPin, Loader2, Bookmark, BookmarkCheck, ExternalLink, Building2, Clock, DollarSign, CheckCircle, Zap, Target, Filter, AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { useTracker } from '@/hooks/useTracker';
 import { useResumeProfile } from '@/hooks/useResumeProfile';
 import { getCachedScores, setCachedScore } from '@/lib/db';
@@ -28,7 +28,7 @@ export default function JobsPage() {
   const handleSearch=(e?:React.FormEvent,oq?:string)=>{if(e)e.preventDefault();autoLoaded.current=true;const q=oq||query;if(oq)setQuery(oq);doSearch(q,location);};
 
   const scoreJob=async(job:Job)=>{if(!profile?.text){toast.error('Upload resume first');return;}setScoringId(job.id);
-    try{const jd=await fetchFullJD(job);if(!jd||jd.length<20){toast.error('No job description available');setScoringId(null);return;}
+    try{const jd=await fetchFullJD(job);if(!jd||jd.length<20){toast.error('No JD available');setScoringId(null);return;}
       const r=await fetch('/api/resume/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({resumeText:profile.text,jobDescription:jd})});if(!r.ok)throw new Error('Failed');const d=await r.json();
       const sd:ScoreData={score:d.overall_score,reason:d.score_summary||''};setScores(p=>({...p,[job.id]:sd}));setCachedScore(job.id,sd.score,sd.reason);toast.success(`Score: ${sd.score}/100`);
     }catch(e:any){toast.error(e.message);}finally{setScoringId(null);}};
@@ -38,83 +38,139 @@ export default function JobsPage() {
   const toggleSave=(job:Job)=>{if(tracker.cards.some(c=>c.url===job.source_url)){tracker.unsaveJob(job.source_url);toast('Removed');}else{const s=scores[job.id];tracker.saveJob({title:job.title,company:job.company,url:job.source_url,location:job.location,salary:fS(job.salary_min,job.salary_max)||undefined,match_score:s?.score});toast.success('Saved!');}};
 
   const isSaved=(j:Job)=>tracker.cards.some(c=>c.url===j.source_url);
-  const fS=(a:number|null,b:number|null)=>{if(!a&&!b)return null;const f=(n:number)=>`$${(n/1000).toFixed(0)}k`;if(a&&b)return`${f(a)}-${f(b)}`;return a?`From ${f(a)}`:`Up to ${f(b!)}`;};
-  const tA=(d:string)=>{const x=Math.floor((Date.now()-new Date(d).getTime())/864e5);if(x===0)return'Today';if(x===1)return'Yesterday';if(x<7)return`${x}d ago`;if(x<30)return`${Math.floor(x/7)}w ago`;return`${Math.floor(x/30)}mo ago`;};
-  const sC=(s:number)=>s>=80?'bg-[#007886]/10 text-[#00daf3] border-[#30d158]/20':s>=60?'bg-[#5203d5]/10 text-[#cdbdff] border-[#ff9f0a]/20':'bg-[#93000a]/10 text-red-700 border-[#ff453a]/20';
+  const fS=(a:number|null,b:number|null)=>{if(!a&&!b)return null;const f=(n:number)=>`$${(n/1000).toFixed(0)}k`;if(a&&b)return`${f(a)}–${f(b)}`;return a?`From ${f(a)}`:`Up to ${f(b!)}`};
+  const tA=(d:string)=>{const x=Math.floor((Date.now()-new Date(d).getTime())/864e5);if(x===0)return'Today';if(x===1)return'Yesterday';if(x<7)return`${x}d ago`;if(x<30)return`${Math.floor(x/7)}w ago`;return`${Math.floor(x/30)}mo ago`};
+  const sC=(s:number)=>s>=80?'text-[#00daf3] bg-[#007886]/15 border-[#00daf3]/20':s>=60?'text-[#cdbdff] bg-[#5203d5]/15 border-[#cdbdff]/20':'text-[#ffb4ab] bg-[#93000a]/15 border-[#ffb4ab]/20';
 
-  return(<div>
-    <div className="flex items-center justify-between">
-      <div><h1 className="text-2xl font-bold text-[#e1e2eb] tracking-tight">Jobs</h1><p className="mt-0.5 text-sm text-[#434656]">LinkedIn, Indeed, Glassdoor & 16K+ sources • {jobs.length} results</p></div>
-      {!profile&&<a href="/profile" className="pill bg-[#5203d5]/10 text-[#cdbdff] border border-[#ff9f0a]/20 gap-1.5 px-3 py-2"><AlertCircle className="h-3.5 w-3.5"/>Upload resume for scoring</a>}
-    </div>
-    {titles.length>1&&<div className="mt-3 flex flex-wrap gap-2">{titles.map(t=>(<button key={t} onClick={()=>handleSearch(undefined,t)} className={`pill cursor-pointer transition-all ${query===t&&searched?'bg-[#007886]/10 text-[#00daf3] border-[#30d158]/20':'bg-[var(--surface-1)] text-[#8e90a2] border-[var(--separator)] hover:bg-[#007886]/10 hover:text-[#00daf3]'} border px-4 py-1.5`}>{t}</button>))}</div>}
-
-    <form onSubmit={e=>handleSearch(e)} className="mt-5">
-      <div className="flex gap-3 surface p-2.5">
-        <div className="relative flex-1"><Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#434656]"/><input type="text" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Job title, skills, or company" className="w-full rounded-2xl bg-[var(--surface-1)] border-0 py-2.5 pl-10 pr-4 text-sm focus:bg-[var(--surface-1)] focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition"/></div>
-        <div className="relative w-44"><MapPin className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#434656]"/><input type="text" value={location} onChange={e=>setLocation(e.target.value)} placeholder="City, state" className="w-full rounded-2xl bg-[var(--surface-1)] border-0 py-2.5 pl-10 pr-4 text-sm focus:bg-[var(--surface-1)] focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition"/></div>
-        <button type="submit" disabled={loading||!query.trim()} className="btn-filled px-6 py-2.5 text-sm disabled:opacity-50">{loading?<Loader2 className="h-4 w-4 animate-spin"/>:'Search'}</button>
-        <button type="button" onClick={()=>setShowFilters(!showFilters)} className={`rounded-2xl border px-3 py-2.5 transition-all ${showFilters?'border-emerald-500/30 bg-[#007886]/10 text-[#00daf3]':'border-[var(--separator)] text-[#434656] hover:text-[#c4c5d9]'}`}><Filter className="h-4 w-4"/></button>
-      </div>
-      {showFilters&&<div className="mt-2 flex flex-wrap items-center gap-3 surface p-3.5">
-        {[{l:'Remote',v:remoteFilter,s:setRemoteFilter,o:[['','Any'],['remote','Remote'],['onsite','On-site']]},{l:'Type',v:employmentType,s:setEmploymentType,o:[['','Any'],['fulltime','Full-time'],['contract','Contract'],['parttime','Part-time']]},{l:'Level',v:experienceLevel,s:setExperienceLevel,o:[['','Any'],['Entry Level','Entry'],['Mid Level','Mid'],['Senior','Senior'],['Lead','Lead']]},{l:'Posted',v:datePosted,s:setDatePosted,o:[['','Any'],['today','Today'],['3days','3 days'],['week','Week'],['month','Month']]}].map(f=>(
-          <div key={f.l}><label className="block text-[10px] font-bold text-[#434656] uppercase mb-1">{f.l}</label><select value={f.v} onChange={e=>f.s(e.target.value)} className="rounded-[16px] border border-[var(--separator)] bg-[var(--surface-1)] px-3 py-1.5 text-xs text-[#c4c5d9]">{f.o.map(([val,label])=><option key={val} value={val}>{label}</option>)}</select></div>
+  return (<div className="h-[calc(100vh-64px)] flex flex-col">
+    {/* Filters Row */}
+    <section className="flex items-center justify-between gap-4 pb-4">
+      <form onSubmit={e=>handleSearch(e)} className="flex items-center gap-3 flex-1">
+        <div className="relative flex-1 max-w-md">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#8e90a2] text-lg">search</span>
+          <input type="text" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search roles, skills, or companies..." className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#e1e2eb] placeholder:text-[#8e90a2]/50 focus:ring-1 focus:ring-[#bbc3ff]/20 outline-none transition-all" />
+        </div>
+        <div className="relative w-40">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#8e90a2] text-lg">location_on</span>
+          <input type="text" value={location} onChange={e=>setLocation(e.target.value)} placeholder="Location" className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-[#e1e2eb] placeholder:text-[#8e90a2]/50 focus:ring-1 focus:ring-[#bbc3ff]/20 outline-none transition-all" />
+        </div>
+        <button type="submit" disabled={loading||!query.trim()} className="kinetic-btn px-6 py-2.5 text-sm disabled:opacity-50">{loading?<Loader2 className="h-4 w-4 animate-spin"/>:'Search'}</button>
+      </form>
+      <div className="flex items-center gap-3">
+        {[{l:'Remote',v:remoteFilter,fn:setRemoteFilter,o:[['','Any'],['remote','Remote']]},{l:'Posted',v:datePosted,fn:setDatePosted,o:[['','Any'],['today','Today'],['week','Week'],['month','Month']]},{l:'Type',v:employmentType,fn:setEmploymentType,o:[['','Any'],['fulltime','Full-time'],['contract','Contract']]}].map(f=>(
+          <select key={f.l} value={f.v} onChange={e=>f.fn(e.target.value)} className="bg-white/5 border border-white/10 rounded-full px-4 py-2 text-sm text-[#c4c5d9] cursor-pointer hover:bg-white/10 transition-colors appearance-none">
+            {f.o.map(([v,l])=><option key={v} value={v} className="bg-[#1d2026]">{v?l:`${f.l}: ${l}`}</option>)}
+          </select>
         ))}
-        <button type="button" onClick={()=>{setRemoteFilter('');setEmploymentType('');setExperienceLevel('');setDatePosted('');}} className="text-xs text-[#00daf3] hover:underline mt-4">Clear filters</button>
-      </div>}
-    </form>
+        <div className="flex items-center gap-2 text-[#c4c5d9] text-sm font-medium">
+          <span className="text-[#bbc3ff] font-bold">{jobs.length}</span> results
+        </div>
+      </div>
+    </section>
 
-    {error&&<div className="mt-4 surface p-3 border-[#ff453a]/20 bg-[#93000a]/10 text-sm text-[#ffb4ab]">{error}</div>}
+    {/* Title pills */}
+    {titles.length>1&&<div className="flex flex-wrap gap-2 pb-4">{titles.map(t=>(<button key={t} onClick={()=>handleSearch(undefined,t)} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${query===t&&searched?'bg-[#3c59fd]/20 text-[#bbc3ff] border border-[#bbc3ff]/20':'bg-white/5 text-[#8e90a2] border border-white/10 hover:bg-[#3c59fd]/10 hover:text-[#bbc3ff]'}`}>{t}</button>))}</div>}
 
-    <div className="mt-5 flex gap-5">
-      <div className="flex-1 space-y-2">
-        {loading&&<div className="py-16 text-center"><Loader2 className="h-6 w-6 animate-spin text-[#00daf3] mx-auto"/></div>}
-        {!loading&&searched&&jobs.length===0&&!error&&<div className="py-16 text-center text-sm text-[#434656]">No jobs found. Try different keywords.</div>}
+    {error&&<div className="mb-4 glass-panel p-3 border-[#ffb4ab]/20 bg-[#93000a]/10 text-sm text-[#ffb4ab] rounded-2xl">{error}</div>}
+
+    {/* Dual Pane */}
+    <section className="flex-1 flex overflow-hidden gap-6">
+      {/* Left: Job Cards */}
+      <div className={`${selectedJob?'w-[420px]':'w-full max-w-2xl'} flex flex-col gap-3 overflow-y-auto pr-2`} style={{scrollbarWidth:'thin'}}>
+        {loading&&<div className="py-20 text-center"><Loader2 className="h-6 w-6 animate-spin text-[#bbc3ff] mx-auto"/></div>}
+        {!loading&&searched&&jobs.length===0&&!error&&<div className="py-20 text-center text-sm text-[#8e90a2]">No jobs found. Try different keywords.</div>}
         {!loading&&jobs.map(job=>{const saved=isSaved(job);const sc=scores[job.id];const scoring=scoringId===job.id;return(
-          <div key={job.id} onClick={()=>setSelectedJob(job)} className={`surface surface-h p-4 cursor-pointer ${selectedJob?.id===job.id?'border-[#30d158]/20 shadow-glow ring-1 ring-emerald-500/20':''}`}>
-            <div className="flex items-start justify-between">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap"><h3 className="text-sm font-bold text-[#e1e2eb]">{job.title}</h3>{saved&&<CheckCircle className="h-3.5 w-3.5 text-emerald-500"/>}{sc&&<span className={`pill border ${sC(sc.score)}`}>{sc.score}%</span>}</div>
-                <p className="text-sm text-[#8e90a2] flex items-center gap-1.5 mt-0.5"><Building2 className="h-3 w-3 text-[#434656]"/>{job.company}</p>
-                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#434656]">
-                  <span className="flex items-center gap-1"><MapPin className="h-3 w-3"/>{job.location}</span>
-                  {job.remote_type==='remote'&&<span className="pill bg-[#007886]/10 text-[#00daf3] border border-[#30d158]/20">Remote</span>}
-                  {fS(job.salary_min,job.salary_max)&&<span className="flex items-center gap-1"><DollarSign className="h-3 w-3"/>{fS(job.salary_min,job.salary_max)}</span>}
-                  <span className="flex items-center gap-1"><Clock className="h-3 w-3"/>{tA(job.posted_date)}</span>
+          <div key={job.id} onClick={()=>setSelectedJob(job)} className={`p-5 rounded-2xl cursor-pointer transition-all duration-200 ${selectedJob?.id===job.id?'glass-card ring-2 ring-[#bbc3ff]/40':'glass-card hover:bg-white/[0.06]'}`}>
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/5">
+                  <span className="material-symbols-outlined text-[#bbc3ff] text-lg">apartment</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-bold text-[#8e90a2] uppercase tracking-widest">{tA(job.posted_date)}</span>
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-1.5 ml-3">
-                <button onClick={e=>{e.stopPropagation();toggleSave(job);}} className="p-1.5 rounded-[16px] text-[#434656] hover:text-[#00daf3] transition">{saved?<BookmarkCheck className="h-5 w-5 text-[#00daf3]"/>:<Bookmark className="h-5 w-5"/>}</button>
-                {!sc&&profile&&<button onClick={e=>{e.stopPropagation();scoreJob(job);}} disabled={scoring} className="pill bg-[var(--surface-1)] text-[#8e90a2] border border-[var(--separator)] hover:bg-[#007886]/10 hover:text-[#00daf3] hover:border-[#30d158]/20 transition cursor-pointer gap-1 px-2.5 py-1">{scoring?<Loader2 className="h-3 w-3 animate-spin"/>:<Target className="h-3 w-3"/>}{scoring?'...':'Score'}</button>}
-                {profile&&<button onClick={e=>{e.stopPropagation();optimizeForJob(job);}} className="p-1.5 rounded-[16px] text-[#434656] hover:text-violet-500 transition" title="Optimize"><Zap className="h-4 w-4"/></button>}
-              </div>
+              {sc&&<div className={`px-2.5 py-1 rounded-lg border text-[10px] font-bold ${sC(sc.score)}`}>{sc.score} ATS</div>}
             </div>
-          </div>);})}
+            <h3 className="text-base font-bold text-[#e1e2eb] leading-tight mb-1">{job.title}</h3>
+            <p className="text-sm text-[#bbc3ff] font-medium mb-3">{job.company}</p>
+            <div className="flex flex-wrap gap-2">
+              <span className="px-2 py-0.5 bg-white/5 text-[#c4c5d9] text-[11px] font-medium rounded border border-white/5">{job.location}</span>
+              {fS(job.salary_min,job.salary_max)&&<span className="px-2 py-0.5 bg-white/5 text-[#c4c5d9] text-[11px] font-medium rounded border border-white/5">{fS(job.salary_min,job.salary_max)}</span>}
+              {job.remote_type==='remote'&&<span className="px-2 py-0.5 bg-[#00daf3]/20 text-[#00daf3] text-[11px] font-bold rounded border border-[#00daf3]/20">Remote</span>}
+            </div>
+          </div>
+        );})}
         {hasMore&&!loading&&searched&&jobs.length>0&&(
-          <button onClick={()=>doSearch(query,location,page+1,true)} disabled={loadingMore} className="w-full surface surface-h py-3 text-sm font-semibold text-[#00daf3] flex items-center justify-center gap-2 mt-2">{loadingMore?<><Loader2 className="h-4 w-4 animate-spin"/>Loading...</>:'Load more jobs'}</button>
+          <button onClick={()=>doSearch(query,location,page+1,true)} disabled={loadingMore} className="w-full glass-card py-3 text-sm font-semibold text-[#bbc3ff] flex items-center justify-center gap-2 mt-2 rounded-2xl">{loadingMore?<><Loader2 className="h-4 w-4 animate-spin"/>Loading...</>:'Load more'}</button>
         )}
       </div>
 
+      {/* Right: Detail Panel */}
       {selectedJob&&(
-        <div className="hidden lg:block w-[420px] flex-shrink-0">
-          <div className="sticky top-0 surface overflow-hidden max-h-[calc(100vh-120px)] overflow-y-auto">
-            <div className="p-5 border-b border-[var(--separator)]">
-              <h2 className="text-lg font-bold text-[#e1e2eb]">{selectedJob.title}</h2>
-              <p className="text-sm text-[#8e90a2] mt-0.5">{selectedJob.company}</p>
-              {scores[selectedJob.id]&&<div className={`mt-3 rounded-2xl p-3 border ${sC(scores[selectedJob.id].score)}`}><span className="text-xl font-bold">{scores[selectedJob.id].score}%</span><span className="text-xs font-semibold ml-1.5">ATS Match</span>{scores[selectedJob.id].reason&&<p className="text-xs mt-1 opacity-75">{scores[selectedJob.id].reason}</p>}</div>}
-              {!scores[selectedJob.id]&&profile&&<button onClick={()=>scoreJob(selectedJob)} disabled={scoringId===selectedJob.id} className="mt-3 w-full btn-gray py-2.5 text-sm flex items-center justify-center gap-2">{scoringId===selectedJob.id?<><Loader2 className="h-4 w-4 animate-spin"/>Scoring...</>:<><Target className="h-4 w-4"/>Get ATS Score</>}</button>}
-              <div className="mt-3 flex flex-wrap gap-2 text-xs"><span className="pill bg-[var(--surface-1)] border border-[var(--separator)] text-[#c4c5d9]">{selectedJob.location}</span>{selectedJob.remote_type==='remote'&&<span className="pill bg-[#007886]/10 border border-[#30d158]/20 text-[#00daf3]">Remote</span>}{fS(selectedJob.salary_min,selectedJob.salary_max)&&<span className="pill bg-[#3c59fd]/10 border border-[#0a84ff]/20 text-[#bbc3ff]">{fS(selectedJob.salary_min,selectedJob.salary_max)}</span>}</div>
-              <div className="mt-3 flex gap-2"><a href={selectedJob.source_url} target="_blank" rel="noopener noreferrer" className="flex-1 btn-filled py-2.5 text-sm text-center flex items-center justify-center gap-2"><ExternalLink className="h-4 w-4"/>Apply</a><button onClick={()=>toggleSave(selectedJob)} className={`btn-gray px-5 py-2.5 text-sm ${isSaved(selectedJob)?'bg-[#007886]/10 text-[#00daf3] border-[#30d158]/20':''}`}>{isSaved(selectedJob)?'Saved':'Save'}</button></div>
-              {profile&&<button onClick={()=>optimizeForJob(selectedJob)} className="mt-2 w-full rounded-2xl bg-[#5203d5]/10 border border-[#bf5af2]/20 px-4 py-2.5 text-sm font-semibold text-[#cdbdff] hover:bg-violet-100 transition flex items-center justify-center gap-2"><Zap className="h-4 w-4"/>Optimize Resume</button>}
+        <div className="hidden lg:flex flex-1 flex-col glass-card rounded-[2rem] overflow-hidden shadow-2xl" style={{borderTop:'1px solid rgba(255,255,255,0.15)',borderLeft:'1px solid rgba(255,255,255,0.1)'}}>
+          {/* Header */}
+          <div className="p-8 pb-0 flex flex-col gap-6">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <div className="h-14 w-14 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
+                  <span className="material-symbols-outlined text-[#bbc3ff] text-2xl">apartment</span>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-black text-[#e1e2eb] tracking-tight leading-none mb-1">{selectedJob.title}</h2>
+                  <p className="text-base font-medium text-[#bbc3ff]">{selectedJob.company} • {selectedJob.location}{selectedJob.remote_type==='remote'?' • Remote':''}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={()=>toggleSave(selectedJob)} className="p-3 bg-white/5 text-[#e1e2eb] rounded-xl hover:bg-white/10 border border-white/10 transition-all">
+                  <span className="material-symbols-outlined" style={isSaved(selectedJob)?{fontVariationSettings:"'FILL' 1",color:'#00daf3'}:{}}>{isSaved(selectedJob)?'bookmark':'bookmark_border'}</span>
+                </button>
+                <a href={selectedJob.source_url} target="_blank" rel="noopener noreferrer" className="p-3 bg-white/5 text-[#e1e2eb] rounded-xl hover:bg-white/10 border border-white/10 transition-all">
+                  <span className="material-symbols-outlined">open_in_new</span>
+                </a>
+              </div>
             </div>
-            <div className="p-5">
-              <h3 className="text-sm font-bold text-[#c4c5d9] mb-2">Job Description</h3>
-              <div className="text-sm text-[#c4c5d9] leading-relaxed whitespace-pre-wrap max-h-[500px] overflow-y-auto">{selectedJob.description||<span className="text-[#434656] italic">No description available</span>}</div>
-              {selectedJob.source_url&&selectedJob.source_url!=='#'&&<a href={selectedJob.source_url} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#00daf3] hover:text-[#00daf3]"><ExternalLink className="h-3.5 w-3.5"/>View original posting</a>}
+
+            {/* AI Score Bar */}
+            {scores[selectedJob.id]?(
+              <div className="rounded-2xl p-4 flex items-center justify-between border border-[#cdbdff]/20" style={{background:'rgba(82,3,213,0.1)',backdropFilter:'blur(12px)'}}>
+                <div className="flex items-center gap-4">
+                  <div><span className="text-[10px] font-bold text-[#cdbdff] uppercase tracking-widest block mb-1">AI MATCH SCORE</span><div className="flex items-center gap-2"><span className="text-2xl font-black text-[#cdbdff]">{scores[selectedJob.id].score}%</span><span className={`px-2 py-0.5 text-[10px] font-bold rounded-full ${scores[selectedJob.id].score>=80?'bg-[#00daf3] text-[#001f24]':'bg-[#cdbdff] text-[#20005f]'}`}>{scores[selectedJob.id].score>=80?'OPTIMAL':'GOOD'}</span></div></div>
+                  {scores[selectedJob.id].reason&&<><div className="h-8 w-px bg-white/10 mx-2"/><div><span className="text-[10px] font-bold text-[#c4c5d9] uppercase tracking-widest block mb-1">SUMMARY</span><p className="text-sm text-[#e1e2eb] font-medium">{scores[selectedJob.id].reason}</p></div></>}
+                </div>
+                <button onClick={()=>optimizeForJob(selectedJob)} className="flex items-center gap-2 px-4 py-2 bg-[#cdbdff]/80 text-[#20005f] rounded-lg text-sm font-bold transition-all hover:brightness-110">
+                  <span className="material-symbols-outlined text-sm" style={{fontVariationSettings:"'FILL' 1"}}>psychology</span>Optimize Resume
+                </button>
+              </div>
+            ):profile?(
+              <button onClick={()=>scoreJob(selectedJob)} disabled={scoringId===selectedJob.id} className="kinetic-btn-ghost py-3 text-sm w-full rounded-2xl flex items-center justify-center gap-2">
+                {scoringId===selectedJob.id?<><Loader2 className="h-4 w-4 animate-spin"/>Analyzing...</>:<><span className="material-symbols-outlined text-sm">analytics</span>Get ATS Score</>}
+              </button>
+            ):null}
+          </div>
+
+          {/* JD */}
+          <div className="flex-1 overflow-y-auto p-8 pt-6" style={{scrollbarWidth:'thin'}}>
+            <h4 className="text-lg font-bold text-[#e1e2eb] mb-4">About the Role</h4>
+            <div className="text-[#c4c5d9] text-sm leading-relaxed whitespace-pre-wrap">{selectedJob.description||<span className="italic text-[#8e90a2]">No description available</span>}</div>
+            {fS(selectedJob.salary_min,selectedJob.salary_max)&&(
+              <div className="mt-6 grid grid-cols-2 gap-4">
+                <div className="p-4 bg-white/5 rounded-xl border border-white/5"><span className="text-[10px] font-bold text-[#bbc3ff] uppercase block mb-1">Salary Range</span><p className="text-[#e1e2eb] font-semibold">{fS(selectedJob.salary_min,selectedJob.salary_max)}</p></div>
+                <div className="p-4 bg-white/5 rounded-xl border border-white/5"><span className="text-[10px] font-bold text-[#bbc3ff] uppercase block mb-1">Source</span><p className="text-[#e1e2eb] font-semibold">{selectedJob.source}</p></div>
+              </div>
+            )}
+          </div>
+
+          {/* Footer Actions */}
+          <div className="p-6 bg-white/5 backdrop-blur-xl flex items-center justify-between border-t border-white/10">
+            <div className="flex items-center gap-3">
+              <button onClick={()=>toggleSave(selectedJob)} className="kinetic-btn-ghost px-6 py-3 text-sm">{isSaved(selectedJob)?'Saved':'Save for later'}</button>
+              {profile&&<button onClick={()=>optimizeForJob(selectedJob)} className="kinetic-btn-ghost px-6 py-3 text-sm flex items-center gap-2"><span className="material-symbols-outlined text-sm">psychology</span>Optimize</button>}
             </div>
+            <a href={selectedJob.source_url} target="_blank" rel="noopener noreferrer" className="kinetic-btn px-10 py-3 text-base flex items-center gap-2">Apply Now <span className="material-symbols-outlined">arrow_forward</span></a>
           </div>
         </div>
       )}
-    </div>
+    </section>
   </div>);
 }

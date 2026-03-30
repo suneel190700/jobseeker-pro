@@ -1,3 +1,4 @@
+export type Stage = "saved" | "applied" | "screening" | "interview" | "offer" | "rejected";
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { getTrackerCards, saveTrackerCard, updateTrackerCard, deleteTrackerCard } from '@/lib/db';

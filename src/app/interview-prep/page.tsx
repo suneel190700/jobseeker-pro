@@ -46,13 +46,13 @@ export default function InterviewPrepPage() {
       {!profile && <div className="mt-4 rounded-2xl bg-[#5203d5]/10 border border-[#ff9f0a]/20 p-3 text-sm text-[#cdbdff]">Upload resume in <a href="/profile" className="font-medium underline">Profile</a> first.</div>}
 
       <div className="mt-6 grid grid-cols-2 gap-3">
-        <div><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Job Title</label><input type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="e.g. AI Engineer" className="input-hig" /></div>
-        <div><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Company</label><input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="e.g. Google" className="input-hig" /></div>
+        <div><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Job Title</label><input type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="e.g. AI Engineer" className="kinetic-input" /></div>
+        <div><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Company</label><input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="e.g. Google" className="kinetic-input" /></div>
       </div>
-      <div className="mt-3"><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Job Description</label><textarea rows={5} value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} placeholder="Paste JD..." className="input-hig" /></div>
+      <div className="mt-3"><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Job Description</label><textarea rows={5} value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} placeholder="Paste JD..." className="kinetic-input" /></div>
 
       {/* Tabs */}
-      <div className="mt-6 flex gap-2 border-b border-[var(--separator)] pb-0">
+      <div className="mt-6 flex gap-2 border-b border-[rgba(255,255,255,0.08)] pb-0">
         {[{ key: 'questions', label: 'Interview Questions', icon: MessageCircle }, { key: 'star', label: 'STAR Stories', icon: BookOpen }, { key: 'company', label: 'Company Brief', icon: Building2 }].map((t) => (
           <button key={t.key} onClick={() => { setActiveTab(t.key as any); if (!data[t.key]) generate(t.key); }}
             className={['flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition', activeTab === t.key ? 'border-brand-600 text-[#00daf3]' : 'border-transparent text-[#434656] hover:text-[#c4c5d9]'].join(' ')}>
@@ -70,7 +70,7 @@ export default function InterviewPrepPage() {
         {/* Questions */}
         {!loading && activeTab === 'questions' && (
           !questions ? (
-            <div className="text-center py-12"><button onClick={() => generate('questions')} disabled={!profile || !jobDescription.trim()} className="rounded-2xl bg-brand-600 px-6 py-3 text-sm font-semibold text-[#e1e2eb] hover:bg-brand-700 disabled:opacity-50 transition">Generate Interview Questions</button></div>
+            <div className="text-center py-12"><button onClick={() => generate('questions')} disabled={!profile || !jobDescription.trim()} className="rounded-2xl bg-[#3c59fd] px-6 py-3 text-sm font-semibold text-[#e1e2eb] hover:bg-brand-700 disabled:opacity-50 transition">Generate Interview Questions</button></div>
           ) : (
             <div className="space-y-6">
               {['behavioral', 'technical', 'system_design', 'role_specific'].map((cat) => (
@@ -78,7 +78,7 @@ export default function InterviewPrepPage() {
                   <div key={cat}>
                     <h3 className="text-sm font-semibold text-[#c4c5d9] capitalize mb-3">{cat.replace('_', ' ')} Questions</h3>
                     <div className="space-y-3">{questions[cat].map((q: any, i: number) => (
-                      <div key={i} className="rounded-2xl border border-[var(--separator)] p-4">
+                      <div key={i} className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-4">
                         <p className="text-sm font-medium text-[#e1e2eb]">{q.question}</p>
                         <p className="text-xs text-[#434656] mt-1">Why: {q.why_asked}</p>
                         <p className="text-xs text-green-400 mt-1">Tip: {q.tip}</p>
@@ -94,10 +94,10 @@ export default function InterviewPrepPage() {
         {/* STAR */}
         {!loading && activeTab === 'star' && (
           !star ? (
-            <div className="text-center py-12"><button onClick={() => generate('star')} disabled={!profile || !jobDescription.trim()} className="rounded-2xl bg-brand-600 px-6 py-3 text-sm font-semibold text-[#e1e2eb] hover:bg-brand-700 disabled:opacity-50 transition">Generate STAR Stories</button></div>
+            <div className="text-center py-12"><button onClick={() => generate('star')} disabled={!profile || !jobDescription.trim()} className="rounded-2xl bg-[#3c59fd] px-6 py-3 text-sm font-semibold text-[#e1e2eb] hover:bg-brand-700 disabled:opacity-50 transition">Generate STAR Stories</button></div>
           ) : (
             <div className="space-y-4">{star.stories?.map((s: any, i: number) => (
-              <div key={i} className="rounded-2xl border border-[var(--separator)] p-4">
+              <div key={i} className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-4">
                 <div className="flex items-center justify-between mb-2"><h4 className="text-sm font-semibold text-[#e1e2eb]">{s.title}</h4><span className="text-[10px] text-[#434656]">For: {s.relevant_for}</span></div>
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div><p className="font-medium text-[#bbc3ff]">Situation</p><p className="text-[#c4c5d9] mt-0.5">{s.situation}</p></div>
@@ -105,7 +105,7 @@ export default function InterviewPrepPage() {
                   <div><p className="font-medium text-green-400">Action</p><p className="text-[#c4c5d9] mt-0.5">{s.action}</p></div>
                   <div><p className="font-medium text-purple-400">Result</p><p className="text-[#c4c5d9] mt-0.5">{s.result}</p></div>
                 </div>
-                {s.keywords?.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{s.keywords.map((k: string) => (<span key={k} className="rounded-full bg-[var(--surface-1)] px-2 py-0.5 text-[9px] text-[#c4c5d9]">{k}</span>))}</div>}
+                {s.keywords?.length > 0 && <div className="mt-2 flex flex-wrap gap-1">{s.keywords.map((k: string) => (<span key={k} className="rounded-full bg-[rgba(255,255,255,0.03)] px-2 py-0.5 text-[9px] text-[#c4c5d9]">{k}</span>))}</div>}
               </div>
             ))}</div>
           )
@@ -114,14 +114,14 @@ export default function InterviewPrepPage() {
         {/* Company */}
         {!loading && activeTab === 'company' && (
           !company ? (
-            <div className="text-center py-12"><button onClick={() => generate('company')} disabled={!profile || !jobDescription.trim()} className="rounded-2xl bg-brand-600 px-6 py-3 text-sm font-semibold text-[#e1e2eb] hover:bg-brand-700 disabled:opacity-50 transition">Generate Company Brief</button></div>
+            <div className="text-center py-12"><button onClick={() => generate('company')} disabled={!profile || !jobDescription.trim()} className="rounded-2xl bg-[#3c59fd] px-6 py-3 text-sm font-semibold text-[#e1e2eb] hover:bg-brand-700 disabled:opacity-50 transition">Generate Company Brief</button></div>
           ) : (
             <div className="space-y-4">
               {company.company_overview && <div className="rounded-2xl bg-[#3c59fd]/10 border border-blue-100 p-4"><h4 className="text-sm font-semibold text-blue-800">Overview</h4><p className="text-xs text-blue-700 mt-1">{company.company_overview}</p></div>}
-              {company.culture_values?.length > 0 && <div className="rounded-2xl border border-[var(--separator)] p-4"><h4 className="text-sm font-semibold text-[#c4c5d9]">Culture & Values</h4><div className="mt-2 flex flex-wrap gap-2">{company.culture_values.map((v: string) => (<span key={v} className="rounded-full bg-purple-500/10 px-3 py-1 text-xs text-purple-400">{v}</span>))}</div></div>}
-              {company.interview_talking_points?.length > 0 && <div className="rounded-2xl border border-[var(--separator)] p-4"><h4 className="text-sm font-semibold text-[#c4c5d9]">Talking Points</h4><div className="mt-2 space-y-1">{company.interview_talking_points.map((t: string, i: number) => (<p key={i} className="text-xs text-[#c4c5d9]">• {t}</p>))}</div></div>}
+              {company.culture_values?.length > 0 && <div className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-4"><h4 className="text-sm font-semibold text-[#c4c5d9]">Culture & Values</h4><div className="mt-2 flex flex-wrap gap-2">{company.culture_values.map((v: string) => (<span key={v} className="rounded-full bg-purple-500/10 px-3 py-1 text-xs text-purple-400">{v}</span>))}</div></div>}
+              {company.interview_talking_points?.length > 0 && <div className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-4"><h4 className="text-sm font-semibold text-[#c4c5d9]">Talking Points</h4><div className="mt-2 space-y-1">{company.interview_talking_points.map((t: string, i: number) => (<p key={i} className="text-xs text-[#c4c5d9]">• {t}</p>))}</div></div>}
               {company.questions_to_ask?.length > 0 && <div className="rounded-2xl border border-green-500/20 bg-green-500/10 p-4"><h4 className="text-sm font-semibold text-green-800">Questions to Ask</h4><div className="mt-2 space-y-1">{company.questions_to_ask.map((q: string, i: number) => (<p key={i} className="text-xs text-green-400">• {q}</p>))}</div></div>}
-              {company.recent_news && <div className="rounded-2xl border border-[var(--separator)] p-4"><h4 className="text-sm font-semibold text-[#c4c5d9]">Research Before Interview</h4><p className="text-xs text-[#c4c5d9] mt-1">{company.recent_news}</p></div>}
+              {company.recent_news && <div className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-4"><h4 className="text-sm font-semibold text-[#c4c5d9]">Research Before Interview</h4><p className="text-xs text-[#c4c5d9] mt-1">{company.recent_news}</p></div>}
             </div>
           )
         )}

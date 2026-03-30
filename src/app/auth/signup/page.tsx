@@ -1,23 +1,52 @@
 'use client';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { Loader2, Sparkles } from 'lucide-react';
+
 export default function SignupPage() {
-  const [email,setEmail]=useState('');const [pw,setPw]=useState('');const [name,setName]=useState('');const [loading,setLoading]=useState(false);const [error,setError]=useState('');const [done,setDone]=useState(false);
-  const handle=async(e:React.FormEvent)=>{e.preventDefault();setLoading(true);setError('');const s=createClient();const{error}=await s.auth.signUp({email,password:pw,options:{data:{full_name:name}}});if(error){setError(error.message);setLoading(false);}else setDone(true);};
-  if(done)return(<div className="min-h-screen bg-[#10131a] flex items-center justify-center px-4"><div className="rounded-[16px] border border-white/5 bg-[var(--surface-1)] p-6 text-center max-w-sm"><Sparkles className="h-8 w-8 text-emerald-400 mx-auto mb-3" /><h1 className="text-lg font-bold text-white">Check your email</h1><p className="mt-1 text-sm text-white/500">Confirmation sent to {email}</p><Link href="/auth/login" className="mt-3 inline-block text-sm text-emerald-400">Back to sign in</Link></div></div>);
-  return(<div className="min-h-screen bg-[#10131a] flex items-center justify-center px-4"><div className="w-full max-w-sm">
-    <div className="text-center mb-8"><div className="inline-flex h-10 w-10 rounded-[16px] items-center justify-center bg-gradient-to-br from-emerald-400 to-emerald-600 mb-4"><Sparkles className="h-5 w-5 text-white" /></div><h1 className="text-xl font-bold text-white">Create account</h1><p className="mt-1 text-sm text-white/500">Start your job search</p></div>
-    <div className="rounded-[16px] border border-white/5 bg-[var(--surface-1)] p-6">
-      <form onSubmit={handle} className="space-y-3.5">
-        <div><label className="label">Full Name</label><input type="text" value={name} onChange={e=>setName(e.target.value)} required className="input-hig" /></div>
-        <div><label className="label">Email</label><input type="email" value={email} onChange={e=>setEmail(e.target.value)} required className="input-hig" /></div>
-        <div><label className="label">Password</label><input type="password" value={pw} onChange={e=>setPw(e.target.value)} required minLength={6} className="input-hig" /></div>
-        {error&&<p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-[12px] p-2.5">{error}</p>}
-        <button type="submit" disabled={loading} className="w-full text-sm font-semibold text-black bg-emerald-400 hover:bg-emerald-300 rounded-[12px] py-2.5 flex items-center justify-center gap-2 transition">{loading&&<Loader2 className="h-4 w-4 animate-spin"/>}Create account</button>
-      </form>
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [pw, setPw] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [gLoading, setGLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault(); if (pw.length < 6) { toast.error('Min 6 characters'); return; } setLoading(true);
+    const { error } = await createClient().auth.signUp({ email, password: pw, options: { data: { full_name: name } } });
+    if (error) { toast.error(error.message); setLoading(false); } else { toast.success('Check your email to confirm!'); router.push('/auth/login'); }
+  };
+
+  const handleGoogle = async () => {
+    setGLoading(true);
+    const { error } = await createClient().auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${window.location.origin}/api/auth/callback` } });
+    if (error) { toast.error(error.message); setGLoading(false); }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center px-4 mesh-gradient" style={{ background: '#10131a' }}>
+      <div className="w-full max-w-sm">
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 mx-auto rounded-xl bg-[#3c59fd] flex items-center justify-center mb-4">
+            <span className="material-symbols-outlined text-white text-2xl" style={{fontVariationSettings:"'FILL' 1"}}>rocket_launch</span>
+          </div>
+          <h1 className="text-2xl font-bold">Create account</h1>
+          <p className="text-[#c4c5d9] text-sm mt-1">Start your career journey</p>
+        </div>
+        <div className="glass-card rounded-3xl p-8">
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div><label className="kinetic-label">Full Name</label><input type="text" value={name} onChange={e => setName(e.target.value)} required className="kinetic-input" placeholder="Alex Rivera" /></div>
+            <div><label className="kinetic-label">Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="kinetic-input" placeholder="you@email.com" /></div>
+            <div><label className="kinetic-label">Password</label><input type="password" value={pw} onChange={e => setPw(e.target.value)} required className="kinetic-input" placeholder="Min 6 characters" /></div>
+            <button type="submit" disabled={loading} className="kinetic-btn w-full py-3 flex items-center justify-center gap-2">{loading && <Loader2 className="h-4 w-4 animate-spin" />}Create Account</button>
+          </form>
+          <button onClick={handleGoogle} disabled={gLoading} className="kinetic-btn-ghost w-full py-3 mt-3 flex items-center justify-center gap-2">{gLoading && <Loader2 className="h-4 w-4 animate-spin" />}Continue with Google</button>
+        </div>
+        <p className="text-center text-sm text-[#c4c5d9] mt-6">Already have an account? <Link href="/auth/login" className="text-[#bbc3ff] font-bold hover:underline">Sign in</Link></p>
+      </div>
     </div>
-    <p className="mt-5 text-center text-sm text-white/600">Have an account? <Link href="/auth/login" className="text-emerald-400 font-medium hover:text-emerald-300">Sign in</Link></p>
-  </div></div>);
+  );
 }

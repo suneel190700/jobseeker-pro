@@ -55,7 +55,7 @@ export default function LinkedInPage() {
         {result && (
           <div className="mt-8 space-y-6">
             {/* Headline */}
-            <div className="rounded-2xl border border-[var(--separator)] p-5">
+            <div className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-5">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base font-semibold text-[#e1e2eb]">Headline</h2>
                 <button onClick={() => copyField(result.headline, 'Headline')} className="flex items-center gap-1 text-xs text-[#434656] hover:text-[#c4c5d9] transition">
@@ -69,19 +69,19 @@ export default function LinkedInPage() {
             </div>
 
             {/* About */}
-            <div className="rounded-2xl border border-[var(--separator)] p-5">
+            <div className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-5">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base font-semibold text-[#e1e2eb]">About / Summary</h2>
                 <button onClick={() => copyField(result.about, 'About')} className="flex items-center gap-1 text-xs text-[#434656] hover:text-[#c4c5d9] transition">
                   {copiedField === 'About' ? <CheckCircle className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />} Copy
                 </button>
               </div>
-              <div className="rounded-2xl bg-[var(--surface-1)] border border-[var(--separator)] p-4 text-sm text-[#c4c5d9] leading-relaxed whitespace-pre-wrap">{result.about}</div>
+              <div className="rounded-2xl bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.08)] p-4 text-sm text-[#c4c5d9] leading-relaxed whitespace-pre-wrap">{result.about}</div>
               <p className="mt-1 text-[10px] text-[#434656]">{result.about?.length || 0}/2000 characters</p>
             </div>
 
             {/* Skills */}
-            <div className="rounded-2xl border border-[var(--separator)] p-5">
+            <div className="rounded-2xl border border-[rgba(255,255,255,0.08)] p-5">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-base font-semibold text-[#e1e2eb]">Top Skills</h2>
                 <button onClick={() => copyField(result.skills?.join(', ') || '', 'Skills')} className="flex items-center gap-1 text-xs text-[#434656] hover:text-[#c4c5d9] transition">

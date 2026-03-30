@@ -37,7 +37,7 @@ export default function AnalyticsPage() {
       <p className="mt-1 text-sm text-[#434656]">Application funnel, timing insights & resume testing</p>
 
       {/* Funnel */}
-      <div className="mt-6 surface p-6">
+      <div className="mt-6 glass-card p-6">
         <h2 className="text-sm font-bold text-[#c4c5d9] flex items-center gap-2"><BarChart3 className="h-4 w-4 text-[#00daf3]" />Application Funnel</h2>
         <div className="mt-4 flex items-end gap-3">
           {stageCounts.map((s, i) => {
@@ -56,7 +56,7 @@ export default function AnalyticsPage() {
         {applied > 0 && (
           <div className="mt-5 grid grid-cols-3 gap-3">
             {[{label:'Screen Rate',mine:myRates.screening,bench:benchmarks.screening},{label:'Interview Rate',mine:myRates.interview,bench:benchmarks.interview},{label:'Offer Rate',mine:myRates.offer,bench:benchmarks.offer}].map(r => (
-              <div key={r.label} className="bg-[var(--surface-1)] rounded-2xl p-3">
+              <div key={r.label} className="bg-[rgba(255,255,255,0.03)] rounded-2xl p-3">
                 <p className="text-[10px] font-semibold text-[#434656] uppercase">{r.label}</p>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className={`text-xl font-bold ${r.mine >= r.bench ? 'text-[#00daf3]' : 'text-[#cdbdff]'}`}>{r.mine}%</span>
@@ -71,14 +71,14 @@ export default function AnalyticsPage() {
 
       <div className="mt-5 grid grid-cols-2 gap-5">
         {/* Timing Optimizer */}
-        <div className="surface p-6">
+        <div className="glass-card p-6">
           <h2 className="text-sm font-bold text-[#c4c5d9] flex items-center gap-2"><Clock className="h-4 w-4 text-violet-500" />Best Time to Apply</h2>
           <p className="text-xs text-[#434656] mt-1">Based on recruiter activity patterns</p>
           <div className="mt-4 space-y-2">
             {bestTimes.map(t => (
               <div key={t.day} className="flex items-center gap-3">
                 <span className="text-xs font-semibold text-[#c4c5d9] w-16">{t.day.slice(0, 3)}</span>
-                <div className="flex-1 bg-[var(--surface-2)] rounded-full h-5 overflow-hidden">
+                <div className="flex-1 bg-[rgba(255,255,255,0.05)] rounded-full h-5 overflow-hidden">
                   <div className={`h-full rounded-full transition-all ${t.score >= 80 ? 'bg-emerald-400' : t.score >= 50 ? 'bg-amber-400' : 'bg-red-300'}`} style={{ width: `${t.score}%` }} />
                 </div>
                 <span className="text-[10px] text-[#8e90a2] w-20 text-right">{t.time}</span>
@@ -91,17 +91,17 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Resume A/B Testing */}
-        <div className="surface p-6">
+        <div className="glass-card p-6">
           <h2 className="text-sm font-bold text-[#c4c5d9] flex items-center gap-2"><FileText className="h-4 w-4 text-blue-500" />Resume A/B Testing</h2>
           <p className="text-xs text-[#434656] mt-1">Track which resume version performs better</p>
-          <div className="mt-4 bg-[var(--surface-1)] rounded-2xl p-4 text-center">
+          <div className="mt-4 bg-[rgba(255,255,255,0.03)] rounded-2xl p-4 text-center">
             <Zap className="h-8 w-8 text-[#434656] mx-auto" />
             <p className="mt-2 text-sm font-semibold text-[#c4c5d9]">Coming Soon</p>
             <p className="text-xs text-[#434656] mt-1">Generate 2 resume versions for a job, track which gets more callbacks. Assign versions A/B in tracker.</p>
             <div className="mt-3 flex gap-2 justify-center">
-              <div className="pill bg-[#3c59fd]/10 text-[#bbc3ff] border border-[#0a84ff]/20">Version A</div>
+              <div className="px-2 py-0.5 rounded-lg text-xs bg-[#3c59fd]/10 text-[#bbc3ff] border border-[#0a84ff]/20">Version A</div>
               <span className="text-xs text-[#434656] self-center">vs</span>
-              <div className="pill bg-purple-500/10 text-purple-400 border border-purple-500/20">Version B</div>
+              <div className="px-2 py-0.5 rounded-lg text-xs bg-purple-500/10 text-purple-400 border border-purple-500/20">Version B</div>
             </div>
           </div>
         </div>
