@@ -1,5 +1,4 @@
 'use client';
-import { Search, Sparkles, FileSignature, MessageSquare, Linkedin, Kanban, User, FolderOpen, ArrowUpRight, Target, Mic, BarChart3, Users, CheckCircle, ChevronRight, Lightbulb, Calendar, Briefcase } from 'lucide-react';
 import Link from 'next/link';
 import { useResumeProfile } from '@/hooks/useResumeProfile';
 import { useTracker } from '@/hooks/useTracker';
@@ -7,19 +6,18 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 const actions = [
-  { href:'/jobs', label:'Search Jobs', desc:'323K+ sources', icon:Search, color:'#0A84FF' },
-  { href:'/resume-optimizer', label:'Resume AI', desc:'ATS optimization', icon:Sparkles, color:'#5E5CE6' },
-  { href:'/mock-interview', label:'Mock Interview', desc:'Voice practice', icon:Mic, color:'#FF375F' },
-  { href:'/networking', label:'Networking', desc:'Find recruiters', icon:Users, color:'#30D158' },
-  { href:'/analytics', label:'Analytics', desc:'Track progress', icon:BarChart3, color:'#FFD60A' },
-  { href:'/tracker', label:'Tracker', desc:'Manage pipeline', icon:Kanban, color:'#BF5AF2' },
+  { href:'/resume-optimizer', icon:'analytics', label:'Run Resume Audit', desc:'AI score improvement', bg:'bg-[#3c59fd]/20', color:'text-[#bbc3ff]' },
+  { href:'/mock-interview', icon:'videocam', label:'Mock Interview', desc:'Practice with AI', bg:'bg-[#5203d5]/20', color:'text-[#cdbdff]' },
+  { href:'/tracker', icon:'add_task', label:'Track Application', desc:'Manual data entry', bg:'bg-[#007886]/20', color:'text-[#00daf3]' },
+  { href:'/networking', icon:'hub', label:'Network Map', desc:'2nd degree connections', bg:'bg-white/5', color:'text-[#e1e2eb]' },
+  { href:'/cover-letter', icon:'auto_stories', label:'Cover Letter Gen', desc:'Custom AI templates', bg:'bg-[#bbc3ff]/10', color:'text-[#bbc3ff]' },
+  { href:'/jobs', icon:'monetization_on', label:'Salary Insights', desc:'Market rate benchmarking', bg:'bg-[#93000a]/20', color:'text-[#ffb4ab]' },
 ];
 
 const tips = [
-  'Apply within 24 hours of posting — early applicants get 3× more callbacks.',
-  'Tuesday–Wednesday, 8–10 AM is the optimal window for submitting applications.',
-  'Resumes with quantified metrics get 40% more interview callbacks.',
-  'Match exact JD keywords — ATS systems use literal matching, not semantic.',
+  { title: 'Leverage the "Hidden Job Market" via LinkedIn.', body: '40% of Pro users who messaged hiring managers directly received an interview within 72 hours. Use our Networking tool to find your direct line.' },
+  { title: 'Apply within the first 24 hours.', body: 'Early applicants get 3x more callbacks. Set up job alerts and apply the same day jobs are posted.' },
+  { title: 'Quantify every bullet point.', body: 'Resumes with metrics get 40% more interviews. Use our Resume AI to add numbers to every achievement.' },
 ];
 
 export default function DashboardPage() {
@@ -27,109 +25,111 @@ export default function DashboardPage() {
   const tracker = useTracker();
   const [name, setName] = useState('');
   const [tip] = useState(tips[Math.floor(Math.random() * tips.length)]);
-  useEffect(() => { createClient().auth.getUser().then(({ data }) => setName(data?.user?.user_metadata?.full_name?.split(' ')[0] || '')); }, []);
+  useEffect(() => { createClient().auth.getUser().then(({ data }) => setName(data?.user?.user_metadata?.full_name || data?.user?.email?.split('@')[0] || '')); }, []);
 
-  const s = {
-    applied: tracker.cards.filter(c => c.stage !== 'saved').length,
-    interviews: tracker.cards.filter(c => c.stage === 'interview').length,
-    saved: tracker.cards.filter(c => c.stage === 'saved').length,
-    offers: tracker.cards.filter(c => c.stage === 'offer').length,
-  };
+  const s = { applied: tracker.cards.filter(c => c.stage !== 'saved').length, interviews: tracker.cards.filter(c => c.stage === 'interview').length, saved: tracker.cards.filter(c => c.stage === 'saved').length, offers: tracker.cards.filter(c => c.stage === 'offer').length };
 
   return (
-    <div>
-      {/* Large Title — Apple style */}
-      <h1 className="large-title">{name ? `Hey, ${name}` : 'Welcome back'}</h1>
-      <p className="subhead mt-1" style={{color:'var(--text-tertiary)'}}>Your career command center</p>
+    <div className="max-w-[1200px] mx-auto">
+      {/* Welcome */}
+      <section className="mb-12">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tighter mb-2">Welcome, {name || 'there'}</h2>
+            <p className="text-[#c4c5d9] max-w-lg">Your AI career assistant is ready. {tracker.cards.length > 0 ? `Tracking ${tracker.cards.length} applications.` : 'Start by searching for jobs or uploading your resume.'}</p>
+          </div>
+          <div className="flex gap-3">
+            <Link href="/jobs" className="kinetic-btn px-6 py-2.5 text-sm">New Search</Link>
+          </div>
+        </div>
+      </section>
 
-      {/* Stats — 4 cards */}
-      <div className="grid grid-cols-4 gap-3 mt-8">
-        {[
-          { label: 'Applied', value: s.applied, icon: Briefcase, color: '#0A84FF' },
-          { label: 'Interviews', value: s.interviews, icon: Calendar, color: '#30D158' },
-          { label: 'Saved', value: s.saved, icon: Search, color: '#5E5CE6' },
-          { label: 'Offers', value: s.offers, icon: CheckCircle, color: '#FFD60A' },
-        ].map(x => (
-          <div key={x.label} className="stat-card">
-            <div className="flex items-center justify-between mb-3">
-              <span className="caption" style={{textTransform:'uppercase',letterSpacing:'0.05em'}}>{x.label}</span>
-              <x.icon className="h-4 w-4" style={{color: x.color, opacity: 0.7}} />
+      {/* Metrics */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        {[{l:'Applied',v:s.applied,icon:'send',c:'text-[#bbc3ff]'},{l:'Interviews',v:s.interviews,icon:'event_available',c:'text-[#cdbdff]'},{l:'Saved',v:s.saved,icon:'bookmark',c:'text-[#00daf3]'},{l:'Offers',v:s.offers,icon:'workspace_premium',c:'text-[#bbc3ff]'}].map(m => (
+          <div key={m.l} className="glass-card rounded-xl p-6 flex flex-col justify-between h-40 transition-all">
+            <div className="flex justify-between items-start">
+              <span className="text-[#c4c5d9] text-xs font-bold uppercase tracking-widest">{m.l}</span>
+              <span className={`material-symbols-outlined ${m.c}`}>{m.icon}</span>
             </div>
-            <span className="text-[32px] font-bold tracking-tight" style={{color: x.color}}>{x.value}</span>
+            <span className="text-4xl font-black tracking-tighter">{m.v}</span>
           </div>
         ))}
-      </div>
+      </section>
 
-      {/* Actions + Sidebar */}
-      <div className="grid grid-cols-3 gap-5 mt-8">
-        <div className="col-span-2 space-y-5">
-          {/* Quick Actions */}
-          <div>
-            <h2 className="headline mb-3">Quick Actions</h2>
-            <div className="grid grid-cols-3 gap-3">
-              {actions.map(a => (
-                <Link key={a.href} href={a.href} className="surface surface-hover p-4 press group block">
-                  <div className="h-10 w-10 rounded-[12px] flex items-center justify-center mb-3" style={{background:`${a.color}18`}}>
-                    <a.icon className="h-5 w-5" style={{color: a.color}} />
-                  </div>
-                  <p className="text-[15px] font-semibold text-white">{a.label}</p>
-                  <p className="caption mt-0.5">{a.desc}</p>
-                </Link>
-              ))}
-            </div>
+      <div className="grid grid-cols-12 gap-6">
+        {/* Quick Actions + Pro Tip */}
+        <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {actions.map(a => (
+              <Link key={a.href} href={a.href} className="glass-card transition-all p-6 rounded-xl flex flex-col gap-4 text-left group">
+                <div className={`w-12 h-12 rounded-lg ${a.bg} flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                  <span className={`material-symbols-outlined ${a.color}`} style={{fontVariationSettings:"'FILL' 1"}}>{a.icon}</span>
+                </div>
+                <div>
+                  <p className="font-bold text-[#e1e2eb]">{a.label}</p>
+                  <p className="text-xs text-[#c4c5d9]">{a.desc}</p>
+                </div>
+              </Link>
+            ))}
           </div>
 
-          {/* Getting Started */}
-          <div className="surface p-5">
-            <h2 className="headline mb-4">Getting Started</h2>
-            <div className="space-y-1">
-              {[
-                { done: !!profile, label: 'Upload your base resume', href: '/profile' },
-                { done: titles.length > 0, label: 'Set target job titles', href: '/profile' },
-                { done: s.applied > 0, label: 'Apply to your first job', href: '/jobs' },
-                { done: s.interviews > 0, label: 'Practice a mock interview', href: '/mock-interview' },
-              ].map((step, i) => (
-                <Link key={i} href={step.href} className="list-row group">
-                  <div className={`h-[22px] w-[22px] rounded-full flex items-center justify-center flex-shrink-0 ${step.done ? '' : ''}`} style={step.done ? {background:'var(--success)'} : {border:'2px solid var(--fill)'}}>
-                    {step.done && <CheckCircle className="h-[14px] w-[14px] text-white" />}
-                  </div>
-                  <span className={`flex-1 text-[15px] ${step.done ? 'line-through' : ''}`} style={{color: step.done ? 'var(--text-tertiary)' : 'var(--text-primary)'}}>{step.label}</span>
-                  {!step.done && <ChevronRight className="h-4 w-4" style={{color:'var(--text-tertiary)'}} />}
-                </Link>
-              ))}
+          {/* Pro Tip */}
+          <div className="relative overflow-hidden rounded-2xl p-8 flex flex-col md:flex-row items-start gap-8" style={{ background: 'linear-gradient(135deg, rgba(60,89,253,0.15), rgba(82,3,213,0.1))', backdropFilter: 'blur(24px)', border: '1px solid rgba(187,195,255,0.2)' }}>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#bbc3ff]/20 blur-[100px] -mr-32 -mt-32" />
+            <div className="relative z-10 flex-1">
+              <div className="flex items-center gap-2 text-[#cdbdff] mb-4">
+                <span className="material-symbols-outlined">lightbulb</span>
+                <span className="text-xs font-bold uppercase tracking-widest">Pro Tip</span>
+              </div>
+              <h3 className="text-2xl font-bold tracking-tight leading-tight mb-4">{tip.title}</h3>
+              <p className="text-[#c4c5d9] text-sm leading-relaxed max-w-lg">{tip.body}</p>
             </div>
           </div>
         </div>
 
-        {/* Right Column */}
-        <div className="space-y-4">
-          {/* Pro Tip */}
-          <div className="surface p-4" style={{borderColor:'rgba(10,132,255,0.15)',background:'rgba(10,132,255,0.04)'}}>
-            <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="h-4 w-4" style={{color:'var(--accent)'}} />
-              <span className="caption" style={{color:'var(--accent)',textTransform:'uppercase',fontWeight:600,letterSpacing:'0.05em'}}>Pro Tip</span>
+        {/* Right: Checklist + Recent */}
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
+          {/* Onboarding */}
+          <div className="glass-card rounded-2xl p-6">
+            <h4 className="text-xl font-bold mb-6">Onboarding Progress</h4>
+            <div className="mb-6">
+              <div className="flex justify-between text-xs mb-2">
+                <span className="text-[#c4c5d9]">Profile Completion</span>
+                <span className="text-[#bbc3ff] font-bold">{[!!profile, titles.length > 0, s.applied > 0, s.interviews > 0].filter(Boolean).length * 25}%</span>
+              </div>
+              <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-full bg-[#bbc3ff]" style={{ width: `${[!!profile, titles.length > 0, s.applied > 0, s.interviews > 0].filter(Boolean).length * 25}%`, boxShadow: '0 0 12px rgba(187,195,255,0.6)' }} />
+              </div>
             </div>
-            <p className="text-[14px]" style={{color:'var(--text-secondary)',lineHeight:'1.5'}}>{tip}</p>
+            <div className="space-y-4">
+              {[{done:!!profile,l:'Upload Master Resume'},{done:titles.length>0,l:'Set Job Preferences'},{done:s.applied>0,l:'First Resume Audit'},{done:s.interviews>0,l:'Complete Mock Interview'}].map((x,i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span className={`material-symbols-outlined ${x.done ? 'text-[#00daf3]' : 'text-[#8e90a2]'}`} style={x.done ? {fontVariationSettings:"'FILL' 1"} : {}}>{x.done ? 'check_circle' : 'radio_button_unchecked'}</span>
+                  <span className={`text-sm ${x.done ? 'text-[#e1e2eb]/60 line-through' : 'text-[#e1e2eb]'}`}>{x.l}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* More Tools */}
-          <div className="surface overflow-hidden">
-            <div className="px-4 py-3" style={{borderBottom:'1px solid var(--separator)'}}>
-              <span className="caption" style={{textTransform:'uppercase',fontWeight:600,letterSpacing:'0.05em'}}>More Tools</span>
+          {/* Recent Tools */}
+          <div className="glass-card rounded-2xl p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h4 className="text-lg font-bold">Quick Links</h4>
             </div>
-            {[
-              { href:'/cover-letter', label:'Cover Letter', icon:FileSignature },
-              { href:'/interview-prep', label:'Interview Q&A', icon:MessageSquare },
-              { href:'/linkedin', label:'LinkedIn Optimizer', icon:Linkedin },
-              { href:'/resume-versions', label:'My Resumes', icon:FolderOpen },
-              { href:'/profile', label:'Profile', icon:User },
-            ].map(t => (
-              <Link key={t.href} href={t.href} className="list-row group">
-                <t.icon className="h-4 w-4" style={{color:'var(--text-tertiary)'}} />
-                <span className="flex-1 text-[14px]" style={{color:'var(--text-secondary)'}}>{t.label}</span>
-                <ChevronRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{color:'var(--text-tertiary)'}} />
-              </Link>
-            ))}
+            <div className="space-y-2">
+              {[{h:'/resume-optimizer',icon:'psychology',l:'Resume AI',c:'text-[#cdbdff]',bg:'bg-[#5203d5]/20'},{h:'/jobs',icon:'work',l:'Job Search',c:'text-[#00daf3]',bg:'bg-[#007886]/20'},{h:'/resume-versions',icon:'folder_open',l:'My Resumes',c:'text-[#bbc3ff]',bg:'bg-[#3c59fd]/20'}].map(t => (
+                <Link key={t.h} href={t.h} className="flex items-center justify-between p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-lg ${t.bg} flex items-center justify-center`}>
+                      <span className={`material-symbols-outlined ${t.c} text-sm`}>{t.icon}</span>
+                    </div>
+                    <p className="text-sm font-bold">{t.l}</p>
+                  </div>
+                  <span className="material-symbols-outlined text-[#8e90a2] text-sm">chevron_right</span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>

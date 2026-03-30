@@ -51,13 +51,13 @@ export default function AdminPage() {
 
   const filtered = users.filter(u => !search || u.name?.toLowerCase().includes(search.toLowerCase()) || u.email?.toLowerCase().includes(search.toLowerCase()));
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-blue-500" /></div>;
+  if (loading) return <div className="min-h-screen bg-[#10131a] flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-blue-500" /></div>;
   if (!auth) return null;
 
   return (
     <div>
       {/* Admin Nav */}
-      <header className="h-12 border-b border-white/[0.06]800/80 bg-black/80 backdrop-blur-xl flex items-center px-6 justify-between">
+      <header className="h-12 border-b border-white/[0.06]800/80 bg-[#10131a]/80 backdrop-blur-xl flex items-center px-6 justify-between">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2"><Shield className="h-4 w-4 text-blue-500" /><span className="text-sm font-bold text-white">Admin Panel</span></div>
           <nav className="flex gap-0.5 ml-4">
@@ -138,7 +138,7 @@ export default function AdminPage() {
         </div>)}
 
         {/* Edit Modal */}
-        {editUser&&(<div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50" onClick={()=>setEditUser(null)}>
+        {editUser&&(<div className="fixed inset-0 bg-[#10131a]/60 flex items-center justify-center z-50" onClick={()=>setEditUser(null)}>
           <div className="bg-white/[0.03] border border-white/[0.06]800 rounded-xl p-6 w-96" onClick={e=>e.stopPropagation()}>
             <h3 className="text-sm font-bold text-white mb-4">Edit {editUser.name||editUser.email}</h3>
             <div className="space-y-3">

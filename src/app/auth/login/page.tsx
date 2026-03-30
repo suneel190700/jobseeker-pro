@@ -8,7 +8,7 @@ export default function LoginPage() {
   const [email,setEmail]=useState('');const [pw,setPw]=useState('');const [loading,setLoading]=useState(false);const [error,setError]=useState('');const r=useRouter();
   const handle=async(e:React.FormEvent)=>{e.preventDefault();setLoading(true);setError('');const s=createClient();const{error}=await s.auth.signInWithPassword({email,password:pw});if(error){setError(error.message);setLoading(false);}else r.push('/dashboard');};
   const google=async()=>{const s=createClient();await s.auth.signInWithOAuth({provider:'google',options:{redirectTo:`${window.location.origin}/api/auth/callback`}});};
-  return(<div className="min-h-screen bg-black flex items-center justify-center px-4"><div className="w-full max-w-sm">
+  return(<div className="min-h-screen bg-[#10131a] flex items-center justify-center px-4"><div className="w-full max-w-sm">
     <div className="text-center mb-8"><div className="inline-flex h-10 w-10 rounded-[16px] items-center justify-center bg-gradient-to-br from-emerald-400 to-emerald-600 mb-4"><Sparkles className="h-5 w-5 text-white" /></div><h1 className="text-xl font-bold text-white">Welcome back</h1><p className="mt-1 text-sm text-white/500">Sign in to continue</p></div>
     <div className="rounded-[16px] border border-white/5 bg-[var(--surface-1)] p-6">
       <form onSubmit={handle} className="space-y-3.5">

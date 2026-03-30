@@ -43,39 +43,39 @@ export default function CoverLetterPage() {
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-2xl font-bold text-white/90">Cover Letter Generator</h1>
-      <p className="mt-1 text-sm text-white/35">Generate a tailored cover letter for any job.</p>
+      <h1 className="text-2xl font-bold text-[#e1e2eb]">Cover Letter Generator</h1>
+      <p className="mt-1 text-sm text-[#8e90a2]">Generate a tailored cover letter for any job.</p>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <div className="space-y-4">
-          {!profile && !optResume && <div className="rounded-2xl bg-[#ff9f0a]/10 border border-[#ff9f0a]/20 p-3 text-sm text-[#ff9f0a]">Upload resume in <a href="/profile" className="font-medium underline">Profile</a> first.</div>}
-          {optResume && <div className="rounded-2xl bg-[#0a84ff]/10 border border-[#0a84ff]/20 p-3 text-xs text-[#0a84ff] flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Using optimized resume from Resume AI</div>}
+          {!profile && !optResume && <div className="rounded-2xl bg-[#5203d5]/10 border border-[#ff9f0a]/20 p-3 text-sm text-[#cdbdff]">Upload resume in <a href="/profile" className="font-medium underline">Profile</a> first.</div>}
+          {optResume && <div className="rounded-2xl bg-[#3c59fd]/10 border border-[#0a84ff]/20 p-3 text-xs text-[#bbc3ff] flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Using optimized resume from Resume AI</div>}
           {!optResume && profile && <div className="rounded-2xl bg-green-500/10 border border-green-100 p-3 text-xs text-green-400 flex items-center gap-2"><CheckCircle className="h-4 w-4" /> Using: {profile.fileName}</div>}
 
           <div className="grid grid-cols-2 gap-3">
-            <div><label className="block text-xs font-medium text-white/70 mb-1">Job Title</label><input type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="e.g. AI Engineer" className="apple-input" /></div>
-            <div><label className="block text-xs font-medium text-white/70 mb-1">Company</label><input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="e.g. Google" className="apple-input" /></div>
+            <div><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Job Title</label><input type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} placeholder="e.g. AI Engineer" className="kinetic-input" /></div>
+            <div><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Company</label><input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} placeholder="e.g. Google" className="kinetic-input" /></div>
           </div>
-          <div><label className="block text-xs font-medium text-white/70 mb-1">Tone</label>
-            <div className="flex gap-2">{[{ v: 'professional', l: 'Professional' }, { v: 'formal', l: 'Formal' }, { v: 'enthusiastic', l: 'Enthusiastic' }].map((t) => (<button key={t.v} onClick={() => setTone(t.v)} className={`rounded-2xl border px-3 py-1.5 text-xs font-medium transition ${tone === t.v ? 'border-[#0a84ff]/30 bg-[#0a84ff]/10 text-[#0a84ff]' : 'border-white/[0.08] text-white/35'}`}>{t.l}</button>))}</div>
+          <div><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Tone</label>
+            <div className="flex gap-2">{[{ v: 'professional', l: 'Professional' }, { v: 'formal', l: 'Formal' }, { v: 'enthusiastic', l: 'Enthusiastic' }].map((t) => (<button key={t.v} onClick={() => setTone(t.v)} className={`rounded-2xl border px-3 py-1.5 text-xs font-medium transition ${tone === t.v ? 'border-[#0a84ff]/30 bg-[#3c59fd]/10 text-[#bbc3ff]' : 'border-white/[0.08] text-[#8e90a2]'}`}>{t.l}</button>))}</div>
           </div>
-          <div><label className="block text-xs font-medium text-white/70 mb-1">Job Description</label><textarea rows={10} value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} placeholder="Paste full JD..." className="apple-input" /></div>
-          <button onClick={handleGenerate} disabled={generating || (!profile && !optResume) || !jobDescription.trim()} className="apple-btn w-full py-3 flex items-center justify-center gap-2 disabled:opacity-50">
+          <div><label className="block text-xs font-medium text-[#c4c5d9] mb-1">Job Description</label><textarea rows={10} value={jobDescription} onChange={(e) => setJobDescription(e.target.value)} placeholder="Paste full JD..." className="kinetic-input" /></div>
+          <button onClick={handleGenerate} disabled={generating || (!profile && !optResume) || !jobDescription.trim()} className="kinetic-btn w-full py-3 flex items-center justify-center gap-2 disabled:opacity-50">
             {generating ? (<><Loader2 className="h-4 w-4 animate-spin" />Generating...</>) : (<><FileSignature className="h-4 w-4" />Generate Cover Letter</>)}
           </button>
-          {error && <div className="rounded-2xl bg-[#ff453a]/10 p-3 text-sm text-[#ff453a]">{error}</div>}
+          {error && <div className="rounded-2xl bg-[#93000a]/10 p-3 text-sm text-[#ffb4ab]">{error}</div>}
         </div>
 
-        <div className="apple-card p-6 min-h-[500px]">
+        <div className="glass-card p-6 min-h-[500px]">
           {!result ? (
-            <div className="flex h-full items-center justify-center text-sm text-white/25">{generating ? <Loader2 className="h-6 w-6 animate-spin text-[#0a84ff]" /> : 'Cover letter will appear here.'}</div>
+            <div className="flex h-full items-center justify-center text-sm text-[#434656]">{generating ? <Loader2 className="h-6 w-6 animate-spin text-[#bbc3ff]" /> : 'Cover letter will appear here.'}</div>
           ) : (
             <div className="space-y-4">
-              {result.subject_line && (<div className="rounded-2xl bg-white/[0.03] p-3"><p className="text-[10px] font-medium text-white/25 uppercase">Email Subject</p><p className="text-sm font-medium text-white/70 mt-0.5">{result.subject_line}</p></div>)}
-              <div className="text-sm text-white/70 leading-relaxed whitespace-pre-wrap">{result.cover_letter}</div>
+              {result.subject_line && (<div className="rounded-2xl bg-white/[0.03] p-3"><p className="text-[10px] font-medium text-[#434656] uppercase">Email Subject</p><p className="text-sm font-medium text-[#c4c5d9] mt-0.5">{result.subject_line}</p></div>)}
+              <div className="text-sm text-[#c4c5d9] leading-relaxed whitespace-pre-wrap">{result.cover_letter}</div>
               <div className="flex gap-2 pt-2 border-t border-white/[0.06]">
-                <button onClick={handleCopy} className="apple-btn-secondary flex-1 py-2 flex items-center justify-center gap-2">
-                  {copied ? <CheckCircle className="h-4 w-4 text-[#30d158]" /> : <Copy className="h-4 w-4" />} {copied ? 'Copied!' : 'Copy'}
+                <button onClick={handleCopy} className="kinetic-btn-ghost flex-1 py-2 flex items-center justify-center gap-2">
+                  {copied ? <CheckCircle className="h-4 w-4 text-[#00daf3]" /> : <Copy className="h-4 w-4" />} {copied ? 'Copied!' : 'Copy'}
                 </button>
               </div>
             </div>
