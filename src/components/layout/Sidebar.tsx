@@ -16,6 +16,7 @@ const nav = [
   { href:'/interview-prep', icon:'quiz', label:'Interview Prep' },
   { href:'/linkedin', icon:'share', label:'LinkedIn' },
   { href:'/resume-versions', icon:'folder_open', label:'My Resumes' },
+  { href:'/compare', icon:'compare_arrows', label:'Compare Jobs' },
   { href:'/profile', icon:'settings', label:'Settings' },
 ];
 
@@ -47,7 +48,7 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <nav className="flex-1 flex flex-col gap-1">
+      <nav className="flex-1 flex flex-col gap-1 overflow-y-auto" style={{scrollbarWidth:'thin'}}>
         {nav.map(n => {
           const active = p === n.href || (n.href !== '/dashboard' && p.startsWith(n.href));
           return (

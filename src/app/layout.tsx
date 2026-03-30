@@ -21,13 +21,15 @@ export const metadata: Metadata = {
 };
 
 import CommandPalette from '@/components/layout/CommandPalette';
+import OnboardingTour from '@/components/layout/OnboardingTour';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark"><head><link rel="manifest" href="/manifest.json" /><meta name="theme-color" content="#3c59fd" /></head>
       <body>
         {children}
         <CommandPalette />
+        <OnboardingTour />
         <Toaster position="bottom-right" theme="dark" richColors toastOptions={{ style: { background: '#1d2026', border: '1px solid rgba(255,255,255,0.08)', color: '#e1e2eb' } }} />
       </body>
     </html>
