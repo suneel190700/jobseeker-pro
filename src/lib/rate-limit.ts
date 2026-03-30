@@ -1,58 +1,13 @@
-// Simple in-memory rate limiter for API routes
-// For production at scale, replace with Upstash Redis (@upstash/ratelimit)
+const rateMap = new Map<string, { count: number; resetAt: number }>();
 
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-
-interface RateLimitConfig {
-  windowMs: number; // Time window in milliseconds
-  maxRequests: number; // Max requests per window
-}
-
-const DEFAULTS: RateLimitConfig = {
-  windowMs: 60 * 1000, // 1 minute
-  maxRequests: 20,
-};
-
-export function rateLimit(
-  identifier: string,
-  config: Partial<RateLimitConfig> = {}
-): { success: boolean; remaining: number; resetIn: number } {
-  const { windowMs, maxRequests } = { ...DEFAULTS, ...config };
+export function rateLimit(key: string, limit: number = 30, windowMs: number = 60000): { success: boolean; remaining: number } {
   const now = Date.now();
-
-  const entry = rateLimitMap.get(identifier);
-
-  // Clean up expired entries periodically
-  if (rateLimitMap.size > 10000) {
-    rateLimitMap.forEach((val, key) => {
-      if (now > val.resetTime) rateLimitMap.delete(key);
-    });
+  const entry = rateMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateMap.set(key, { count: 1, resetAt: now + windowMs });
+    return { success: true, remaining: limit - 1 };
   }
-
-  if (!entry || now > entry.resetTime) {
-    rateLimitMap.set(identifier, { count: 1, resetTime: now + windowMs });
-    return { success: true, remaining: maxRequests - 1, resetIn: windowMs };
-  }
-
-  if (entry.count >= maxRequests) {
-    return {
-      success: false,
-      remaining: 0,
-      resetIn: entry.resetTime - now,
-    };
-  }
-
+  if (entry.count >= limit) return { success: false, remaining: 0 };
   entry.count++;
-  return {
-    success: true,
-    remaining: maxRequests - entry.count,
-    resetIn: entry.resetTime - now,
-  };
+  return { success: true, remaining: limit - entry.count };
 }
-
-// Pre-configured limiters for different endpoints
-export const resumeAnalysisLimit = (userId: string) =>
-  rateLimit(`resume:${userId}`, { windowMs: 60_000, maxRequests: 5 });
-
-export const jobSearchLimit = (userId: string) =>
-  rateLimit(`jobs:${userId}`, { windowMs: 60_000, maxRequests: 30 });

@@ -105,3 +105,37 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Manrope', sans-serif; }
     letter-spacing: 0.2em; color: var(--outline);
   }
 }
+
+/* Light theme */
+.light {
+  --bg: #ffffff;
+  --surface: #f8f9fa;
+  --surface-container: #f0f1f3;
+  --surface-container-low: #f5f6f7;
+  --surface-container-high: #e8e9ec;
+  --surface-container-highest: #dddee2;
+  --surface-container-lowest: #ffffff;
+  --primary: #2848ee;
+  --primary-container: #3c59fd;
+  --secondary: #5203d5;
+  --secondary-container: #e8deff;
+  --tertiary: #007886;
+  --tertiary-container: #9cf0ff;
+  --error: #ba1a1a;
+  --on-surface: #1a1c22;
+  --on-surface-variant: #434656;
+  --outline: #8e90a2;
+  --outline-variant: #c4c5d9;
+  --on-primary: #ffffff;
+  --on-primary-container: #000f5d;
+  --on-secondary-container: #20005f;
+}
+.light body, .light { background: var(--bg) !important; color: var(--on-surface) !important; }
+.light .glass-card { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.08); backdrop-filter: blur(20px); }
+.light .glass-card:hover { background: rgba(0,0,0,0.05); border-color: rgba(0,0,0,0.12); }
+.light .glass-panel { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.06); }
+.light .glass-card-deep { background: rgba(0,0,0,0.02); border-color: rgba(0,0,0,0.08); }
+.light .kinetic-input { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.1); color: #1a1c22; }
+.light .kinetic-input:focus { border-color: #3c59fd; box-shadow: 0 0 0 4px rgba(60,89,253,0.1); }
+.light .kinetic-btn-ghost { background: rgba(0,0,0,0.04); color: #1a1c22; border-color: rgba(0,0,0,0.1); }
+.light .mesh-gradient { background: radial-gradient(circle at 50% 50%, rgba(60,89,253,0.06) 0%, transparent 50%); }

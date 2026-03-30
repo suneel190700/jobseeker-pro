@@ -26,6 +26,9 @@ export default function Sidebar() {
   const [mobile, setMobile] = useState(false);
   useEffect(() => { createClient().auth.getUser().then(({ data }) => setName(data?.user?.user_metadata?.full_name || data?.user?.email?.split('@')[0] || '')); }, []);
 
+  const [theme, setTheme] = useState('dark');
+  useEffect(() => { const t = localStorage.getItem('theme') || 'dark'; setTheme(t); document.documentElement.className = t; }, []);
+  const toggleTheme = () => { const next = theme === 'dark' ? 'light' : 'dark'; setTheme(next); localStorage.setItem('theme', next); document.documentElement.className = next; };
   const logout = async () => { await createClient().auth.signOut(); r.push('/'); };
 
   return (<>
@@ -39,6 +42,9 @@ export default function Sidebar() {
           <h1 className="text-[#bbc3ff] font-bold text-lg tracking-tighter">JobSeeker Pro</h1>
         </div>
         <p className="text-[#e1e2eb]/50 text-xs">Premium AI Career Suite</p>
+        <button onClick={() => { const e = new KeyboardEvent('keydown', { key: 'k', metaKey: true }); window.dispatchEvent(e); }} className="mt-4 w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/5 text-[#8e90a2] text-xs hover:bg-white/10 transition">
+          <span className="material-symbols-outlined text-sm">search</span>Search...<kbd className="ml-auto px-1.5 py-0.5 rounded bg-white/5 text-[9px] border border-white/10">⌘K</kbd>
+        </button>
       </div>
 
       <nav className="flex-1 flex flex-col gap-1">
@@ -58,6 +64,9 @@ export default function Sidebar() {
           <div className="w-8 h-8 rounded-full bg-[#3c59fd] flex items-center justify-center text-xs font-bold text-white">{name?.[0]?.toUpperCase()||'U'}</div>
           <div className="flex-1 min-w-0"><p className="text-sm font-medium text-[#e1e2eb] truncate">{name}</p></div>
         </div>
+        <button onClick={toggleTheme} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#e1e2eb]/40 hover:text-[#cdbdff] hover:bg-[#cdbdff]/5 transition-all rounded-lg">
+          <span className="material-symbols-outlined text-xl">{theme==='dark'?'light_mode':'dark_mode'}</span>{theme==='dark'?'Light Mode':'Dark Mode'}
+        </button>
         <button onClick={logout} className="w-full flex items-center gap-3 px-4 py-2 text-sm text-[#e1e2eb]/40 hover:text-[#ffb4ab] hover:bg-[#ffb4ab]/5 transition-all rounded-lg">
           <span className="material-symbols-outlined text-xl">logout</span>Sign out
         </button>
