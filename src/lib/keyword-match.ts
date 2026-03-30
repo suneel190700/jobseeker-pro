@@ -1,4 +1,4 @@
-const TECH_RE = /\b(python|java|javascript|typescript|react|angular|vue|node|express|django|flask|fastapi|spring|kubernetes|docker|aws|azure|gcp|terraform|ansible|jenkins|ci\/cd|sql|nosql|postgresql|mongodb|redis|elasticsearch|kafka|graphql|rest|grpc|tensorflow|pytorch|langchain|llm|rag|nlp|ml|ai|deep learning|machine learning|data engineering|mlops|devops|microservices|api|agile|scrum|spark|hadoop|airflow|databricks|snowflake|dbt|git|linux|bash|go|rust|c\+\+|ruby|php|swift|kotlin|next\.js|tailwind|s3|ec2|lambda|pandas|numpy|scikit|openai|bert|gpt|cuda|gpu|distributed|scalability|monitoring|prometheus|grafana|datadog|network|tcp|sdn|containerization|orchestration|data pipeline|etl|data warehouse|data lake|batch processing|stream processing|real time|low latency|high performance|data modeling|big data|test automation|infrastructure|cloud|serverless|event driven)\b/gi;
+const TECH_RE = /\b(python|java|javascript|typescript|react|angular|vue|node|express|django|flask|fastapi|spring|kubernetes|docker|aws|azure|gcp|terraform|ansible|jenkins|ci\/cd|sql|nosql|postgresql|mongodb|redis|elasticsearch|kafka|graphql|rest|grpc|tensorflow|pytorch|langchain|llm|rag|nlp|ml|ai|deep learning|machine learning|data engineering|mlops|devops|microservices|api|agile|scrum|spark|hadoop|airflow|databricks|snowflake|dbt|git|linux|bash|go|rust|c\+\+|ruby|php|swift|kotlin|next\.js|tailwind|s3|ec2|lambda|pandas|numpy|scikit|openai|bert|gpt|cuda|gpu|distributed|scalability|monitoring|prometheus|grafana|datadog|network|tcp|sdn|containerization|orchestration|data pipeline|etl|data warehouse|data lake|batch processing|stream processing|real time|low latency|high performance|data modeling|big data|test automation|infrastructure|cloud|serverless|event driven|software engineer|data engineer|machine learning engineer|backend|frontend|full stack|product manager|devops engineer|sre|architect|analyst|scientist)\b/gi;
 
 const SYNONYMS: Record<string, string[]> = {
   'kubernetes':['k8s'],'machine learning':['ml'],'artificial intelligence':['ai'],
@@ -7,6 +7,8 @@ const SYNONYMS: Record<string, string[]> = {
   'llm':['large language models'],'rag':['retrieval augmented generation'],
   'react.js':['react','reactjs'],'node.js':['node','nodejs'],
   'postgresql':['postgres'],'mongodb':['mongo'],
+  'software engineer':['swe','developer'],'data engineer':['de'],
+  'machine learning engineer':['mle'],
 };
 
 export function extractKeywords(text: string): string[] {
@@ -16,9 +18,19 @@ export function extractKeywords(text: string): string[] {
 
 export function matchScore(resumeText: string, jdText: string): number {
   if (!resumeText || !jdText) return 0;
+  
+  // If JD is very short (just title), do title-based matching
   const resumeKws = new Set(extractKeywords(resumeText));
   const jdKws = extractKeywords(jdText);
-  if (jdKws.length === 0) return 0;
+  
+  if (jdKws.length === 0) {
+    // Fallback: check if job title words appear in resume
+    const titleWords = jdText.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    const resumeLower = resumeText.toLowerCase();
+    let hits = 0;
+    for (const w of titleWords) { if (resumeLower.includes(w)) hits++; }
+    return titleWords.length > 0 ? Math.min(85, Math.round((hits / titleWords.length) * 80)) : 0;
+  }
 
   let matched = 0;
   for (const kw of jdKws) {

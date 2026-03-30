@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       try {
         const expiry = new Date(Date.now() - CACHE_HOURS * 3600000).toISOString();
         const { data: cached } = await sb.from('cached_jobs').select('*').eq('query_key', cacheKey).gte('fetched_at', expiry).order('posted_date', { ascending: false });
-        if (cached && cached.length >= 5) {
+        if (cached && cached.length >= 5 && cached.some((j: any) => j.description && j.description.length > 50)) {
           console.log(`Cache HIT: ${cached.length} jobs`);
           return NextResponse.json({ jobs: cached.map(mapCached), count: cached.length, page, hasMore: cached.length >= 10, source: 'cache' });
         }
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
 // === THEIRSTACK ===
 async function fetchTheirStack(query: string, location: string, remote: boolean, datePosted: string, employmentType: string, page: number): Promise<MappedJob[]> {
   try {
-    const body: any = { page: page - 1, limit: 15, job_title_or: [query], posted_at_max_age_days: 30, order_by: [{ desc: true, field: 'date_posted' }] };
+    const body: any = { page: page - 1, limit: 15, job_title_or: [query], posted_at_max_age_days: 30, order_by: [{ desc: true, field: 'date_posted' }], include_total_results: true, blur_company_data: false };
     if (location) body.job_location_pattern_or = [location]; else body.job_country_code_or = ['US'];
     if (remote) body.remote = true;
     if (datePosted === 'today') body.posted_at_max_age_days = 1;
@@ -82,14 +82,14 @@ async function fetchTheirStack(query: string, location: string, remote: boolean,
     const r = await fetch(`${THEIRSTACK_BASE}/jobs/search`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.THEIRSTACK_API_KEY}` }, body: JSON.stringify(body), signal: AbortSignal.timeout(15000) });
     if (!r.ok) { console.error('TheirStack:', r.status); return []; }
     const data = await r.json();
-    if (data.data?.[0]) console.log('TS fields:', Object.keys(data.data[0]).join(','));
+    if (data.data?.[0]) { const f = data.data[0]; console.log('TS sample:', JSON.stringify({ keys: Object.keys(f).join(','), desc_len: (f.description||'').length, jd_len: (f.job_description||'').length, body_len: (f.body||'').length, text_desc: (f.text_description||'').length, html_desc: (f.html_description||'').length }).slice(0,500)); }
     return (data.data || []).map((item: any): MappedJob => ({
       id: `ts_${item.id || Math.random().toString(36).slice(2)}`,
       title: item.job_title || item.title || 'Untitled',
       company: item.company_name || item.company_object?.name || item.company?.name || (typeof item.company === 'string' ? item.company : '') || 'Unknown',
       location: item.location || item.job_location || 'US',
       remote_type: item.remote ? 'remote' : 'onsite',
-      description: item.description || item.job_description || '',
+      description: item.description || item.job_description || item.job_description_text || item.html_description || item.text_description || item.body || item.content || '',
       salary_min: item.min_annual_salary ? Math.round(item.min_annual_salary / 1000) * 1000 : null,
       salary_max: item.max_annual_salary ? Math.round(item.max_annual_salary / 1000) * 1000 : null,
       posted_date: item.date_posted || item.discovered_at || new Date().toISOString(),
@@ -110,13 +110,14 @@ async function fetchJSearch(query: string, location: string, remote: boolean, da
     const r = await fetch(`${JSEARCH_BASE}/search?${p}`, { headers: { 'X-RapidAPI-Key': process.env.RAPIDAPI_KEY!, 'X-RapidAPI-Host': 'jsearch.p.rapidapi.com' } });
     if (!r.ok) return [];
     const data = await r.json();
+    if (data.data?.[0]) { const f = data.data[0]; console.log('JSearch sample:', JSON.stringify({ keys: Object.keys(f).join(','), job_description_len: (f.job_description||'').length, job_highlights: !!f.job_highlights, job_description_start: (f.job_description||'').slice(0,100) }).slice(0,500)); }
     return (data.data || []).map((item: any): MappedJob => ({
       id: item.job_id || `js_${Math.random().toString(36).slice(2)}`,
       title: item.job_title || 'Untitled',
       company: item.employer_name || 'Unknown',
       location: item.job_city ? `${item.job_city}, ${item.job_state || ''}` : 'US',
       remote_type: item.job_is_remote ? 'remote' : 'onsite',
-      description: item.job_description || '',
+      description: item.job_description || item.job_highlights?.Qualifications?.join('\n') || item.job_highlights?.Responsibilities?.join('\n') || '',
       salary_min: item.job_min_salary, salary_max: item.job_max_salary,
       posted_date: item.job_posted_at_datetime_utc || new Date().toISOString(),
       source_url: item.job_apply_link || item.job_google_link || '#',
