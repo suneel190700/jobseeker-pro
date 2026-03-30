@@ -139,3 +139,30 @@ h1, h2, h3, h4, h5, h6 { font-family: 'Manrope', sans-serif; }
 .light .kinetic-input:focus { border-color: #3c59fd; box-shadow: 0 0 0 4px rgba(60,89,253,0.1); }
 .light .kinetic-btn-ghost { background: rgba(0,0,0,0.04); color: #1a1c22; border-color: rgba(0,0,0,0.1); }
 .light .mesh-gradient { background: radial-gradient(circle at 50% 50%, rgba(60,89,253,0.06) 0%, transparent 50%); }
+
+/* Custom scrollbar for Stitch theme */
+* { scrollbar-width: thin; scrollbar-color: rgba(187,195,255,0.15) transparent; }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(187,195,255,0.15); border-radius: 10px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(187,195,255,0.25); }
+
+/* Custom select/dropdown */
+select.kinetic-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 8px 32px 8px 14px;
+  font-size: 13px;
+  color: #c4c5d9;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238e90a2' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+select.kinetic-select:hover { background-color: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+select.kinetic-select:focus { outline: none; border-color: rgba(187,195,255,0.3); box-shadow: 0 0 0 3px rgba(60,89,253,0.1); }
+select.kinetic-select option { background: #1d2026; color: #e1e2eb; }
