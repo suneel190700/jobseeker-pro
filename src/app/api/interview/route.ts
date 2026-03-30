@@ -4,13 +4,16 @@ import { callAI, parseJSON, smartTruncate } from '@/lib/ai-router';
 
 export async function POST(request: NextRequest) {
   try {
-    const { resumeText, jobDescription, jobTitle, companyName, prepType } = await request.json();
-    if (!resumeText?.trim() || !jobDescription?.trim()) return NextResponse.json({ error: 'Resume and JD required.' }, { status: 400 });
+    const { resumeText, jobDescription, jobTitle, companyName, type: prepType } = await request.json();
+    if (!jobDescription?.trim()) return NextResponse.json({ error: 'JD required' }, { status: 400 });
+
     let sys = '';
-    if (prepType === 'questions') sys = 'Generate interview questions. Return ONLY JSON: {"technical_questions":[{"question":"","why_asked":"","tip":""}],"behavioral_questions":[{"question":"","what_they_want":"","tip":""}],"system_design":[{"question":"","context":""}],"questions_to_ask":[{"question":"","why_good":""}]}. 5 technical, 5 behavioral, 2 system design, 3 to ask.';
-    else if (prepType === 'star') sys = 'Create STAR stories from resume. Return ONLY JSON: {"stories":[{"title":"","best_for_question":"","situation":"","task":"","action":"","result":""}]}. 5-7 stories. No fabrication.';
-    else sys = `Company research brief for ${companyName || 'the company'}. Return ONLY JSON: {"company_overview":"","recent_news":"","culture_values":[],"tech_stack_likely":[],"talking_points":[],"why_you_fit":""}`;
-    const text = await callAI({ tier: 'cheap', system: sys, user: `RESUME:\n${resumeText}\n\nJOB: ${jobTitle || 'role'} at ${companyName || 'company'}\n\nJD:\n${jobDescription}` });
+    if (prepType === 'questions') sys = `Generate interview questions with sample answers. Return ONLY JSON: {"technical":[{"question":"","answer":"sample answer the candidate should give","why_asked":"","tip":""}],"behavioral":[{"question":"","answer":"sample STAR-format answer","why_asked":"","tip":""}],"system_design":[{"question":"","answer":"approach to answer","context":""}],"questions_to_ask":[{"question":"","why_good":""}]}. 5 technical, 5 behavioral, 2 system design, 3 to ask. Answers should be specific to the candidate's resume.`;
+    else if (prepType === 'star') sys = 'Generate STAR stories from the resume. Return ONLY JSON: {"stories":[{"title":"","relevant_for":"which question type","situation":"","task":"","action":"","result":"with metrics","keywords":["kw"]}]}. 4-5 stories.';
+    else if (prepType === 'company') sys = 'Research the company. Return ONLY JSON: {"company_overview":"","culture_values":[""],"interview_talking_points":[""],"questions_to_ask":[""],"recent_news":"","tips":[""]}.';
+    else return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+
+    const text = await callAI({ tier: 'cheap', system: sys, user: `Resume:\n${smartTruncate(resumeText || '', 3000)}\n\nJob: ${jobTitle || ''} at ${companyName || ''}\n\nJD:\n${smartTruncate(jobDescription, 2000)}`, maxTokens: 4000 });
     return NextResponse.json(parseJSON(text));
-  } catch (error: any) { console.error('Interview error:', error); return NextResponse.json({ error: error.message || 'Failed.' }, { status: 500 }); }
+  } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }
