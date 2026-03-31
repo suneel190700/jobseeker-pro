@@ -2,82 +2,90 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { callAI, parseJSON, smartTruncate } from '@/lib/ai-router';
 
-const PROMPT = `You are a senior resume writer and ATS optimization expert. Your task is to rewrite the resume to score 90-93% on ALL major ATS platforms.
+// STEP 1: Master Rewrite
+const REWRITE_PROMPT = `Act as a Senior Hiring Manager, ATS Optimization Expert, and Resume Strategist.
+Rewrite and optimize the resume so it achieves 90-93% ATS match across Workday, Greenhouse, Lever, and iCIMS, passes recruiter screening in 10 seconds, and sounds credible.
 
-TARGET ATS PLATFORMS: Workday, Greenhouse, Lever, iCIMS, UKG Pro, Taleo, SAP SuccessFactors.
+CRITICAL RULES:
+1. UNIVERSAL DOMAIN ADAPTATION - Adapt resume to match JD domain. Use exact terminology and tools from JD.
+2. MANDATORY SKILL INJECTION - Identify all mandatory JD skills. If missing: add naturally in SKILLS section AND reflect in 1-2 experience bullets. Use safe phrasing: "Hands-on experience with", "Exposure to", "Worked with". Ensure consistency between Skills and Experience.
+3. ATS OPTIMIZATION - Include all critical JD keywords. Use exact matches and variations. No keyword stuffing. ATS-friendly structure.
+4. HUMAN OPTIMIZATION - Every bullet: Action verb + what + how + measurable impact. Add metrics: percentages, latency, scale, cost savings. Replace "worked on"/"responsible for" with "Designed"/"Developed"/"Led"/"Optimized".
+5. EXPERIENCE LEVEL ADAPTATION - Detect level from resume: Fresher (0-2yr): focus projects, no exaggeration. Mid (2-6yr): show module ownership, careful skill injection. Senior (6+yr): emphasize architecture, leadership, system design.
+6. FORMATTING - No em dashes. Single column. Clean sections: SUMMARY, SKILLS, EXPERIENCE, EDUCATION. Bullet points only in experience. 1-2 pages. Contact info in body. Dates: "Month YYYY - Present".
+7. CONSISTENCY - No contradictions. Skills must appear in experience logically. Add 2-3 relevant coursework items under Education.
+8. Never start 2 bullets with same verb in one job. Mix short and medium bullets.
 
-STRICT ATS FORMATTING RULES:
-- Single column layout only. No tables, columns, graphics, icons, images.
-- Section headers EXACTLY: SUMMARY, SKILLS, EXPERIENCE, EDUCATION, CERTIFICATIONS
-- Contact info at top of body: Name, Email, Phone, Location, LinkedIn
-- Dates format: "Month YYYY - Present" or "Month YYYY - Month YYYY" (plain dash, not em dash)
-- No em dashes, smart quotes, or unicode. Use plain dash (-) and straight quotes only.
-- No headers/footers content - everything in body.
-- Font assumption: Calibri 10-11pt
+Return ONLY valid JSON: {"name":"","email":"","phone":"","location":"","linkedin":"","summary":"3 lines max","skills_grouped":{"Category":["skill"]},"experience":[{"company":"","title":"","location":"","dates":"Month YYYY - Present","bullets":[]}],"education":[{"institution":"","degree":"","dates":"","coursework":["course1","course2"]}],"certifications":[""]}`;
 
-KEYWORD RULES:
-- Each required keyword appears 2-3x naturally across resume. NEVER more than 3x.
-- Place keywords in Summary, Skills, AND Experience sections.
-- Use exact JD terms, not synonyms (ATS matches literally).
-- Do NOT keyword stuff. If it reads unnaturally, remove it.
+// STEP 3: Fix Weak Areas (only if score < 90)
+const FIX_PROMPT = `Improve this resume to increase ATS score above 90%. Focus ONLY on:
+- Missing keywords from JD that need injection
+- Weak bullet points that lack metrics or impact
+- Skill alignment issues between Skills and Experience sections
+Do NOT rewrite entire resume. Only update necessary sections. Maintain natural tone. Return ONLY valid JSON with same structure.`;
 
-BULLET STYLE (Compressed Storytelling):
-- Format: [Action Verb] + [Technology/Work] + [Short Context] + [Impact/Result]
-- 1-2 lines per bullet. Max 6 bullets per job.
-- No "I" or "we". No conversational phrasing.
-- Mix short (1 line) and medium (2 line) bullets naturally.
-- First bullet = biggest achievement. Last bullet = team/leadership.
-- Never start 2 bullets with same verb in one job.
-- Include metrics where real (avoid fake %). Some bullets without numbers are OK.
-
-HUMANIZATION RULES:
-- No em dashes (—). Use dash (-) or comma.
-- Vary sentence structure. No identical bullet patterns.
-- No buzzword stacking ("spearheaded cross-functional enterprise-grade initiatives").
-- Slightly imperfect = human. Not every bullet needs a metric.
-- Score target 90-93%. NOT 95+ which looks AI-generated.
-
-CONTENT RULES:
-- Keep real companies, titles, dates. Do NOT invent experience.
-- MAY rephrase bullets and add implied keywords.
-- Remove or downplay irrelevant experience.
-- Add relevant coursework under Education (2-3 courses matching JD).
-- Group skills by category matching JD requirements.
-- Summary: 3 lines max, keyword-rich, specific to target role.
-
-Return ONLY valid JSON (no markdown, no backticks):
-{"name":"","email":"","phone":"","location":"","linkedin":"","github":"","summary":"3 lines","skills_grouped":{"Category":["skill"]},"experience":[{"company":"","title":"","location":"","dates":"Month YYYY - Present","bullets":[""]}],"education":[{"institution":"","degree":"","dates":"","coursework":["relevant course 1","relevant course 2"]}],"certifications":[""],"ats_compliance":{"format":"single column, standard headers","score_target":"90-93%","platforms_optimized":["Workday","Greenhouse","Lever","iCIMS","UKG Pro"]}}`;
+// STEP 4: Human Optimization
+const HUMAN_PROMPT = `Act as a recruiter reviewing this resume in 10 seconds. Improve for human readability WITHOUT reducing ATS score.
+Focus on: Make summary clearly match job role. Every bullet: Action + What + How + Business Impact. Replace weak language. Make it skimmable. Ensure credibility. Show growth and ownership. No em dashes.
+Return ONLY valid JSON with same structure.`;
 
 export async function POST(request: NextRequest) {
   try {
-    const { resumeText, jobDescription, jobTitle, userName, company } = await request.json();
+    const { resumeText, jobDescription, jobTitle, company, userName } = await request.json();
     if (!resumeText?.trim() || !jobDescription?.trim()) return NextResponse.json({ error: 'Resume and JD required.' }, { status: 400 });
-    
-    const text = await callAI({
-      tier: 'balanced',
-      system: PROMPT,
-      user: `ORIGINAL RESUME:\n${smartTruncate(resumeText)}\n\nTARGET JOB${jobTitle ? ` (${jobTitle})` : ''}${company ? ` at ${company}` : ''}:\n${smartTruncate(jobDescription)}\n\nRewrite to score 90-93% on all ATS platforms. Be aggressive with keywords but natural. Fill pages. Add relevant coursework.`,
+
+    // STEP 1: Master Rewrite
+    console.log('Step 1: Rewriting...');
+    const text1 = await callAI({
+      tier: 'balanced', system: REWRITE_PROMPT,
+      user: `RESUME:\n${smartTruncate(resumeText)}\n\nTARGET JOB: ${jobTitle || ''} at ${company || ''}\n\nJOB DESCRIPTION:\n${smartTruncate(jobDescription)}`,
       maxTokens: 6000
     });
-    
+    let resume = parseJSON(text1);
+
+    // STEP 2: Quick algorithmic score check
+    const resumeFlat = JSON.stringify(resume).toLowerCase();
+    const jdKws: string[] = (jobDescription.match(/\b[a-z]{2,}\b/gi) || []).map((w: string) => w.toLowerCase());
+    const uniqueJdKws: string[] = Array.from(new Set(jdKws.filter((w: string) => w.length > 3))) as string[];
+    const matched: string[] = uniqueJdKws.filter((kw: string) => resumeFlat.includes(kw));
+    const quickScore = uniqueJdKws.length > 0 ? Math.round((matched.length / uniqueJdKws.length) * 100) : 80;
+    console.log(`Step 2: Quick score = ${quickScore}%`);
+
+    // STEP 3: Fix if score < 85 (run max 1 time to save tokens)
+    if (quickScore < 85) {
+      console.log('Step 3: Fixing weak areas...');
+      try {
+        const text3 = await callAI({
+          tier: 'cheap', system: FIX_PROMPT,
+          user: `CURRENT RESUME JSON:\n${JSON.stringify(resume)}\n\nJOB DESCRIPTION:\n${smartTruncate(jobDescription, 2000)}\n\nMISSING KEYWORDS: ${uniqueJdKws.filter((kw: string) => !resumeFlat.includes(kw)).slice(0, 15).join(', ')}`,
+          maxTokens: 5000
+        });
+        resume = parseJSON(text3);
+      } catch (e) { console.error('Step 3 failed, continuing with step 1 result'); }
+    }
+
+    // STEP 4: Human optimization
+    console.log('Step 4: Humanizing...');
     try {
-      const resume = parseJSON(text);
-      // Add filename suggestion
-      const safeName = (userName || resume.name || 'resume').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-      const safeCompany = (company || '').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-      const safePosition = (jobTitle || '').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-      resume._filename = [safeName, safeCompany, safePosition].filter(Boolean).join('_');
-      return NextResponse.json({ resume });
-    } catch (parseErr) {
-      console.error('Generate JSON parse failed, retrying...');
-      const text2 = await callAI({
-        tier: 'balanced',
-        system: PROMPT + '\n\nCRITICAL: Return ONLY valid JSON. No markdown. Keep compact. Under 4000 tokens.',
-        user: `RESUME:\n${smartTruncate(resumeText, 3000)}\n\nJOB: ${jobTitle || ''} at ${company || ''}\n\nJD:\n${smartTruncate(jobDescription, 2000)}`,
+      const text4 = await callAI({
+        tier: 'cheap', system: HUMAN_PROMPT,
+        user: `RESUME JSON:\n${JSON.stringify(resume)}\n\nTARGET ROLE: ${jobTitle || ''} at ${company || ''}`,
         maxTokens: 5000
       });
-      const resume = parseJSON(text2);
-      return NextResponse.json({ resume });
-    }
-  } catch (error: any) { console.error('Generate error:', error); return NextResponse.json({ error: error.message || 'Failed.' }, { status: 500 }); }
+      resume = parseJSON(text4);
+    } catch (e) { console.error('Step 4 failed, using step 1/3 result'); }
+
+    // Add filename
+    const safeName = (userName || resume.name || 'resume').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const safeCompany = (company || '').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const safePosition = (jobTitle || '').split(' ').slice(0, 3).join('_').replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
+    resume._filename = [safeName, safeCompany, safePosition].filter(Boolean).join('_');
+    resume._pipeline = { quickScore, stepsRun: quickScore < 85 ? 4 : 3 };
+
+    return NextResponse.json({ resume });
+  } catch (error: any) {
+    console.error('Generate error:', error);
+    return NextResponse.json({ error: error.message || 'Failed.' }, { status: 500 });
+  }
 }
