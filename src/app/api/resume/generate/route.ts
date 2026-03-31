@@ -15,6 +15,14 @@ CRITICAL RULES:
 6. FORMATTING - No em dashes. Single column. Clean sections: SUMMARY, SKILLS, EXPERIENCE, EDUCATION. Bullet points only in experience. 1-2 pages. Contact info in body. Dates: "Month YYYY - Present".
 7. CONSISTENCY - No contradictions. Skills must appear in experience logically. Add 2-3 relevant coursework items under Education.
 8. Never start 2 bullets with same verb in one job. Mix short and medium bullets.
+9. RECRUITER HUMANIZATION (CRITICAL - a real recruiter reads this in 10 seconds):
+   FIRST IMPRESSION: Summary must immediately answer "why this person for THIS role" in 2-3 lines. No generic filler.
+   BULLET IMPACT: Every bullet must follow Action + What + How + Business Impact. Add strong metrics: percentages, latency reductions, scale (users/records/transactions), cost savings, time improvements.
+   STRONG LANGUAGE: Never use "worked on", "responsible for", "helped with", "assisted in", "participated in". Always use "Led", "Architected", "Built", "Optimized", "Delivered", "Engineered", "Spearheaded", "Reduced", "Increased", "Automated".
+   SKIMMABILITY: Short punchy bullets (1-2 lines max). No wall-of-text bullets. First bullet per job = biggest achievement. Last bullet = team/leadership.
+   CREDIBILITY: Skills must feel earned not listed. Every skill in Skills section should appear naturally in at least one experience bullet. No buzzword stacking.
+   STORY FLOW: Show clear career progression and increasing ownership. Each role should feel like a step up.
+   TONE: Confident but not arrogant. Specific not vague. Numbers not adjectives.
 
 Return ONLY valid JSON: {"name":"","email":"","phone":"","location":"","linkedin":"","summary":"3 lines max","skills_grouped":{"Category":["skill"]},"experience":[{"company":"","title":"","location":"","dates":"Month YYYY - Present","bullets":[]}],"education":[{"institution":"","degree":"","dates":"","coursework":["course1","course2"]}],"certifications":[""]}`;
 
@@ -65,23 +73,15 @@ export async function POST(request: NextRequest) {
       } catch (e) { console.error('Step 3 failed, continuing with step 1 result'); }
     }
 
-    // STEP 4: Human optimization
-    console.log('Step 4: Humanizing...');
-    try {
-      const text4 = await callAI({
-        tier: 'cheap', system: HUMAN_PROMPT,
-        user: `RESUME JSON:\n${JSON.stringify(resume)}\n\nTARGET ROLE: ${jobTitle || ''} at ${company || ''}`,
-        maxTokens: 5000
-      });
-      resume = parseJSON(text4);
-    } catch (e) { console.error('Step 4 failed, using step 1/3 result'); }
+    // STEP 4: Skipped - humanize rules already in Step 1 prompt to stay under Vercel 60s limit
+    // Human optimization is baked into the master rewrite prompt
 
     // Add filename
     const safeName = (userName || resume.name || 'resume').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     const safeCompany = (company || '').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     const safePosition = (jobTitle || '').split(' ').slice(0, 3).join('_').replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
     resume._filename = [safeName, safeCompany, safePosition].filter(Boolean).join('_');
-    resume._pipeline = { quickScore, stepsRun: quickScore < 85 ? 4 : 3 };
+    resume._pipeline = { quickScore, stepsRun: quickScore < 85 ? 3 : 2 };
 
     return NextResponse.json({ resume });
   } catch (error: any) {

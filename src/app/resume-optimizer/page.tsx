@@ -203,7 +203,7 @@ export default function ResumeOptimizerPage() {
 
           {/* Optimize Button */}
           <button onClick={doRewrite} disabled={!ok||ging} className="kinetic-btn w-full py-3.5 text-sm disabled:opacity-50 flex items-center justify-center gap-2" style={{background:'linear-gradient(135deg, #5203d5, #3c59fd)'}}>
-            {ging?<><Loader2 className="h-4 w-4 animate-spin"/>Running 4-Step AI Pipeline (30-40s)...</>:<><span className="material-symbols-outlined text-sm">auto_awesome</span>Optimize Resume{atsResult?` (${atsResult.overallScore}% → 90+%)`:''}</>}
+            {ging?<><Loader2 className="h-4 w-4 animate-spin"/>Optimizing with AI (20-30s)...</>:<><span className="material-symbols-outlined text-sm">auto_awesome</span>Optimize Resume{atsResult?` (${atsResult.overallScore}% → 90+%)`:''}</>}
           </button>
 
           {/* Post-gen: Before → After Score */}
@@ -295,7 +295,7 @@ export default function ResumeOptimizerPage() {
                   </div>
                 ) : ging ? (
                   <div className="h-full flex items-center justify-center min-h-[350px]">
-                    <div className="text-center"><Loader2 className="h-8 w-8 animate-spin text-[#5203d5] mx-auto"/><p className="mt-3 text-sm text-slate-400">4-Step AI Pipeline Running...</p><p className="text-xs text-slate-300 mt-1">Rewrite → Score → Fix → Humanize</p></div>
+                    <div className="text-center"><Loader2 className="h-8 w-8 animate-spin text-[#5203d5] mx-auto"/><p className="mt-3 text-sm text-slate-400">4-Step AI Pipeline Running...</p><p className="text-xs text-slate-300 mt-1">Rewrite → Score → Fix gaps</p></div>
                   </div>
                 ) : (
                   <div className="h-full flex items-center justify-center min-h-[350px]"><p className="text-sm text-slate-300 italic text-center">Paste JD to see live ATS analysis.<br/>Click Optimize for AI rewrite.</p></div>
