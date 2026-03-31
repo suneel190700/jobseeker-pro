@@ -27,13 +27,14 @@ export async function GET(request: NextRequest) {
 
     const cacheKey = `${query.toLowerCase().trim()}|${location.toLowerCase().trim()}|${remote}|${datePosted}|${employmentType}|${page}`;
 
-    // Check cache
-    const sb = getSupabase();
+    // Cache disabled - always fetch fresh (re-enable when TheirStack credits refilled)
+    const sb: any = null;
     if (sb) {
       try {
         const expiry = new Date(Date.now() - CACHE_HOURS * 3600000).toISOString();
         const { data: cached } = await sb.from('cached_jobs').select('*').eq('query_key', cacheKey).gte('fetched_at', expiry).order('posted_date', { ascending: false });
-        if (cached && cached.length >= 5 && cached.some((j: any) => j.description && j.description.length > 50)) {
+        const hasJDs = cached.filter((j: any) => j.description && j.description.length > 100).length;
+        if (cached && cached.length >= 5 && hasJDs >= cached.length * 0.5) {
           console.log(`Cache HIT: ${cached.length} jobs`);
           return NextResponse.json({ jobs: cached.map(mapCached), count: cached.length, page, hasMore: cached.length >= 10, source: 'cache' });
         }
