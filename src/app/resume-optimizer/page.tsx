@@ -71,9 +71,39 @@ export default function ResumeOptimizerPage() {
       if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || 'Failed');
       const data = await r.json(); setGen(data.resume); toast.success('Resume optimized!');
       sessionStorage.setItem('optimized_resume', JSON.stringify(data.resume));
-      // Re-score optimized resume
-      const optimizedText = JSON.stringify(data.resume);
-      const newScore = scoreResume(optimizedText, jd);
+      // Re-score optimized resume - flatten JSON to plain text first
+      const r2 = data.resume;
+      const flatParts: string[] = [];
+      if (r2.name) flatParts.push(r2.name);
+      if (r2.email) flatParts.push(r2.email);
+      if (r2.phone) flatParts.push(r2.phone);
+      if (r2.location) flatParts.push(r2.location);
+      if (r2.linkedin) flatParts.push(r2.linkedin);
+      if (r2.summary) flatParts.push('SUMMARY', r2.summary);
+      if (r2.skills_grouped) {
+        flatParts.push('SKILLS');
+        Object.entries(r2.skills_grouped).forEach(([cat, skills]) => {
+          if (Array.isArray(skills)) flatParts.push(`${cat}: ${(skills as string[]).join(', ')}`);
+        });
+      }
+      if (r2.experience?.length) {
+        flatParts.push('EXPERIENCE');
+        r2.experience.forEach((e: any) => {
+          flatParts.push(`${e.title} - ${e.company}`);
+          if (e.dates) flatParts.push(e.dates);
+          if (e.bullets) e.bullets.forEach((b: string) => flatParts.push(`- ${b}`));
+        });
+      }
+      if (r2.education?.length) {
+        flatParts.push('EDUCATION');
+        r2.education.forEach((e: any) => {
+          flatParts.push(`${e.degree} - ${e.institution}`);
+          if (e.coursework?.length) flatParts.push(`Coursework: ${e.coursework.join(', ')}`);
+        });
+      }
+      if (r2.certifications?.length) { flatParts.push('CERTIFICATIONS'); r2.certifications.filter(Boolean).forEach((c: string) => flatParts.push(c)); }
+      const optimizedPlainText = flatParts.join('\n');
+      const newScore = scoreResume(optimizedPlainText, jd);
       setPostScore(newScore);
     } catch (e: any) { setErr(e.message); } finally { setGing(false); }
   };
