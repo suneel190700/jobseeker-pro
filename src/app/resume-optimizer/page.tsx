@@ -24,6 +24,8 @@ export default function ResumeOptimizerPage() {
   const [ging, setGing] = useState(false);
   const [gen, setGen] = useState<any>(null);
   const [postScore, setPostScore] = useState<ATSResult|null>(null);
+  const [aiScore, setAiScore] = useState<any>(null);
+  const [aiScoring, setAiScoring] = useState(false);
   const [dling, setDling] = useState(false);
   const [err, setErr] = useState<string|null>(null);
   const [svd, setSvd] = useState(false);
@@ -105,6 +107,10 @@ export default function ResumeOptimizerPage() {
       const optimizedPlainText = flatParts.join('\n');
       const newScore = scoreResume(optimizedPlainText, jd);
       setPostScore(newScore);
+      // Fire AI scoring in background (non-blocking)
+      setAiScoring(true); setAiScore(null);
+      fetch('/api/resume/score-ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resumeText: optimizedPlainText, jobDescription: jd }) })
+        .then(r => r.json()).then(d => { if (!d.error) setAiScore(d); }).catch(() => {}).finally(() => setAiScoring(false));
     } catch (e: any) { setErr(e.message); } finally { setGing(false); }
   };
 
@@ -236,11 +242,11 @@ export default function ResumeOptimizerPage() {
             {ging?<><Loader2 className="h-4 w-4 animate-spin"/>Optimizing with AI (20-30s)...</>:<><span className="material-symbols-outlined text-sm">auto_awesome</span>Optimize Resume{atsResult?` (${atsResult.overallScore}% → 90+%)`:''}</>}
           </button>
 
-          {/* Post-gen: Before → After Score */}
-          {gen && postScore && atsResult && (
+          {/* Post-gen: AI ATS Scores */}
+          {gen && (aiScore || aiScoring || postScore) && atsResult && (
             <div className="glass-card rounded-2xl p-5 space-y-4">
-              <div className="flex items-center gap-6">
-                {/* Before */}
+              {/* Before → After with AI score */}
+              <div className="flex items-center gap-5">
                 <div className="text-center">
                   <div className="relative w-16 h-16">
                     <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
@@ -252,37 +258,59 @@ export default function ResumeOptimizerPage() {
                   <p className="text-[9px] text-[#8e90a2] font-bold uppercase tracking-widest mt-1">Before</p>
                 </div>
                 <span className="material-symbols-outlined text-[#8e90a2] text-xl">arrow_forward</span>
-                {/* After */}
                 <div className="text-center">
                   <div className="relative w-16 h-16">
-                    <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
-                      <circle cx="40" cy="40" r="34" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="5"/>
-                      <circle cx="40" cy="40" r="34" fill="transparent" stroke={scoreColor(postScore.overallScore)} strokeWidth="5" strokeLinecap="round" strokeDasharray={`${2*Math.PI*34}`} strokeDashoffset={`${2*Math.PI*34 - (postScore.overallScore/100)*2*Math.PI*34}`} style={{transition:'stroke-dashoffset 1s ease'}}/>
-                    </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-sm font-black" style={{color:scoreColor(postScore.overallScore)}}>{postScore.overallScore}%</span>
+                    {aiScoring ? <div className="w-full h-full flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-[#00daf3]"/></div> : (
+                      <><svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
+                        <circle cx="40" cy="40" r="34" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="5"/>
+                        <circle cx="40" cy="40" r="34" fill="transparent" stroke={scoreColor(aiScore?.overall_score || postScore?.overallScore || 0)} strokeWidth="5" strokeLinecap="round" strokeDasharray={`${2*Math.PI*34}`} strokeDashoffset={`${2*Math.PI*34 - ((aiScore?.overall_score || postScore?.overallScore || 0)/100)*2*Math.PI*34}`} style={{transition:'stroke-dashoffset 1s ease'}}/>
+                      </svg>
+                      <span className="absolute inset-0 flex items-center justify-center text-sm font-black" style={{color:scoreColor(aiScore?.overall_score || postScore?.overallScore || 0)}}>{aiScore?.overall_score || postScore?.overallScore || 0}%</span></>
+                    )}
                   </div>
-                  <p className="text-[9px] text-[#8e90a2] font-bold uppercase tracking-widest mt-1">After</p>
+                  <p className="text-[9px] text-[#8e90a2] font-bold uppercase tracking-widest mt-1">{aiScore ? 'AI Score' : 'After'}</p>
                 </div>
                 <div className="flex-1 text-xs text-[#c4c5d9] space-y-1">
-                  <p className="font-bold text-[#e1e2eb]">+{postScore.overallScore - atsResult.overallScore}% improvement</p>
-                  <p>Keywords: {atsResult.keywordScore}% → {postScore.keywordScore}%</p>
-                  <p>Placement: {atsResult.placementScore}% → {postScore.placementScore}%</p>
+                  {aiScore ? <>
+                    <p className="font-bold text-[#00daf3]">+{(aiScore.overall_score || 0) - atsResult.overallScore}% improvement</p>
+                    {aiScore.recruiter_impression && <p className="text-[#e1e2eb] italic">"{aiScore.recruiter_impression}"</p>}
+                  </> : <p className="font-bold text-[#e1e2eb]">+{(postScore?.overallScore||0) - atsResult.overallScore}% improvement</p>}
                 </div>
               </div>
 
-              {/* Changes Made */}
-              {(() => {
+              {/* ATS Platform Scores */}
+              {aiScore?.ats_scores && (
+                <div className="grid grid-cols-4 gap-2 pt-3 border-t border-white/5">
+                  {Object.entries(aiScore.ats_scores).map(([platform, score]) => (
+                    <div key={platform} className="text-center p-2 rounded-lg" style={{background:scoreBg(score as number)}}>
+                      <p className="text-lg font-black" style={{color:scoreColor(score as number)}}>{score as number}%</p>
+                      <p className="text-[9px] text-[#8e90a2] font-bold uppercase tracking-widest mt-0.5">{platform}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Strengths + Improvements from AI */}
+              {aiScore?.strengths?.length > 0 && (
+                <div className="pt-2 border-t border-white/5 space-y-2">
+                  <div><p className="text-[10px] font-bold text-[#00daf3] uppercase tracking-widest mb-1">Strengths</p>
+                    {aiScore.strengths.map((s: string, i: number) => <p key={i} className="text-xs text-[#c4c5d9]">✓ {s}</p>)}
+                  </div>
+                  {aiScore.improvements?.length > 0 && <div><p className="text-[10px] font-bold text-[#cdbdff] uppercase tracking-widest mb-1">Could Improve</p>
+                    {aiScore.improvements.map((s: string, i: number) => <p key={i} className="text-xs text-[#c4c5d9]">→ {s}</p>)}
+                  </div>}
+                </div>
+              )}
+
+              {/* Changes Made (algorithmic) */}
+              {postScore && (() => {
                 const fixedKws = atsResult.missing.filter(k => postScore.matched.includes(k));
                 const fixedPlacement = atsResult.misplaced.filter(k => !postScore.misplaced.includes(k));
-                const fixedStructure = atsResult.structureIssues.filter(i => !postScore.structureIssues.includes(i));
-                const stillMissing = postScore.missing;
-                return (fixedKws.length > 0 || fixedPlacement.length > 0 || fixedStructure.length > 0) ? (
+                return (fixedKws.length > 0 || fixedPlacement.length > 0) ? (
                   <div className="space-y-2 pt-2 border-t border-white/5">
-                    <p className="text-[10px] font-bold text-[#00daf3] uppercase tracking-widest">Changes Made</p>
+                    <p className="text-[10px] font-bold text-[#00daf3] uppercase tracking-widest">Keywords Added</p>
                     {fixedKws.length > 0 && <div className="flex flex-wrap gap-1.5">{fixedKws.map(k => <span key={k} className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#007886]/15 text-[#00daf3] border border-[#00daf3]/20">+ {k}</span>)}</div>}
-                    {fixedPlacement.length > 0 && <p className="text-xs text-[#cdbdff]">{fixedPlacement.length} keywords moved from skills-only into experience bullets</p>}
-                    {fixedStructure.length > 0 && <p className="text-xs text-[#00daf3]">{fixedStructure.length} structure issues fixed</p>}
-                    {stillMissing.length > 0 && <div><p className="text-[10px] font-bold text-[#8e90a2] mt-1">Still missing ({stillMissing.length}):</p><div className="flex flex-wrap gap-1">{stillMissing.slice(0, 8).map(k => <span key={k} className="px-2 py-0.5 rounded text-[10px] bg-white/5 text-[#8e90a2]">{k}</span>)}</div></div>}
+                    {fixedPlacement.length > 0 && <p className="text-xs text-[#cdbdff]">{fixedPlacement.length} keywords woven into experience bullets</p>}
                   </div>
                 ) : null;
               })()}
