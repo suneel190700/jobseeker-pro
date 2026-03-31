@@ -23,6 +23,7 @@ export default function ResumeOptimizerPage() {
   const [co, setCo] = useState('');
   const [ging, setGing] = useState(false);
   const [gen, setGen] = useState<any>(null);
+  const [postScore, setPostScore] = useState<ATSResult|null>(null);
   const [dling, setDling] = useState(false);
   const [err, setErr] = useState<string|null>(null);
   const [svd, setSvd] = useState(false);
@@ -70,6 +71,10 @@ export default function ResumeOptimizerPage() {
       if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || 'Failed');
       const data = await r.json(); setGen(data.resume); toast.success('Resume optimized!');
       sessionStorage.setItem('optimized_resume', JSON.stringify(data.resume));
+      // Re-score optimized resume
+      const optimizedText = JSON.stringify(data.resume);
+      const newScore = scoreResume(optimizedText, jd);
+      setPostScore(newScore);
     } catch (e: any) { setErr(e.message); } finally { setGing(false); }
   };
 
@@ -201,8 +206,62 @@ export default function ResumeOptimizerPage() {
             {ging?<><Loader2 className="h-4 w-4 animate-spin"/>Running 4-Step AI Pipeline (30-40s)...</>:<><span className="material-symbols-outlined text-sm">auto_awesome</span>Optimize Resume{atsResult?` (${atsResult.overallScore}% → 90+%)`:''}</>}
           </button>
 
+          {/* Post-gen: Before → After Score */}
+          {gen && postScore && atsResult && (
+            <div className="glass-card rounded-2xl p-5 space-y-4">
+              <div className="flex items-center gap-6">
+                {/* Before */}
+                <div className="text-center">
+                  <div className="relative w-16 h-16">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
+                      <circle cx="40" cy="40" r="34" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="5"/>
+                      <circle cx="40" cy="40" r="34" fill="transparent" stroke={scoreColor(atsResult.overallScore)} strokeWidth="5" strokeLinecap="round" strokeDasharray={`${2*Math.PI*34}`} strokeDashoffset={`${2*Math.PI*34 - (atsResult.overallScore/100)*2*Math.PI*34}`}/>
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-sm font-black" style={{color:scoreColor(atsResult.overallScore)}}>{atsResult.overallScore}%</span>
+                  </div>
+                  <p className="text-[9px] text-[#8e90a2] font-bold uppercase tracking-widest mt-1">Before</p>
+                </div>
+                <span className="material-symbols-outlined text-[#8e90a2] text-xl">arrow_forward</span>
+                {/* After */}
+                <div className="text-center">
+                  <div className="relative w-16 h-16">
+                    <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
+                      <circle cx="40" cy="40" r="34" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="5"/>
+                      <circle cx="40" cy="40" r="34" fill="transparent" stroke={scoreColor(postScore.overallScore)} strokeWidth="5" strokeLinecap="round" strokeDasharray={`${2*Math.PI*34}`} strokeDashoffset={`${2*Math.PI*34 - (postScore.overallScore/100)*2*Math.PI*34}`} style={{transition:'stroke-dashoffset 1s ease'}}/>
+                    </svg>
+                    <span className="absolute inset-0 flex items-center justify-center text-sm font-black" style={{color:scoreColor(postScore.overallScore)}}>{postScore.overallScore}%</span>
+                  </div>
+                  <p className="text-[9px] text-[#8e90a2] font-bold uppercase tracking-widest mt-1">After</p>
+                </div>
+                <div className="flex-1 text-xs text-[#c4c5d9] space-y-1">
+                  <p className="font-bold text-[#e1e2eb]">+{postScore.overallScore - atsResult.overallScore}% improvement</p>
+                  <p>Keywords: {atsResult.keywordScore}% → {postScore.keywordScore}%</p>
+                  <p>Placement: {atsResult.placementScore}% → {postScore.placementScore}%</p>
+                </div>
+              </div>
+
+              {/* Changes Made */}
+              {(() => {
+                const fixedKws = atsResult.missing.filter(k => postScore.matched.includes(k));
+                const fixedPlacement = atsResult.misplaced.filter(k => !postScore.misplaced.includes(k));
+                const fixedStructure = atsResult.structureIssues.filter(i => !postScore.structureIssues.includes(i));
+                const stillMissing = postScore.missing;
+                return (fixedKws.length > 0 || fixedPlacement.length > 0 || fixedStructure.length > 0) ? (
+                  <div className="space-y-2 pt-2 border-t border-white/5">
+                    <p className="text-[10px] font-bold text-[#00daf3] uppercase tracking-widest">Changes Made</p>
+                    {fixedKws.length > 0 && <div className="flex flex-wrap gap-1.5">{fixedKws.map(k => <span key={k} className="px-2 py-0.5 rounded text-[10px] font-medium bg-[#007886]/15 text-[#00daf3] border border-[#00daf3]/20">+ {k}</span>)}</div>}
+                    {fixedPlacement.length > 0 && <p className="text-xs text-[#cdbdff]">{fixedPlacement.length} keywords moved from skills-only into experience bullets</p>}
+                    {fixedStructure.length > 0 && <p className="text-xs text-[#00daf3]">{fixedStructure.length} structure issues fixed</p>}
+                    {stillMissing.length > 0 && <div><p className="text-[10px] font-bold text-[#8e90a2] mt-1">Still missing ({stillMissing.length}):</p><div className="flex flex-wrap gap-1">{stillMissing.slice(0, 8).map(k => <span key={k} className="px-2 py-0.5 rounded text-[10px] bg-white/5 text-[#8e90a2]">{k}</span>)}</div></div>}
+                  </div>
+                ) : null;
+              })()}
+            </div>
+          )}
+
           {/* Post-gen actions */}
-          {gen && <div className="glass-card rounded-2xl p-5 space-y-3">
+          {gen && (
+            <div className="glass-card rounded-2xl p-5 space-y-3">
             {gen.ats_compliance && <p className="text-xs text-[#00daf3] flex items-center gap-1"><span className="material-symbols-outlined text-sm">verified</span>ATS Optimized: {gen.ats_compliance.platforms_optimized?.join(', ')}</p>}
             <div className="flex flex-wrap gap-3">
               <button onClick={() => doDL('docx')} disabled={dling} className="kinetic-btn px-5 py-2.5 text-sm flex items-center gap-2"><span className="material-symbols-outlined text-sm">description</span>DOCX</button>
@@ -211,7 +270,7 @@ export default function ResumeOptimizerPage() {
               <button onClick={() => goTo('/cover-letter', { cl_jd: jd, cl_title: jt, cl_company: co })} className="kinetic-btn-ghost px-5 py-2.5 text-sm flex items-center gap-2"><span className="material-symbols-outlined text-sm">auto_stories</span>Cover Letter</button>
               <button onClick={() => goTo('/interview-prep', { interview_jd: jd, interview_title: jt, interview_company: co })} className="kinetic-btn-ghost px-5 py-2.5 text-sm flex items-center gap-2"><span className="material-symbols-outlined text-sm">quiz</span>Interview Prep</button>
             </div>
-          </div>}
+          </div>)}
           {err && <div className="glass-panel rounded-2xl p-4 border-[#ffb4ab]/20 bg-[#93000a]/10 text-sm text-[#ffb4ab] flex items-center gap-2"><span className="material-symbols-outlined">error</span>{err}</div>}
         </div>
 
