@@ -1,20 +1,33 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { callAI, parseJSON, smartTruncate } from '@/lib/ai-router';
+import { callAI, parseJSON } from '@/lib/ai-router';
 
 export async function POST(request: NextRequest) {
   try {
-    const { resumeText, jobDescription } = await request.json();
+    const body = await request.json();
+    const { resumeText, jobDescription } = body;
     if (!resumeText || !jobDescription) return NextResponse.json({ error: 'Resume and JD required' }, { status: 400 });
+
+    // Truncate manually to avoid issues
+    const rText = resumeText.slice(0, 4000);
+    const jText = jobDescription.slice(0, 3000);
+
+    console.log('AI Score: starting, resume len:', rText.length, 'jd len:', jText.length);
 
     const text = await callAI({
       tier: 'cheap',
-      system: `Act as an ATS scoring engine simulating Workday, Greenhouse, Lever, and iCIMS. Analyze the resume against the job description. Be accurate and realistic. Score 90-95 only if resume truly matches well. Return ONLY valid JSON:
-{"overall_score":number,"ats_scores":{"workday":number,"greenhouse":number,"lever":number,"icims":number},"keyword_match":{"matched":["keyword"],"missing":["keyword"],"match_percentage":number},"strengths":["strength1","strength2"],"improvements":["fix1","fix2"],"recruiter_impression":"one sentence - would a recruiter shortlist this?"}`,
-      user: `RESUME:\n${smartTruncate(resumeText, 3000)}\n\nJOB DESCRIPTION:\n${smartTruncate(jobDescription, 2000)}`,
-      maxTokens: 2000
+      system: `You are an ATS scoring engine. Score this resume against the job description as Workday, Greenhouse, Lever, and iCIMS would. Return ONLY valid JSON, no markdown, no backticks:
+{"overall_score":90,"ats_scores":{"workday":90,"greenhouse":91,"lever":89,"icims":90},"strengths":["strength1","strength2","strength3"],"improvements":["improvement1","improvement2"],"recruiter_impression":"Would shortlist - strong match"}`,
+      user: `RESUME:\n${rText}\n\nJOB DESCRIPTION:\n${jText}\n\nScore this resume. Return ONLY JSON.`,
+      maxTokens: 1500
     });
 
-    return NextResponse.json(parseJSON(text));
-  } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
+    console.log('AI Score: raw response length:', text?.length);
+    const result = parseJSON(text);
+    console.log('AI Score: parsed, overall:', result.overall_score);
+    return NextResponse.json(result);
+  } catch (e: any) {
+    console.error('AI Score error:', e.message);
+    return NextResponse.json({ error: e.message || 'Score failed' }, { status: 500 });
+  }
 }

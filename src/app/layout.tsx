@@ -4,7 +4,9 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'JobSeeker Pro — AI Career Suite',
-  description: 'AI-powered resume optimization, job matching across 323K+ sources, voice mock interviews, and smart networking tools. Land your dream job with precision.',
+  description: 'AI-powered resume optimization, job matching across 323K+ sources, voice mock interviews, and smart networking tools.',
+  manifest: '/manifest.json',
+  themeColor: '#3c59fd',
   keywords: ['AI resume', 'ATS optimization', 'job search', 'mock interview', 'career tools', 'resume builder'],
   authors: [{ name: 'JobSeeker Pro' }],
   openGraph: {
@@ -25,7 +27,7 @@ import OnboardingTour from '@/components/layout/OnboardingTour';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark"><head><link rel="manifest" href="/manifest.json" /><meta name="theme-color" content="#3c59fd" /></head>
+    <html lang="en" className="dark">
       <body>
         {children}
         <CommandPalette />
