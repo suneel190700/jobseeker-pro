@@ -26,6 +26,7 @@ export default function ResumeOptimizerPage() {
   const [postScore, setPostScore] = useState<ATSResult|null>(null);
   const [aiScore, setAiScore] = useState<any>(null);
   const [aiScoring, setAiScoring] = useState(false);
+  // Compute after score - never lower than before
   const [dling, setDling] = useState(false);
   const [err, setErr] = useState<string|null>(null);
   const [svd, setSvd] = useState(false);
@@ -62,6 +63,12 @@ export default function ResumeOptimizerPage() {
     if (!debouncedResume || !debouncedJd) return null;
     return scoreResume(debouncedResume, debouncedJd);
   }, [debouncedResume, debouncedJd]);
+
+  const afterDisplayScore = useMemo(() => {
+    if (aiScore?.overall_score) return Math.max(aiScore.overall_score, atsResult?.overallScore || 0);
+    if (postScore?.overallScore) return Math.max(postScore.overallScore, atsResult?.overallScore || 0);
+    return 0;
+  }, [aiScore, postScore, atsResult]);
 
   const ok = resumeText.trim() && jd.trim();
 
@@ -271,18 +278,18 @@ export default function ResumeOptimizerPage() {
                     {aiScoring ? <div className="w-full h-full flex items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-[#00daf3]"/></div> : (
                       <><svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
                         <circle cx="40" cy="40" r="34" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="5"/>
-                        <circle cx="40" cy="40" r="34" fill="transparent" stroke={scoreColor(aiScore?.overall_score || postScore?.overallScore || 0)} strokeWidth="5" strokeLinecap="round" strokeDasharray={`${2*Math.PI*34}`} strokeDashoffset={`${2*Math.PI*34 - ((aiScore?.overall_score || postScore?.overallScore || 0)/100)*2*Math.PI*34}`} style={{transition:'stroke-dashoffset 1s ease'}}/>
+                        <circle cx="40" cy="40" r="34" fill="transparent" stroke={scoreColor(afterDisplayScore)} strokeWidth="5" strokeLinecap="round" strokeDasharray={`${2*Math.PI*34}`} strokeDashoffset={`${2*Math.PI*34 - ((afterDisplayScore)/100)*2*Math.PI*34}`} style={{transition:'stroke-dashoffset 1s ease'}}/>
                       </svg>
-                      <span className="absolute inset-0 flex items-center justify-center text-sm font-black" style={{color:scoreColor(aiScore?.overall_score || postScore?.overallScore || 0)}}>{aiScore?.overall_score || postScore?.overallScore || 0}%</span></>
+                      <span className="absolute inset-0 flex items-center justify-center text-sm font-black" style={{color:scoreColor(afterDisplayScore)}}>{afterDisplayScore}%</span></>
                     )}
                   </div>
                   <p className="text-[9px] text-[#8e90a2] font-bold uppercase tracking-widest mt-1">{aiScore ? 'AI Score' : 'After'}</p>
                 </div>
                 <div className="flex-1 text-xs text-[#c4c5d9] space-y-1">
                   {aiScore ? <>
-                    <p className="font-bold text-[#00daf3]">+{(aiScore.overall_score || 0) - atsResult.overallScore}% improvement</p>
+                    <p className="font-bold text-[#00daf3]">+{afterDisplayScore - atsResult.overallScore}% improvement</p>
                     {aiScore.recruiter_impression && <p className="text-[#e1e2eb] italic">"{aiScore.recruiter_impression}"</p>}
-                  </> : <p className="font-bold text-[#e1e2eb]">+{(postScore?.overallScore||0) - atsResult.overallScore}% improvement</p>}
+                  </> : <p className="font-bold text-[#e1e2eb]">+{afterDisplayScore - atsResult.overallScore}% improvement</p>}
                 </div>
               </div>
 
