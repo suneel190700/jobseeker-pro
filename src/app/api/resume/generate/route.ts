@@ -24,7 +24,15 @@ CRITICAL RULES:
    STORY FLOW: Show clear career progression and increasing ownership. Each role should feel like a step up.
    TONE: Confident but not arrogant. Specific not vague. Numbers not adjectives.
 
-Return ONLY valid JSON: {"name":"","email":"","phone":"","location":"","linkedin":"","summary":"3 lines max","skills_grouped":{"Category":["skill"]},"experience":[{"company":"","title":"","location":"","dates":"Month YYYY - Present","bullets":[]}],"education":[{"institution":"","degree":"","dates":"","coursework":["course1","course2"]}],"certifications":[""]}`;
+Return ONLY valid JSON: {"name":"","email":"","phone":"","location":"","linkedin":"","summary":"3 lines max","skills_grouped":{"Category":["skill"]},"experience":[{"company":"","title":"","location":"","dates":"Month YYYY - Present","bullets":[]}],"projects":[{"name":"","description":"one line","technologies":["tech"],"bullets":["what you built and impact"]}],"education":[{"institution":"","degree":"","dates":"","coursework":["course1","course2"]}],"certifications":[""]}
+
+IMPORTANT FOR FRESHERS (0-2 years):
+- ALWAYS include projects section with ALL projects from the original resume
+- Projects are critical for freshers - NEVER remove them
+- If resume has projects/personal projects/academic projects, keep ALL of them
+- For freshers, projects section is MORE important than experience
+- Add relevant technologies used in each project
+- Rewrite project bullets with same Action + What + How + Impact format`;
 
 // STEP 3: Fix Weak Areas (only if score < 90)
 const FIX_PROMPT = `Improve this resume to increase ATS score above 90%. Focus ONLY on:

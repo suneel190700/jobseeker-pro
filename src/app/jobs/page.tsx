@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 import { useTracker } from '@/hooks/useTracker';
 import { useResumeProfile } from '@/hooks/useResumeProfile';
 import { getCachedScores, setCachedScore } from '@/lib/db';
-import { scoreResume } from '@/lib/ats-scorer';
+import { quickMatchScore } from '@/lib/ats-scorer';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
@@ -35,7 +35,7 @@ export default function JobsPage() {
     if (!profile?.text) return {};
     const s: Record<string, number> = {};
     for (const job of jobs) {
-      if (job.description) s[job.id] = scoreResume(profile.text, job.description + ' ' + job.title).overallScore;
+      if (job.description) s[job.id] = quickMatchScore(profile.text, job.description + ' ' + job.title);
     }
     return s;
   }, [jobs, profile?.text]);

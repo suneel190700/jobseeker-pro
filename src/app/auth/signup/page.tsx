@@ -16,7 +16,7 @@ export default function SignupPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault(); if (pw.length < 6) { toast.error('Min 6 characters'); return; } setLoading(true);
-    const { error } = await createClient().auth.signUp({ email, password: pw, options: { data: { full_name: name } } });
+    const { error } = await createClient().auth.signUp({ email, password: pw, options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/api/auth/callback` } });
     if (error) { toast.error(error.message); setLoading(false); } else { toast.success('Check your email to confirm!'); router.push('/auth/login'); }
   };
 

@@ -97,6 +97,14 @@ export default function ResumeOptimizerPage() {
         });
       }
       if (r2.education?.length) {
+      if (r2.projects?.length) {
+        flatParts.push('PROJECTS');
+        r2.projects.forEach((p: any) => {
+          flatParts.push(p.name);
+          if (p.technologies?.length) flatParts.push(`Technologies: ${p.technologies.join(', ')}`);
+          if (p.bullets) p.bullets.forEach((b: string) => flatParts.push(`- ${b}`));
+        });
+      }
         flatParts.push('EDUCATION');
         r2.education.forEach((e: any) => {
           flatParts.push(`${e.degree} - ${e.institution}`);
@@ -348,6 +356,7 @@ export default function ResumeOptimizerPage() {
                     {gen.summary&&<div className="mb-4"><h3 className="font-black uppercase tracking-widest text-slate-400 mb-1 border-b border-slate-100 pb-0.5">Summary</h3><p className="text-slate-600 leading-relaxed">{gen.summary}</p></div>}
                     {gen.skills_grouped&&Object.keys(gen.skills_grouped).length>0&&<div className="mb-4"><h3 className="font-black uppercase tracking-widest text-slate-400 mb-1 border-b border-slate-100 pb-0.5">Skills</h3>{Object.entries(gen.skills_grouped).map(([c,s])=>Array.isArray(s)&&s.length?<p key={c} className="text-slate-600 mb-0.5"><b>{c}:</b> {(s as string[]).join(', ')}</p>:null)}</div>}
                     {gen.experience?.length>0&&<div className="mb-4"><h3 className="font-black uppercase tracking-widest text-slate-400 mb-1 border-b border-slate-100 pb-0.5">Experience</h3>{gen.experience.map((e:any,i:number)=>(<div key={i} className="mb-3"><div className="flex justify-between"><b className="text-slate-800">{e.title} - {e.company}</b><span className="text-[9px] text-slate-400">{e.dates}</span></div>{e.location&&<p className="text-[9px] text-slate-400">{e.location}</p>}<ul className="mt-1 space-y-0.5 list-disc ml-3">{e.bullets?.map((b:string,j:number)=><li key={j} className="text-slate-600 leading-snug">{b}</li>)}</ul></div>))}</div>}
+                    {gen.projects?.length>0&&<div className="mb-4"><h3 className="font-black uppercase tracking-widest text-slate-400 mb-1 border-b border-slate-100 pb-0.5">Projects</h3>{gen.projects.map((p:any,i:number)=>(<div key={i} className="mb-3"><div className="flex justify-between"><b className="text-slate-800">{p.name}</b>{p.technologies?.length>0&&<span className="text-[9px] text-slate-400">{p.technologies.join(', ')}</span>}</div>{p.description&&<p className="text-[9px] text-slate-500 italic">{p.description}</p>}<ul className="mt-1 space-y-0.5 list-disc ml-3">{p.bullets?.map((b:string,j:number)=><li key={j} className="text-slate-600 leading-snug">{b}</li>)}</ul></div>))}</div>}
                     {gen.education?.length>0&&<div className="mb-3"><h3 className="font-black uppercase tracking-widest text-slate-400 mb-1 border-b border-slate-100 pb-0.5">Education</h3>{gen.education.map((e:any,i:number)=><div key={i} className="mb-1.5"><b>{e.degree} - {e.institution}</b><span className="text-[9px] text-slate-400 ml-2">{e.dates}</span>{e.coursework?.length>0&&<p className="text-[9px] text-slate-500">Coursework: {e.coursework.join(', ')}</p>}</div>)}</div>}
                     {gen.certifications?.filter(Boolean).length>0&&<div><h3 className="font-black uppercase tracking-widest text-slate-400 mb-1 border-b border-slate-100 pb-0.5">Certifications</h3>{gen.certifications.filter(Boolean).map((c:string,i:number)=><p key={i} className="text-slate-600">- {c}</p>)}</div>}
                   </div>
