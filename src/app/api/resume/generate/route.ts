@@ -34,17 +34,9 @@ IMPORTANT FOR FRESHERS (0-2 years):
 - Add relevant technologies used in each project
 - Rewrite project bullets with same Action + What + How + Impact format`;
 
-// STEP 3: Fix Weak Areas (only if score < 90)
-const FIX_PROMPT = `Improve this resume to increase ATS score above 90%. Focus ONLY on:
-- Missing keywords from JD that need injection
-- Weak bullet points that lack metrics or impact
-- Skill alignment issues between Skills and Experience sections
-Do NOT rewrite entire resume. Only update necessary sections. Maintain natural tone. Return ONLY valid JSON with same structure.`;
 
-// STEP 4: Human Optimization
-const HUMAN_PROMPT = `Act as a recruiter reviewing this resume in 10 seconds. Improve for human readability WITHOUT reducing ATS score.
-Focus on: Make summary clearly match job role. Every bullet: Action + What + How + Business Impact. Replace weak language. Make it skimmable. Ensure credibility. Show growth and ownership. No em dashes.
-Return ONLY valid JSON with same structure.`;
+
+
 
 export async function POST(request: NextRequest) {
   try {
@@ -59,37 +51,13 @@ export async function POST(request: NextRequest) {
       maxTokens: 6000
     });
     let resume = parseJSON(text1);
-
-    // STEP 2: Quick algorithmic score check
-    const resumeFlat = JSON.stringify(resume).toLowerCase();
-    const jdKws: string[] = (jobDescription.match(/\b[a-z]{2,}\b/gi) || []).map((w: string) => w.toLowerCase());
-    const uniqueJdKws: string[] = Array.from(new Set(jdKws.filter((w: string) => w.length > 3))) as string[];
-    const matched: string[] = uniqueJdKws.filter((kw: string) => resumeFlat.includes(kw));
-    const quickScore = uniqueJdKws.length > 0 ? Math.round((matched.length / uniqueJdKws.length) * 100) : 80;
-    console.log(`Step 2: Quick score = ${quickScore}%`);
-
-    // STEP 3: Fix if score < 85 (run max 1 time to save tokens)
-    if (quickScore < 85) {
-      console.log('Step 3: Fixing weak areas...');
-      try {
-        const text3 = await callAI({
-          tier: 'cheap', system: FIX_PROMPT,
-          user: `CURRENT RESUME JSON:\n${JSON.stringify(resume)}\n\nJOB DESCRIPTION:\n${smartTruncate(jobDescription, 2000)}\n\nMISSING KEYWORDS: ${uniqueJdKws.filter((kw: string) => !resumeFlat.includes(kw)).slice(0, 15).join(', ')}`,
-          maxTokens: 5000
-        });
-        resume = parseJSON(text3);
-      } catch (e) { console.error('Step 3 failed, continuing with step 1 result'); }
-    }
-
-    // STEP 4: Skipped - humanize rules already in Step 1 prompt to stay under Vercel 60s limit
-    // Human optimization is baked into the master rewrite prompt
+    console.log('Step 1: Done');
 
     // Add filename
     const safeName = (userName || resume.name || 'resume').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     const safeCompany = (company || '').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     const safePosition = (jobTitle || '').split(' ').slice(0, 3).join('_').replace(/[^a-zA-Z0-9_]/g, '').toLowerCase();
     resume._filename = [safeName, safeCompany, safePosition].filter(Boolean).join('_');
-    resume._pipeline = { quickScore, stepsRun: quickScore < 85 ? 3 : 2 };
 
     return NextResponse.json({ resume });
   } catch (error: any) {
