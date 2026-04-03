@@ -33,7 +33,13 @@ export async function saveProfile(details: { full_name: string; email: string; p
 export async function getBaseResume() {
   const { supabase, user } = await getUser();
   if (!user) return null;
-  const { data } = await supabase.from('resumes').select('*').eq('user_id', user.id).eq('version_label', 'base').order('created_at', { ascending: false }).limit(1).single();
+  // Try base label first
+  let { data } = await supabase.from('resumes').select('*').eq('user_id', user.id).eq('version_label', 'base').order('created_at', { ascending: false }).limit(1).single();
+  // Fallback: any resume for this user
+  if (!data) {
+    const { data: any_resume } = await supabase.from('resumes').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).single();
+    data = any_resume;
+  }
   if (!data) return null;
   return { fileName: data.file_name, text: data.raw_text, uploadedAt: data.created_at };
 }

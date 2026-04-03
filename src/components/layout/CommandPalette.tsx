@@ -17,6 +17,7 @@ const commands = [
   { label: 'Salary Negotiator', href: '/salary-negotiator', icon: 'payments' },
   { label: 'Company Research', href: '/company-research', icon: 'apartment' },
   { label: 'Resume Templates', href: '/resume-templates', icon: 'dashboard_customize' },
+  { label: 'Chrome Extension', href: '/extension', icon: 'extension' },
   { label: 'Compare Jobs', href: '/compare', icon: 'compare_arrows' },
   { label: 'Profile & Settings', href: '/profile', icon: 'settings' },
   { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },

@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+import { trackAICall } from "@/lib/track-usage";
 import { NextRequest, NextResponse } from 'next/server';
 import { callAI, parseJSON, smartTruncate } from '@/lib/ai-router';
 
@@ -45,6 +46,8 @@ export async function POST(request: NextRequest) {
 
     // STEP 1: Master Rewrite
     console.log('Step 1: Rewriting...');
+    // Track AI usage
+    try { const sb = (await import("@supabase/supabase-js")).createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!); const authHeader = request.headers.get("Authorization"); if (authHeader) { const { data } = await sb.auth.getUser(authHeader.replace("Bearer ","")); if (data.user) await trackAICall(data.user.id); } } catch {}
     const text1 = await callAI({
       tier: 'balanced', system: REWRITE_PROMPT,
       user: `RESUME:\n${smartTruncate(resumeText)}\n\nTARGET JOB: ${jobTitle || ''} at ${company || ''}\n\nJOB DESCRIPTION:\n${smartTruncate(jobDescription)}`,

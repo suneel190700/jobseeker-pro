@@ -12,30 +12,43 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error } = await sb.auth.getUser(token);
     if (error || !user) return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
 
-    // Get profile from profiles table
     const adminSB = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
     const { data: profile } = await adminSB.from('profiles').select('*').eq('id', user.id).single();
+    const { data: resume } = await adminSB.from('resumes').select('raw_text, file_name').eq('user_id', user.id).order('created_at', { ascending: false }).limit(1).single();
+
+    const p = profile || {};
+    const workExps = p.work_experience || [];
+    const eduList = p.education || [];
 
     return NextResponse.json({
-      name: profile?.full_name || user.user_metadata?.full_name || '',
-      first_name: (profile?.full_name || '').split(' ')[0],
-      last_name: (profile?.full_name || '').split(' ').slice(1).join(' '),
-      email: user.email,
-      phone: profile?.phone || '',
-      location: profile?.location || '',
-      city: profile?.city || '',
-      state: profile?.state || '',
-      linkedin: profile?.linkedin || '',
-      github: profile?.github || '',
-      website: profile?.website || '',
-      resume_text: profile?.resume_text || '',
-      current_company: profile?.current_company || '',
-      current_title: profile?.current_title || '',
-      years_experience: profile?.years_experience || '',
-      university: profile?.university || '',
-      degree: profile?.degree || '',
-      salary_expectation: profile?.salary_expectation || '',
-      target_titles: profile?.target_titles || [],
+      name: p.full_name || user.user_metadata?.full_name || '',
+      first_name: (p.full_name || '').split(' ')[0],
+      last_name: (p.full_name || '').split(' ').slice(1).join(' '),
+      email: p.email || user.email,
+      phone: p.phone || '',
+      location: p.location || '',
+      city: p.city || '',
+      state: p.state || '',
+      country: p.country || 'US',
+      linkedin: p.linkedin_url || '',
+      github: p.github_url || '',
+      website: p.website || '',
+      current_company: p.current_company || workExps[0]?.company || '',
+      current_title: p.current_title || workExps[0]?.title || '',
+      years_experience: String(p.experience_years || ''),
+      salary_expectation: p.salary_expectation || '',
+      work_authorization: p.work_authorization || '',
+      target_role: p.target_role || '',
+      target_titles: p.target_titles || [],
+      skills: p.skills || [],
+      university: p.university || eduList[0]?.university || '',
+      degree: p.degree || eduList[0]?.degree || '',
+      graduation_year: p.graduation_year || eduList[0]?.graduationYear || '',
+      gpa: p.gpa || eduList[0]?.gpa || '',
+      work_experience: workExps,
+      education: eduList,
+      resume_text: resume?.raw_text || '',
+      resume_file: resume?.file_name || '',
     });
   } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }
 }

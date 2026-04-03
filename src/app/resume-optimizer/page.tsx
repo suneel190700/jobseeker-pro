@@ -23,7 +23,7 @@ export default function ResumeOptimizerPage() {
   const [co, setCo] = useState('');
   const [ging, setGing] = useState(false);
   const [gen, setGen] = useState<any>(null);
-  const [postScore, setPostScore] = useState<ATSResult|null>(null);
+  
   const [aiScore, setAiScore] = useState<any>(null);
   const [aiScoring, setAiScoring] = useState(false);
   // Compute after score - never lower than before
@@ -65,10 +65,9 @@ export default function ResumeOptimizerPage() {
   }, [debouncedResume, debouncedJd]);
 
   const afterDisplayScore = useMemo(() => {
-    if (aiScore?.overall_score) return Math.max(aiScore.overall_score, atsResult?.overallScore || 0);
-    if (postScore?.overallScore) return Math.max(postScore.overallScore, atsResult?.overallScore || 0);
+    if (aiScore?.overall_score) return aiScore.overall_score;
     return 0;
-  }, [aiScore, postScore, atsResult]);
+  }, [aiScore]);
 
   const ok = resumeText.trim() && jd.trim();
 
@@ -80,51 +79,10 @@ export default function ResumeOptimizerPage() {
       if (!r.ok) throw new Error((await r.json().catch(()=>({}))).error || 'Failed');
       const data = await r.json(); setGen(data.resume); toast.success('Resume optimized!');
       sessionStorage.setItem('optimized_resume', JSON.stringify(data.resume));
-      // Re-score optimized resume - flatten JSON to plain text first
-      const r2 = data.resume;
-      const flatParts: string[] = [];
-      if (r2.name) flatParts.push(r2.name);
-      if (r2.email) flatParts.push(r2.email);
-      if (r2.phone) flatParts.push(r2.phone);
-      if (r2.location) flatParts.push(r2.location);
-      if (r2.linkedin) flatParts.push(r2.linkedin);
-      if (r2.summary) flatParts.push('SUMMARY', r2.summary);
-      if (r2.skills_grouped) {
-        flatParts.push('SKILLS');
-        Object.entries(r2.skills_grouped).forEach(([cat, skills]) => {
-          if (Array.isArray(skills)) flatParts.push(`${cat}: ${(skills as string[]).join(', ')}`);
-        });
-      }
-      if (r2.experience?.length) {
-        flatParts.push('EXPERIENCE');
-        r2.experience.forEach((e: any) => {
-          flatParts.push(`${e.title} - ${e.company}`);
-          if (e.dates) flatParts.push(e.dates);
-          if (e.bullets) e.bullets.forEach((b: string) => flatParts.push(`- ${b}`));
-        });
-      }
-      if (r2.education?.length) {
-      if (r2.projects?.length) {
-        flatParts.push('PROJECTS');
-        r2.projects.forEach((p: any) => {
-          flatParts.push(p.name);
-          if (p.technologies?.length) flatParts.push(`Technologies: ${p.technologies.join(', ')}`);
-          if (p.bullets) p.bullets.forEach((b: string) => flatParts.push(`- ${b}`));
-        });
-      }
-        flatParts.push('EDUCATION');
-        r2.education.forEach((e: any) => {
-          flatParts.push(`${e.degree} - ${e.institution}`);
-          if (e.coursework?.length) flatParts.push(`Coursework: ${e.coursework.join(', ')}`);
-        });
-      }
-      if (r2.certifications?.length) { flatParts.push('CERTIFICATIONS'); r2.certifications.filter(Boolean).forEach((c: string) => flatParts.push(c)); }
-      const optimizedPlainText = flatParts.join('\n');
-      const newScore = scoreResume(optimizedPlainText, jd);
-      setPostScore(newScore);
-      // Fire AI scoring in background (non-blocking)
+      // AI scoring in background - send resume JSON as text
+      const resumeForScore = JSON.stringify(data.resume).replace(/[{}"[\]]/g, ' ').replace(/,/g, ', ').replace(/\s+/g, ' ');
       setAiScoring(true); setAiScore(null);
-      fetch('/api/resume/score-ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resumeText: optimizedPlainText, jobDescription: jd }) })
+      fetch('/api/resume/score-ai', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ resumeText: resumeForScore, jobDescription: jd }) })
         .then(r => r.json()).then(d => { if (!d.error) setAiScore(d); }).catch(() => {}).finally(() => setAiScoring(false));
     } catch (e: any) { setErr(e.message); } finally { setGing(false); }
   };
@@ -258,7 +216,7 @@ export default function ResumeOptimizerPage() {
           </button>
 
           {/* Post-gen: AI ATS Scores */}
-          {gen && (aiScore || aiScoring || postScore) && atsResult && (
+          {gen && (aiScore || aiScoring) && atsResult && (
             <div className="glass-card rounded-2xl p-5 space-y-4">
               {/* Before → After with AI score */}
               <div className="flex items-center gap-5">
@@ -318,9 +276,9 @@ export default function ResumeOptimizerPage() {
               )}
 
               {/* Changes Made (algorithmic) */}
-              {postScore && (() => {
-                const fixedKws = atsResult.missing.filter(k => postScore.matched.includes(k));
-                const fixedPlacement = atsResult.misplaced.filter(k => !postScore.misplaced.includes(k));
+              {atsResult && aiScore && (() => {
+                const fixedKws = atsResult.missing.filter(k => aiScore?.keyword_match?.matched?.includes(k));
+                const fixedPlacement = atsResult.misplaced.filter(k => !false);
                 return (fixedKws.length > 0 || fixedPlacement.length > 0) ? (
                   <div className="space-y-2 pt-2 border-t border-white/5">
                     <p className="text-[10px] font-bold text-[#00daf3] uppercase tracking-widest">Keywords Added</p>
@@ -366,7 +324,7 @@ export default function ResumeOptimizerPage() {
 
         {/* RIGHT: Preview */}
         <div className="col-span-12 lg:col-span-5">
-          <div className="sticky top-6">
+          <div className="sticky top-20">
             <div className="glass-card rounded-2xl p-2" style={{boxShadow:'inset 0 0 40px rgba(187,195,255,0.03), 0 25px 50px -12px rgba(0,0,0,0.5)'}}>
               <div className="flex items-center justify-between px-4 py-2.5 rounded-t-xl" style={{background:'rgba(39,42,49,0.3)'}}>
                 <div className="flex gap-1.5"><div className="w-2 h-2 rounded-full bg-[#ffb4ab]/40"/><div className="w-2 h-2 rounded-full bg-[#00daf3]/40"/><div className="w-2 h-2 rounded-full bg-[#cdbdff]/40"/></div>

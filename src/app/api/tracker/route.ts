@@ -15,9 +15,13 @@ export async function POST(request: NextRequest) {
     const adminSB = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
     const job = await request.json();
     const { data, error: insertErr } = await adminSB.from('saved_jobs').insert({
-      user_id: user.id, title: job.title, company: job.company,
-      location: job.location, description: job.description?.slice(0, 5000),
-      source_url: job.source_url, source: job.source || 'Extension', status: job.status || 'saved',
+      user_id: user.id,
+      title: job.title || '',
+      company: job.company || '',
+      location: job.location || '',
+      description: job.description?.slice(0, 5000) || '',
+      source_url: job.source_url || '',
+      source: job.source || 'extension',
     }).select().single();
 
     if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });

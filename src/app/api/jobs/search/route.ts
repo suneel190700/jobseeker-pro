@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+import { trackSearch } from "@/lib/track-usage";
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
@@ -42,6 +43,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch from available sources
+    trackSearch().catch(() => {}); // fire and forget
     const fetches: Promise<MappedJob[]>[] = [];
     if (process.env.THEIRSTACK_API_KEY) fetches.push(fetchTheirStack(query, location, remote, datePosted, employmentType, page));
     if (process.env.RAPIDAPI_KEY) fetches.push(fetchJSearch(query, location, remote, datePosted, employmentType, page));

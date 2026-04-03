@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+import { trackAICall } from "@/lib/track-usage";
 import { NextRequest, NextResponse } from 'next/server';
 import { callAI, parseJSON } from '@/lib/ai-router';
 
@@ -6,6 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     const { company, jobTitle } = await request.json();
     if (!company) return NextResponse.json({ error: 'Company required' }, { status: 400 });
+    trackAICall().catch(() => {}); // fire and forget
     const text = await callAI({
       tier: 'cheap',
       system: 'You are a career research assistant. Return ONLY valid JSON with company research brief.',

@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+import { trackAICall } from "@/lib/track-usage";
 import { NextRequest, NextResponse } from 'next/server';
 import { callAI, parseJSON } from '@/lib/ai-router';
 
@@ -7,7 +8,8 @@ export async function POST(request: NextRequest) {
     const { action, jobDescription, jobTitle, company, resumeText, answer, questionNumber, history, mode, fillerData } = await request.json();
 
     if (action === 'start') {
-      const text = await callAI({ tier: 'cheap', system: `You are a senior hiring manager. Ask the first interview question for ${jobTitle||'the role'}${company?` at ${company}`:''}. Return ONLY JSON: {"question":"your opening question","suggestedAnswer":"a strong sample answer the candidate could give based on their resume (2-3 sentences)","keyPoints":["key point 1","key point 2","key point 3"]}`, user: `JD:\n${jobDescription}\nResume:\n${resumeText||'Not provided'}` });
+      trackAICall().catch(() => {}); // fire and forget
+    const text = await callAI({ tier: 'cheap', system: `You are a senior hiring manager. Ask the first interview question for ${jobTitle||'the role'}${company?` at ${company}`:''}. Return ONLY JSON: {"question":"your opening question","suggestedAnswer":"a strong sample answer the candidate could give based on their resume (2-3 sentences)","keyPoints":["key point 1","key point 2","key point 3"]}`, user: `JD:\n${jobDescription}\nResume:\n${resumeText||'Not provided'}` });
       return NextResponse.json(parseJSON(text));
     }
 

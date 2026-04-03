@@ -26,8 +26,16 @@ export default function JobsPage() {
 
   useEffect(()=>{getCachedScores().then(s=>setScores(s)).catch(()=>{});},[]);
   useEffect(()=>{if(pLoaded&&!autoLoaded.current&&!searched){autoLoaded.current=true;
+    // Search based on profile: target titles, or extract role from resume
     if(titles.length>0){setQuery(titles[0]);doSearch(titles[0],'');}
-    else if(profile?.text){setQuery('Software Engineer');doSearch('Software Engineer','');}
+    else if(profile?.text){
+      // Try to extract role from resume first line
+      const firstLines = profile.text.split('\n').slice(0,5).join(' ').toLowerCase();
+      const roles = ['data engineer','software engineer','ai engineer','ml engineer','frontend','backend','full stack','devops','cloud','data scientist','product manager','sre'];
+      const found = roles.find(r => firstLines.includes(r));
+      setQuery(found || 'Software Engineer');
+      doSearch(found || 'Software Engineer','');
+    }
   }},[pLoaded,titles,searched]);
 
   // Auto-calculate match scores for all jobs
@@ -75,7 +83,7 @@ export default function JobsPage() {
     return [...jobs].sort((a, b) => (jobScores[b.id] || 0) - (jobScores[a.id] || 0));
   }, [jobs, jobScores, profile?.text]);
 
-  return (<div className="h-[calc(100vh-64px)] flex flex-col">
+  return (<div className="h-[calc(100vh-4rem)] flex flex-col">
     {/* Search + Filters */}
     <section className="pb-4 space-y-3">
       <form onSubmit={e=>handleSearch(e)} className="flex items-center gap-3">
@@ -114,7 +122,7 @@ export default function JobsPage() {
       </div>
 
       {/* Title pills from profile */}
-      {titles.length>1&&<div className="flex flex-wrap gap-2">{titles.map(t=>(<button key={t} onClick={()=>handleSearch(undefined,t)} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${query===t&&searched?'bg-[#3c59fd]/20 text-[#bbc3ff] border border-[#bbc3ff]/20':'bg-white/5 text-[#8e90a2] border border-white/10 hover:bg-[#3c59fd]/10 hover:text-[#bbc3ff]'}`}>{t}</button>))}</div>}
+      {titles.length>0&&<div className="flex flex-wrap gap-2">{titles.map(t=>(<button key={t} onClick={()=>handleSearch(undefined,t)} className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${query===t&&searched?'bg-[#3c59fd]/20 text-[#bbc3ff] border border-[#bbc3ff]/20':'bg-white/5 text-[#8e90a2] border border-white/10 hover:bg-[#3c59fd]/10 hover:text-[#bbc3ff]'}`}>{t}</button>))}</div>}
     </section>
 
     {error&&<div className="mb-4 glass-panel p-3 border-[#ffb4ab]/20 bg-[#93000a]/10 text-sm text-[#ffb4ab] rounded-2xl">{error}</div>}

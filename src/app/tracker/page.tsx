@@ -30,7 +30,7 @@ export default function TrackerPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-64px)] flex flex-col">
+    <div className="h-[calc(100vh-4rem)] flex flex-col">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
         <div>
           <span className="text-[#cdbdff] text-[10px] tracking-[0.2em] uppercase font-bold mb-2 block">Application Lifecycle</span>

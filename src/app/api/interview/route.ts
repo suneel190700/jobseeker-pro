@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+import { trackAICall } from "@/lib/track-usage";
 import { NextRequest, NextResponse } from 'next/server';
 import { callAI, parseJSON, smartTruncate } from '@/lib/ai-router';
 
@@ -13,6 +14,7 @@ export async function POST(request: NextRequest) {
     else if (prepType === 'company') sys = 'Research the company. Return ONLY JSON: {"company_overview":"","culture_values":[""],"interview_talking_points":[""],"questions_to_ask":[""],"recent_news":"","tips":[""]}.';
     else return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
 
+    trackAICall().catch(() => {}); // fire and forget
     const text = await callAI({ tier: 'cheap', system: sys, user: `Resume:\n${smartTruncate(resumeText || '', 3000)}\n\nJob: ${jobTitle || ''} at ${companyName || ''}\n\nJD:\n${smartTruncate(jobDescription, 2000)}`, maxTokens: 4000 });
     return NextResponse.json(parseJSON(text));
   } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }

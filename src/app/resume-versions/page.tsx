@@ -36,7 +36,7 @@ export default function ResumeVersionsPage() {
             ))}
           </div>
           {selected?.resumeData && (
-            <div className="hidden lg:block w-[400px] flex-shrink-0"><div className="sticky top-0 glass-card overflow-hidden max-h-[calc(100vh-150px)] overflow-y-auto">
+            <div className="hidden lg:block w-[400px] flex-shrink-0"><div className="sticky top-20 glass-card overflow-hidden max-h-[calc(100vh-8rem)] overflow-y-auto">
               <div className="px-5 py-4 bg-[rgba(255,255,255,0.03)] border-b border-[rgba(255,255,255,0.08)] flex items-center justify-between"><h2 className="text-sm font-bold text-[#c4c5d9]">{selected.label}</h2><span className={`px-2 py-0.5 rounded-lg text-xs border ${selected.score >= 80 ? 'bg-[#007886]/10 text-[#00daf3] border-[#30d158]/20' : 'bg-[#5203d5]/10 text-[#cdbdff] border-[#ff9f0a]/20'}`}>{selected.score}%</span></div>
               <div className="p-5">
                 <div className="text-center border-b border-[rgba(255,255,255,0.08)] pb-4 mb-4"><p className="text-lg font-bold text-[#e1e2eb]">{selected.resumeData?.name}</p><p className="text-xs text-[#434656] mt-1">{[selected.resumeData?.email, selected.resumeData?.phone, selected.resumeData?.location].filter(Boolean).join(' • ')}</p></div>
