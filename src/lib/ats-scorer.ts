@@ -18,7 +18,7 @@ const SYNONYMS: Record<string, string[]> = {
 };
 
 // Extract meaningful terms from text
-function extractTerms(text: string): Set<string> {
+export function extractTerms(text: string): Set<string> {
   const lower = text.toLowerCase();
   const terms = new Set<string>();
   
@@ -214,4 +214,9 @@ export function scoreResume(resumeText: string, jdText: string): ATSResult {
 export function quickMatchScore(resumeText: string, jdText: string): number {
   if (!resumeText || !jdText) return 0;
   return scoreResume(resumeText, jdText).overallScore;
+}
+
+// Exported keyword extractor for skill-gap page
+export function extractKeywords(text: string): string[] {
+  return Array.from(extractTerms(text));
 }

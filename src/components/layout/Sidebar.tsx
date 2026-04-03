@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import NotificationCenter from './NotificationCenter';
 import { createClient } from '@/lib/supabase/client';
 import { useEffect, useState } from 'react';
 
@@ -17,6 +18,10 @@ const nav = [
   { href:'/linkedin', icon:'share', label:'LinkedIn' },
   { href:'/resume-versions', icon:'folder_open', label:'My Resumes' },
   { href:'/compare', icon:'compare_arrows', label:'Compare Jobs' },
+  { href:'/skill-gap', icon:'trending_up', label:'Skill Gap' },
+  { href:'/salary-negotiator', icon:'payments', label:'Salary Negotiator' },
+  { href:'/company-research', icon:'apartment', label:'Company Research' },
+  { href:'/resume-templates', icon:'dashboard_customize', label:'Resume Templates' },
   { href:'/profile', icon:'settings', label:'Settings' },
 ];
 
@@ -46,6 +51,7 @@ export default function Sidebar() {
         <button onClick={() => { const e = new KeyboardEvent('keydown', { key: 'k', metaKey: true }); window.dispatchEvent(e); }} className="mt-4 w-full flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/5 text-[#8e90a2] text-xs hover:bg-white/10 transition">
           <span className="material-symbols-outlined text-sm">search</span>Search...<kbd className="ml-auto px-1.5 py-0.5 rounded bg-white/5 text-[9px] border border-white/10">⌘K</kbd>
         </button>
+        <div className="mt-2 flex justify-end"><NotificationCenter /></div>
       </div>
 
       <nav className="flex-1 flex flex-col gap-1 overflow-y-auto" style={{scrollbarWidth:'thin'}}>

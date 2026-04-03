@@ -332,6 +332,23 @@ export default function ResumeOptimizerPage() {
             </div>
           )}
 
+          {/* Resume Diff View */}
+          {gen && resumeText && (
+            <div className="glass-card rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[10px] font-bold text-[#cdbdff] uppercase tracking-widest">What Changed</p>
+              </div>
+              <div className="space-y-2 text-xs">
+                {gen.summary && <div className="flex items-start gap-2"><span className="material-symbols-outlined text-[#00daf3] text-sm mt-0.5">edit</span><div><span className="font-bold text-[#e1e2eb]">Summary</span><span className="text-[#8e90a2]"> — Rewritten to match target role</span></div></div>}
+                {gen.skills_grouped && Object.keys(gen.skills_grouped).length > 0 && <div className="flex items-start gap-2"><span className="material-symbols-outlined text-[#00daf3] text-sm mt-0.5">add_circle</span><div><span className="font-bold text-[#e1e2eb]">Skills</span><span className="text-[#8e90a2]"> — Regrouped by {Object.keys(gen.skills_grouped).length} categories, JD keywords injected</span></div></div>}
+                {gen.experience?.length > 0 && <div className="flex items-start gap-2"><span className="material-symbols-outlined text-[#cdbdff] text-sm mt-0.5">auto_fix_high</span><div><span className="font-bold text-[#e1e2eb]">Experience</span><span className="text-[#8e90a2]"> — {gen.experience.reduce((a: number, e: any) => a + (e.bullets?.length || 0), 0)} bullets rewritten with metrics and action verbs</span></div></div>}
+                {gen.projects?.length > 0 && <div className="flex items-start gap-2"><span className="material-symbols-outlined text-[#00daf3] text-sm mt-0.5">code</span><div><span className="font-bold text-[#e1e2eb]">Projects</span><span className="text-[#8e90a2]"> — {gen.projects.length} projects optimized with tech keywords</span></div></div>}
+                {gen.education?.[0]?.coursework?.length > 0 && <div className="flex items-start gap-2"><span className="material-symbols-outlined text-[#00daf3] text-sm mt-0.5">school</span><div><span className="font-bold text-[#e1e2eb]">Education</span><span className="text-[#8e90a2]"> — Relevant coursework added</span></div></div>}
+                <div className="flex items-start gap-2"><span className="material-symbols-outlined text-[#00daf3] text-sm mt-0.5">format_align_left</span><div><span className="font-bold text-[#e1e2eb]">Format</span><span className="text-[#8e90a2]"> — ATS-safe structure, no em dashes, standard headers</span></div></div>
+              </div>
+            </div>
+          )}
+
           {/* Post-gen actions */}
           {gen && (
             <div className="glass-card rounded-2xl p-5 space-y-3">

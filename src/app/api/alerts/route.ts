@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     if (!userId || !query) return NextResponse.json({ error: 'Missing params' }, { status: 400 });
     const sb = getSB();
     if (!sb) return NextResponse.json({ error: 'Not configured' }, { status: 500 });
-    const { data, error } = await sb.from('job_alerts').insert({ user_id: userId, query, location: location || '' }).select().single();
+    const { data, error } = await sb.from('job_alerts').insert({ user_id: userId, query, location: location || '', active: true }).select().single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json(data);
   } catch (e: any) { return NextResponse.json({ error: e.message }, { status: 500 }); }

@@ -1,12 +1,15 @@
 import '@/styles/globals.css';
 import { Toaster } from 'sonner';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+
+export const viewport: Viewport = {
+  themeColor: '#3c59fd',
+};
 
 export const metadata: Metadata = {
   title: 'JobSeeker Pro — AI Career Suite',
   description: 'AI-powered resume optimization, job matching across 323K+ sources, voice mock interviews, and smart networking tools.',
   manifest: '/manifest.json',
-  themeColor: '#3c59fd',
   keywords: ['AI resume', 'ATS optimization', 'job search', 'mock interview', 'career tools', 'resume builder'],
   authors: [{ name: 'JobSeeker Pro' }],
   openGraph: {

@@ -13,6 +13,11 @@ const commands = [
   { label: 'Interview Prep', href: '/interview-prep', icon: 'quiz' },
   { label: 'LinkedIn Optimizer', href: '/linkedin', icon: 'share' },
   { label: 'My Resumes', href: '/resume-versions', icon: 'folder_open' },
+  { label: 'Skill Gap Analysis', href: '/skill-gap', icon: 'trending_up' },
+  { label: 'Salary Negotiator', href: '/salary-negotiator', icon: 'payments' },
+  { label: 'Company Research', href: '/company-research', icon: 'apartment' },
+  { label: 'Resume Templates', href: '/resume-templates', icon: 'dashboard_customize' },
+  { label: 'Compare Jobs', href: '/compare', icon: 'compare_arrows' },
   { label: 'Profile & Settings', href: '/profile', icon: 'settings' },
   { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
 ];

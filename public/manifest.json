@@ -1,10 +1,12 @@
 {
   "name": "JobSeeker Pro",
   "short_name": "JobSeeker",
-  "description": "AI-powered career suite",
+  "description": "AI-powered career suite - Resume optimization, job matching, mock interviews",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#10131a",
   "theme_color": "#3c59fd",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "business"],
   "icons": []
 }
